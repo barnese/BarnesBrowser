@@ -1,4 +1,6 @@
 import tkinter
+from layout import Layout
+from lex import *
 from url import URL
 
 # Creates a GUI for the browser using Python's Tk graphical toolkit.
@@ -34,24 +36,26 @@ class Browser:
 
     def load(self, url):
         body = url.request()
-        self.text = lex(body)
-        self.display_list = layout(self.text, self.width)
+        self.tokens = lex(body)
+        self.layout_and_redraw()
+
+    def layout_and_redraw(self):
+        self.display_list = Layout(self.tokens, self.width, HSTEP, VSTEP).display_list
         self.draw()
 
     # Draws the browser's display list of text in screen coordinates.
     def draw(self):
         self.canvas.delete("all")
-        for x, y, c in self.display_list:
+        for x, y, c, f in self.display_list:
             # Skip drawing characters that are off-screen.
             if y > self.scroll + self.height: continue
             if y + VSTEP < self.scroll: continue
-            self.canvas.create_text(x, y - self.scroll, text=c)
+            self.canvas.create_text(x, y - self.scroll, text=c, anchor='nw', font=f)
 
     def resize(self, e):
         self.width = e.width
         self.height = e.height
-        self.display_list = layout(self.text, e.width)
-        self.draw()
+        self.layout_and_redraw()
 
     def scrolldown(self, e):
         if self.allow_scrolldown():
@@ -108,38 +112,6 @@ class Browser:
         self.draw()
 
 #END Browser class
-
-# Lays out text using page coordinates.
-def layout(text, width):
-    display_list = []
-    cursor_x, cursor_y = HSTEP, VSTEP
-
-    for c in text:
-        display_list.append((cursor_x, cursor_y, c))
-
-        if c == "\n":
-            cursor_x = 0
-            cursor_y += VSTEP
-
-        cursor_x += HSTEP
-        if cursor_x >= width - HSTEP:
-            cursor_y += VSTEP
-            cursor_x = HSTEP
-
-    return display_list
-
-# Returns the textual context of an HTML document.
-def lex(body):
-    text = ""
-    in_tag = False
-    for c in body:
-        if c == "<":
-            in_tag = True
-        elif c == ">":
-            in_tag = False
-        elif not in_tag:
-            text += c
-    return text
 
 if __name__ == "__main__":
     import sys
