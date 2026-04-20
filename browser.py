@@ -7,7 +7,6 @@ from url import URL
 # Requires installing Tkinter: `brew install python-tk`
 
 WIDTH, HEIGHT = 800, 600
-HSTEP, VSTEP = 13, 18
 SCROLL_STEP = 100
 BOTTOM_SCROLL_PADDING = 100
 
@@ -40,7 +39,7 @@ class Browser:
         self.layout_and_redraw()
 
     def layout_and_redraw(self):
-        self.display_list = Layout(self.tokens, self.width, HSTEP, VSTEP).display_list
+        self.display_list = Layout(self.tokens, self.width).display_list
         self.draw()
 
     # Draws the browser's display list of text in screen coordinates.
@@ -49,7 +48,7 @@ class Browser:
         for x, y, c, f in self.display_list:
             # Skip drawing characters that are off-screen.
             if y > self.scroll + self.height: continue
-            if y + VSTEP < self.scroll: continue
+            if y + 18 < self.scroll: continue
             self.canvas.create_text(x, y - self.scroll, text=c, anchor='nw', font=f)
 
     def resize(self, e):
