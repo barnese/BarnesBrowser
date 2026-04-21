@@ -66,6 +66,7 @@ class Layout:
             self.weight = "normal"
 
     def word(self, word):
+        word = self.replace_special_chars(word)
         font = get_font(self.size, self.weight, self.style)
         self.line.append((self.cursor_x, word, font))
         w = font.measure(word)
@@ -73,7 +74,13 @@ class Layout:
         
         if self.cursor_x + w > self.width - HSTEP:
             self.flush()
-    
+
+    # Replaces occurrences of special character codes with their matching symbols.
+    def replace_special_chars(self, word):
+        word = word.replace("&lt;", "<")
+        word = word.replace("&gt;", ">")
+        return word
+   
     # Flush has three resposibilities:
     # 1. Aligns words in a line along the baseline.
     # 2. Adds words to display list.
