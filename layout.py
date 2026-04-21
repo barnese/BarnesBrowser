@@ -4,6 +4,17 @@ from lex import Text
 
 HSTEP, VSTEP = 13, 18
 
+# Global font dictionary for caching fonts to improve performance.
+FONTS = {}
+
+def get_font(size, weight, style):
+    key = (size, weight, style)
+    if key not in FONTS:
+        font = tkinter.font.Font(size=size, weight=weight, slant=style)
+        label = tkinter.Label(font=font)
+        FONTS[key] = (font, label)
+    return FONTS[key][0]
+
 class Layout:
     def __init__(self, tokens, width):
         self.display_list = []
@@ -55,12 +66,7 @@ class Layout:
             self.weight = "normal"
 
     def word(self, word):
-        font = tkinter.font.Font(
-            size=self.size,
-            weight=self.weight,
-            slant=self.style
-        )
-
+        font = get_font(self.size, self.weight, self.style)
         self.line.append((self.cursor_x, word, font))
         w = font.measure(word)
         self.cursor_x += w + font.measure(" ")
