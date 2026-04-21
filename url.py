@@ -5,12 +5,13 @@ import ssl
 # https://browser.engineering/http.html
 
 class URL:
-    # Constructor - parses the URL
-    def __init__(self, url):
+    # Constructor - parses the URL, with optional headers for the request.
+    def __init__(self, url, headers=None):
         self.scheme, url = url.split("://", 1)
+        self.headers = headers or {}
 
-        # We only support two schemes for now.
-        assert self.scheme in ["http", "https"]
+        # Supported schemes.
+        assert self.scheme in ["http", "https", "file"]
 
         if self.scheme == "http":
             self.port = 80
@@ -27,6 +28,17 @@ class URL:
             self.port = int(port)
     
     def request(self):
+        if self.scheme == "file":
+            return self.read_file()
+        else:
+            return self.tcp_request()
+
+    def read_file(self):
+        with open(self.path, "r") as f:
+            data = f.read()
+        return data
+
+    def tcp_request(self):
         # Connect to the server via a socket.
         s = socket.socket(
             family=socket.AF_INET, # address family
@@ -42,8 +54,14 @@ class URL:
             s = ctx.wrap_socket(s, server_hostname=self.host)
 
         # Send a get request to the server.
-        request = "GET {} HTTP/1.0\r\n".format(self.path)
+        request = "GET {} HTTP/1.1\r\n".format(self.path)
         request += "Host: {}\r\n".format(self.host)
+        request += "Connection: close\r\n"
+        request += "User-Agent: BarnesBrowser\r\n"
+
+        for key, value in self.headers.items():
+            request += "{}: {}\r\n".format(key, value)
+
         request += "\r\n"
         s.send(request.encode("utf8"))
 
@@ -73,28 +91,3 @@ class URL:
         s.close()
 
         return content
-# END of URL
-
-# Displays an HTML page, very simply.
-# def show(body):
-#     in_tag = False
-#     for c in body:
-#         if c == "<":
-#             in_tag = True
-#         elif c == ">":
-#             in_tag = False
-#         elif not in_tag:
-#             print(c, end="")
-
-# def load(url):
-#     body = url.request()
-#     show(body)
-
-# Main
-# Run examples: 
-# python3 browser.py http://example.org/
-# python3 browser.py https://example.org/
-# python3 browser.py http://localhost:8000
-#if __name__ == "__main__":
-#    import sys
-#    load(URL(sys.argv[1]))
