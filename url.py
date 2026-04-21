@@ -7,11 +7,17 @@ import ssl
 class URL:
     # Constructor - parses the URL, with optional headers for the request.
     def __init__(self, url, headers=None):
-        self.scheme, url = url.split("://", 1)
+        # Quick data scheme handler. TODO: this should be improved later.
+        if url.startswith("data:text/html"):
+            self.scheme = "data"
+            self.data = url.split("data:text/html,", 1)[1]
+            return
+        
+        self.scheme, url = url.split("://", 1) or url.split(":text/html,", 1)
         self.headers = headers or {}
 
         # Supported schemes.
-        assert self.scheme in ["http", "https", "file"]
+        assert self.scheme in ["http", "https", "file", "data"]
 
         if self.scheme == "http":
             self.port = 80
@@ -30,6 +36,8 @@ class URL:
     def request(self):
         if self.scheme == "file":
             return self.read_file()
+        elif self.scheme == "data":
+            return self.data
         else:
             return self.tcp_request()
 

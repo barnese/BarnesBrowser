@@ -114,5 +114,8 @@ class Browser:
 
 if __name__ == "__main__":
     import sys
-    Browser().load(URL(sys.argv[1]))
+    args = sys.argv
+    args.pop(0)
+    joined_args = " ".join(args)
+    Browser().load(URL(joined_args))
     tkinter.mainloop()
