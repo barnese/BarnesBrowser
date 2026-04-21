@@ -5,20 +5,28 @@ import ssl
 # https://browser.engineering/http.html
 
 class URL:
-    # Constructor - parses the URL, with optional headers for the request.
     def __init__(self, url, headers=None):
-        # Quick data scheme handler. TODO: this should be improved later.
-        if url.startswith("data:text/html"):
-            self.scheme = "data"
-            self.data = url.split("data:text/html,", 1)[1]
-            return
-        
-        self.scheme, url = url.split("://", 1) or url.split(":text/html,", 1)
         self.headers = headers or {}
 
-        # Supported schemes.
-        assert self.scheme in ["http", "https", "file", "data"]
+        if ":" not in url:
+            self.scheme = "error"
+            self.error_message = "invalid URL"
+        elif "://" not in url:
+            self.scheme, url = url.split(":", 1) 
+        else:
+            self.scheme, url = url.split("://", 1) 
 
+        match self.scheme:
+            case "http":
+                self.init_for_tcp(url)
+            case "https":
+                self.init_for_tcp(url)
+            case "file":
+                self.init_for_file(url)
+            case "data":
+                self.init_for_data(url)
+
+    def init_for_tcp(self, url):
         if self.scheme == "http":
             self.port = 80
         elif self.scheme == "https":
@@ -32,14 +40,26 @@ class URL:
         if ":" in self.host:
             self.host, port = self.host.split(":", 1)
             self.port = int(port)
-    
+
+    def init_for_file(self, url):
+        self.path = "/" + url
+
+    def init_for_data(self, url):
+        if url.startswith("text/html"):
+            self.data = url.split(",", 1)[1]
+
     def request(self):
-        if self.scheme == "file":
-            return self.read_file()
-        elif self.scheme == "data":
-            return self.data
-        else:
-            return self.tcp_request()
+        match self.scheme:
+            case "file":
+                return self.read_file()
+            case "data":
+                return self.data
+            case "error":
+                return self.error_message
+            case "about":
+                return ""
+            case _:
+                return self.tcp_request()
 
     def read_file(self):
         with open(self.path, "r") as f:
