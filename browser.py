@@ -1,7 +1,7 @@
 import tkinter
 from layout import Layout
-from lex import *
 from url import URL
+from html_parser import HTMLParser
 
 # Creates a GUI for the browser using Python's Tk graphical toolkit.
 # Requires installing Tkinter: `brew install python-tk`
@@ -36,11 +36,11 @@ class Browser:
     def load(self, url):
         body = url.request()
         self.view_source = url.view_source
-        self.tokens = lex(body)
+        self.nodes = HTMLParser(body).parse()
         self.layout_and_redraw()
 
     def layout_and_redraw(self):
-        self.display_list = Layout(self.tokens, self.width, self.view_source).display_list
+        self.display_list = Layout(self.nodes, self.width, self.view_source).display_list
         self.draw()
 
     # Draws the browser's display list of text in screen coordinates.

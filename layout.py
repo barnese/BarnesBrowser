@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import font
-from lex import Text
+from text import Text
 
 HSTEP, VSTEP = 13, 18
 
@@ -16,7 +16,7 @@ def get_font(size, weight, style):
     return FONTS[key][0]
 
 class Layout:
-    def __init__(self, tokens, width, view_source):
+    def __init__(self, nodes, width, view_source):
         self.display_list = []
         self.width = width
         self.view_source = view_source
@@ -31,43 +31,51 @@ class Layout:
         # first computing x-positions, then y-positions.
         self.line = []
 
-        for tok in tokens:
-            self.token(tok)
-
+        self.recurse(nodes)
         self.flush()
 
-    def token(self, tok):
-        if isinstance(tok, Text):
-            for word in tok.text.split():
-                self.word(word, True)
-        elif self.view_source:
-            tok_word = "&lt;" + tok.tag + "&gt;"
-            self.word(tok_word, False)
-        elif tok.tag == "i":
-            self.style = "italic"
-        elif tok.tag == "/i":
-            self.style = "roman"
-        elif tok.tag == "b":
+    def open_tag(self, tag):
+        if tag == "i":
+            self.syle = "italic"
+        elif tag == "b":
             self.weight = "bold"
-        elif tok.tag == "/b":
-            self.weight = "normal"
-        elif tok.tag == "small":
+        elif tag == "small":
             self.size -= 2
-        elif tok.tag == "/small":
-            self.size += 2
-        elif tok.tag == "big":
+        elif tag == "big":
             self.size += 4
-        elif tok.tag == "/big":
-            self.size -= 4
-        elif tok.tag == "br":
+        elif tag == "br":
             self.flush()
-        elif tok.tag == "/p":
-            self.flush()
-            self.cursor_y += VSTEP # Add a gap between paragraphs.
-        else:
-            self.size = 12
+    
+    def close_tag(self, tag):
+        if tag == "i":
             self.style = "roman"
+        elif tag == "b":
             self.weight = "normal"
+        elif tag == "small":
+            self.size += 2
+        elif tag == "big":
+            self.size -= 4
+        elif tag == "br":
+            self.flush()
+        elif tag == "p":
+            self.flush()
+            # Add a gap between paragraphs.
+            self.cursor_y += VSTEP 
+ 
+    # Walks the node tree, handling open and close tags and text.
+    def recurse(self, tree):
+        if isinstance(tree, Text):
+            for word in tree.text.split():
+                self.word(word, True)
+        else:
+            if self.view_source:
+                tok_word = "&lt;" + tree.tag + "&gt;"
+                self.word(tok_word, False)
+
+            self.open_tag(tree.tag)
+            for child in tree.children:
+                self.recurse(child)
+            self.close_tag(tree.tag)
 
     def word(self, word, add_space):
         word = self.replace_special_chars(word)
