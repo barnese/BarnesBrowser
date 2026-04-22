@@ -35,11 +35,12 @@ class Browser:
 
     def load(self, url):
         body = url.request()
+        self.view_source = url.view_source
         self.tokens = lex(body)
         self.layout_and_redraw()
 
     def layout_and_redraw(self):
-        self.display_list = Layout(self.tokens, self.width).display_list
+        self.display_list = Layout(self.tokens, self.width, self.view_source).display_list
         self.draw()
 
     # Draws the browser's display list of text in screen coordinates.

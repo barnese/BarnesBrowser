@@ -16,9 +16,10 @@ def get_font(size, weight, style):
     return FONTS[key][0]
 
 class Layout:
-    def __init__(self, tokens, width):
+    def __init__(self, tokens, width, view_source):
         self.display_list = []
         self.width = width
+        self.view_source = view_source
         self.cursor_x = HSTEP
         self.cursor_y = VSTEP
         self.weight = "normal"
@@ -38,7 +39,10 @@ class Layout:
     def token(self, tok):
         if isinstance(tok, Text):
             for word in tok.text.split():
-                self.word(word)
+                self.word(word, True)
+        elif self.view_source:
+            tok_word = "&lt;" + tok.tag + "&gt;"
+            self.word(tok_word, False)
         elif tok.tag == "i":
             self.style = "italic"
         elif tok.tag == "/i":
@@ -65,13 +69,16 @@ class Layout:
             self.style = "roman"
             self.weight = "normal"
 
-    def word(self, word):
+    def word(self, word, add_space):
         word = self.replace_special_chars(word)
         font = get_font(self.size, self.weight, self.style)
         self.line.append((self.cursor_x, word, font))
         w = font.measure(word)
-        self.cursor_x += w + font.measure(" ")
-        
+        self.cursor_x += w
+
+        if add_space:
+            self.cursor_x += font.measure(" ")
+
         if self.cursor_x + w > self.width - HSTEP:
             self.flush()
 

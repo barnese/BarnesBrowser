@@ -7,10 +7,14 @@ import ssl
 class URL:
     def __init__(self, url, headers=None):
         self.headers = headers or {}
+        self.view_source = False
 
         if ":" not in url:
             self.scheme = "error"
             self.error_message = "invalid URL"
+        elif url.startswith("view-source:"):
+            self.view_source = True
+            self.scheme, url = url.replace("view-source:", "").split("://", 1)
         elif "://" not in url:
             self.scheme, url = url.split(":", 1) 
         else:
