@@ -7,6 +7,12 @@ class HTMLParser:
         "link", "meta", "param", "source", "track", "wbr"
     ]
 
+    # Defines tags that are supposed to be put into a <head> element.
+    HEAD_TAGS = [
+        "base", "basefont", "bgsound", "noscript", 
+        "link", "meta", "title", "style", "script"
+    ]
+
     def __init__(self, body):
         self.body = body
 
@@ -35,6 +41,7 @@ class HTMLParser:
     def add_text(self, text):
         # Skip whitesapce-only text for now. Revisit to render <span> correctly.
         if text.isspace(): return
+        self.implicit_tags(None)
         parent = self.unfinished[-1]
         node = Text(text, parent)
         parent.children.append(node)
@@ -45,6 +52,8 @@ class HTMLParser:
 
         # Throw away tags like <!doctype> or comments <!-- comment -->.
         if tag.startswith("!"): return
+
+        self.implicit_tags(tag)
 
         if tag.startswith("/"):
             # If this is the last close tag, there will be no 
@@ -71,6 +80,8 @@ class HTMLParser:
     # Once the parser is done, it turns the incomplete HTML tree into a complete tree
     # by finishing any unfinished nodes.
     def finish(self):
+        if not self.unfinished:
+            self.implicit_tags(None)
         while len(self.unfinished) > 1:
             node = self.unfinished.pop()
             parent = self.unfinished[-1]
@@ -92,6 +103,26 @@ class HTMLParser:
             else:
                 attributes[attrpair.casefold()] = ""
         return tag, attributes
+
+    # Handles adding implicit tags that are required for a
+    # valid web page, but were omitted by author error.
+    # For example: <html>, <head>, <body>, etc.
+    def implicit_tags(self, tag):
+        while True:
+            open_tags = [node.tag for node in self.unfinished]
+            if open_tags == [] and tag != "html":
+                self.add_tag("html")
+            elif open_tags == ["html"] \
+                and tag not in ["head", "body", "/html"]:
+                if tag in self.HEAD_TAGS:
+                    self.add_tag("head")
+                else:
+                    self.add_tag("body")
+            elif open_tags == ["html", "head"] \
+                 and tag not in ["/head"] + self.HEAD_TAGS:
+                self.add_tag("/head")
+            else:
+                break
 
 # End of HTMLParser
 
