@@ -1,25 +1,21 @@
 import tkinter
-from tkinter import font
+from fonts import get_font
 from text import Text
 
 HSTEP, VSTEP = 13, 18
 
-# Global font dictionary for caching fonts to improve performance.
-FONTS = {}
-
-def get_font(size, weight, style):
-    key = (size, weight, style)
-    if key not in FONTS:
-        font = tkinter.font.Font(size=size, weight=weight, slant=style)
-        label = tkinter.Label(font=font)
-        FONTS[key] = (font, label)
-    return FONTS[key][0]
-
-class Layout:
-    def __init__(self, nodes, width, view_source):
-        self.display_list = []
-        self.width = width
+# Defines a layout block, such as a paragraph or heading.
+class BlockLayout:
+    def __init__(self, node, parent, previous, view_source):
+        self.node = node
+        self.parent = parent
+        self.previous = previous
         self.view_source = view_source
+        self.children = []
+
+    def layout(self, width):
+        self.width = width
+        self.display_list = []
         self.cursor_x = HSTEP
         self.cursor_y = VSTEP
         self.weight = "normal"
@@ -31,7 +27,7 @@ class Layout:
         # first computing x-positions, then y-positions.
         self.line = []
 
-        self.recurse(nodes)
+        self.recurse(self.node)
         self.flush()
 
     def open_tag(self, tag):

@@ -1,5 +1,5 @@
 import tkinter
-from layout import Layout
+from document_layout import DocumentLayout
 from url import URL
 from html_parser import HTMLParser
 
@@ -37,10 +37,12 @@ class Browser:
         body = url.request()
         self.view_source = url.view_source
         self.nodes = HTMLParser(body).parse()
+        self.document = DocumentLayout(self.nodes, self.view_source)
         self.layout_and_redraw()
 
     def layout_and_redraw(self):
-        self.display_list = Layout(self.nodes, self.width, self.view_source).display_list
+        self.document.layout(self.width)
+        self.display_list = self.document.display_list
         self.draw()
 
     # Draws the browser's display list of text in screen coordinates.
