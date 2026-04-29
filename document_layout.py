@@ -8,9 +8,8 @@ class DocumentLayout:
         self.parent = None
         self.children = []
 
-    def layout(self, width):
-        self.width = width
+    def layout(self):
         child = BlockLayout(self.node, self, None, self.view_source)
         self.children.append(child)
-        child.layout(self.width)
+        child.layout()
         self.display_list = child.display_list

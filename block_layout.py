@@ -1,8 +1,18 @@
 import tkinter
 from fonts import get_font
 from text import Text
+from element import Element
 
 HSTEP, VSTEP = 13, 18
+
+BLOCK_ELEMENTS = [
+    "html", "body", "article", "section", "nav", "aside",
+    "h1", "h2", "h3", "h4", "h5", "h6", "hgroup", "header",
+    "footer", "address", "p", "hr", "pre", "blockquote",
+    "ol", "ul", "menu", "li", "dl", "dt", "dd", "figure",
+    "figcaption", "main", "div", "table", "form", "fieldset",
+    "legend", "details",  "summary"
+]
 
 # Defines a layout block, such as a paragraph or heading.
 class BlockLayout:
@@ -12,23 +22,35 @@ class BlockLayout:
         self.previous = previous
         self.view_source = view_source
         self.children = []
-
-    def layout(self, width):
-        self.width = width
         self.display_list = []
-        self.cursor_x = HSTEP
-        self.cursor_y = VSTEP
-        self.weight = "normal"
-        self.style = "roman"
-        self.size = 12
-        
-        # Acts as a buffer for correcting baseline positioning of text
-        # of different sizes using a two-pass algorithm,
-        # first computing x-positions, then y-positions.
-        self.line = []
 
-        self.recurse(self.node)
-        self.flush()
+    # Construct the layout tree from the HTML tree.
+    # The HTML tree is represented in self.node and its children.
+    # The layout tree is written to next, previous and self.
+    def layout(self):
+        mode = self.layout_mode()
+        if mode == "block":
+            previous = None
+            for child in self.node.children:
+                next = BlockLayout(child, self, previous, self.view_source)
+                self.children.append(next)
+                previous = next
+        else:
+            self.cursor_x = 0
+            self.cursor_y = 0
+            self.weight = "normal"
+            self.style = "roman"
+            self.size = 12
+            
+            # Acts as a buffer for correcting baseline positioning of text
+            # of different sizes using a two-pass algorithm,
+            # first computing x-positions, then y-positions.
+            self.line = []
+
+            self.recurse(self.node)
+            self.flush()
+        for child in self.children:
+            child.layout()
 
     def open_tag(self, tag):
         if tag == "i":
@@ -58,6 +80,20 @@ class BlockLayout:
             # Add a gap between paragraphs.
             self.cursor_y += VSTEP 
  
+    # Determines whether a node is a block like <p> or <h1> 
+    # or if it is inline text and text-related tags like <b>.
+    def layout_mode(self):
+        if isinstance(self.node, Text):
+            return "inline"
+        elif any([isinstance(child, Element) and \
+                  child.tag in BLOCK_ELEMENTS
+                  for child in self.node.children]):
+            return "block"
+        elif self.node.children: 
+            return "inline"
+        else:
+            return "block"
+
     # Walks the node tree, handling open and close tags and text.
     def recurse(self, tree):
         if isinstance(tree, Text):
@@ -83,7 +119,9 @@ class BlockLayout:
         if add_space:
             self.cursor_x += font.measure(" ")
 
-        if self.cursor_x + w > self.width - HSTEP:
+        # TODO: figure out resizing. Hardcoding width for now.
+        width = 800
+        if self.cursor_x + w > width - HSTEP:
             self.flush()
 
     # Replaces occurrences of special character codes with their matching symbols.

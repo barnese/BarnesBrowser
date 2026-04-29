@@ -2,6 +2,7 @@ import tkinter
 from document_layout import DocumentLayout
 from url import URL
 from html_parser import HTMLParser
+from html_parser import print_tree
 
 # Creates a GUI for the browser using Python's Tk graphical toolkit.
 # Requires installing Tkinter: `brew install python-tk`
@@ -38,10 +39,11 @@ class Browser:
         self.view_source = url.view_source
         self.nodes = HTMLParser(body).parse()
         self.document = DocumentLayout(self.nodes, self.view_source)
+        #print_tree(self.nodes)        
         self.layout_and_redraw()
 
     def layout_and_redraw(self):
-        self.document.layout(self.width)
+        self.document.layout()
         self.display_list = self.document.display_list
         self.draw()
 
