@@ -1,31 +1,11 @@
-#include <iostream>
-#include "helpers.h"
+#include "url.h"
 
-class URL {
-  public:
-    URL(const std::string& url)
-    {
-      auto parts = split(url, "://");
+int main() 
+{
+    URL url("https://browser.engineering/http.html");
+    url.describe();
+    url.request();
 
-      m_scheme = parts[0];
-      m_url = parts[1];
-    }
-
-    void describe() const
-    {
-      std::cout << "url = " << m_url << "\n";
-      std::cout << "scheme = " << m_scheme << "\n";
-    }
-
-  private:
-    std::string m_url;
-    std::string m_scheme;
-};
-
-int main() {
-  URL url("https://www.apple.com/");
-  url.describe();
-
-  return 0;
+    return 0;
 }
 
