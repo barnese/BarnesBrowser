@@ -6,7 +6,7 @@ class URL
 {
     public:
         URL(const std::string& url);
-        void request() const;
+        std::string request() const;
         void describe() const;
     
     private:

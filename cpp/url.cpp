@@ -1,6 +1,8 @@
 #include "url.h"
-#include "helpers.h"
+#include "string_helpers.h"
+#include <cassert>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -18,7 +20,7 @@ URL::URL(const std::string& url)
     m_port = 80;
 }
 
-void URL::request() const
+std::string URL::request() const
 {
     // Do a DNS lookup to resolve the host using TCP.
     addrinfo hints{};
@@ -31,7 +33,7 @@ void URL::request() const
     if (address != 0)
     {
         std::cout << "DNS lookup failed! Error code = " << address << "\n";
-        return;
+        return "";
     }
 
     // Create the socket.
@@ -42,14 +44,14 @@ void URL::request() const
     if (sock == 0)
     {
         std::cout << "Failed to create the socket!\n";
-        return;
+        return "";
     }
 
     // Connect to the host.
     if (connect(sock, result->ai_addr, result->ai_addrlen) == -1) 
     {
         std::cout << "Error connecting to the host!\n";
-        return;
+        return "";
     }
 
     // Create the HTTP request.
@@ -110,6 +112,7 @@ void URL::request() const
     std::string headerText = response.substr(0, headerEnd);
     std::string body = response.substr(headerEnd + separator.size());
 
+    // Parse the status line.
     std::istringstream stream(headerText);
     std::string statusLine;
     std::getline(stream, statusLine);
@@ -119,11 +122,52 @@ void URL::request() const
     statusStream >> version;
     statusStream >> statusCode;
 
-    std::cout << "Received response:\n";
-    std::cout << "Version = " << version << "\n";
-    std::cout << "Status Code = " << statusCode << "\n";
-    
-    // TODO: Finish parsing the response headers.
+    // Parse the headers.
+    std::string line;
+    std::map<std::string, std::string> headers;
+
+    while (std::getline(stream, line))
+    {
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
+
+        size_t colon = line.find(':');
+
+        if (colon == std::string::npos)
+            continue;
+        
+        std::string name = line.substr(0, colon);
+        std::string value = line.substr(colon + 1);
+
+        headers[name] = trim(value);
+    }
+
+    // Make sure these headers are not found.
+    assert(headers.find("transfer-encoding") == headers.end());
+    assert(headers.find("content-encoding") == headers.end());
+
+    // Print response details.
+    std::cout << "Received response: " << statusCode << " " << version << "\n"; 
+    /*
+    std::cout << "Headers:\n";
+    for (const auto& [key, value] : headers) 
+        std::cout << "- " << key << ": " << value << "\n";
+
+    // Print first few lines of the body.    
+    std::cout << "Response body:\n";
+    int maxLines = 10;
+    int count = 0;
+    std::istringstream bodyStream(body);
+
+    while (std::getline(bodyStream, line))
+    {
+        std::cout << line << "\n";
+        if (++count > maxLines)
+            break;        
+    }
+    */
+
+    return body;
 }
 
 void URL::describe() const
