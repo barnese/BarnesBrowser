@@ -1,3 +1,6 @@
 __pycache__/
-/cpp/main
-/cpp/main.dSYM
+/.vscode/tasks
+/.vscode/tasks.dSYM/
+/.DS_Store
+/cpp/.DS_Store
+/cpp/build/

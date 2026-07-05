@@ -25,7 +25,9 @@ void load(std::string urlString)
 
 int main() 
 {
+    //load("http://example.org/");
     load("https://browser.engineering/http.html");
+    //load("http://localhost:8000/");
     return 0;
 }
 

@@ -1,5 +1,6 @@
 #include "url.h"
 #include "string_helpers.h"
+#include "ssl_helper.h"
 #include <cassert>
 #include <iostream>
 #include <map>
@@ -17,7 +18,17 @@ URL::URL(const std::string& url)
     auto urlParts = split(parts[1], "/");
     m_host = urlParts[0];
     m_path = "/" + urlParts[1];
-    m_port = 80;
+
+    if (m_host.contains(':')) 
+    {
+        auto hostParts = split(m_host, ":");
+        m_host = hostParts[0];
+        m_port = std::stoi(hostParts[1]);
+    } 
+    else
+    {
+        m_scheme == "https" ? m_port = 443 : m_port = 80;
+    }
 }
 
 std::string URL::request() const
@@ -61,16 +72,22 @@ std::string URL::request() const
     out << "\r\n";
     std::string request = out.str();
 
+    SSLHelper ssl;
+
+    if (m_scheme == "https")
+    {
+        ssl.initWithSocket(sock, m_host);
+    }
+
     // Send the request.
     size_t totalSent = 0;
     while (totalSent < request.size())
     {
-        ssize_t sent = send(
-            sock,
-            request.data() + totalSent,
-            request.size() - totalSent,
-            0
-        );
+        ssize_t sent;
+        if (m_scheme == "https")
+            sent = ssl.write(request.data() + totalSent, request.size() - totalSent);
+        else
+            sent = send(sock, request.data() + totalSent, request.size() - totalSent, 0);
 
         if (sent <= 0)
         {
@@ -86,7 +103,11 @@ std::string URL::request() const
     char buffer[4096];
     while (true)
     {
-        ssize_t received = recv(sock, buffer, sizeof(buffer), 0);
+        ssize_t received;
+        if (m_scheme == "https")
+            received = ssl.read(buffer, sizeof(buffer));
+        else
+            received = recv(sock, buffer, sizeof(buffer), 0);
 
         if (received > 0)
         {
@@ -101,6 +122,11 @@ std::string URL::request() const
             std::cout << "There was an error receiving response!\n";
             break;
         }
+    }
+
+    if (m_scheme == "https")
+    {
+        ssl.shutdown();
     }
 
     close(sock);

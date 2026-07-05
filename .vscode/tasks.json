@@ -4,15 +4,44 @@
         {
             "label": "Build Debug",
             "type": "shell",
-            "command": "clang++ -std=c++23 -g -Wall -Wextra -pedantic *.cpp -o main && ./main",
+            "command": "clang++",
+            "args": [
+                "-std=c++23",
+                "-g",
+                "-Wall",
+                "-Wextra",
+                "-pedantic",
+                "*.cpp",
+                "-o",
+                "build/main",
+                "-I/opt/homebrew/opt/openssl@3/include",
+                "-L/opt/homebrew/opt/openssl@3/lib",
+                "-lssl",
+                "-lcrypto"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}/cpp"
             },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Run Build",
+            "type": "shell",
+            "command": "./cpp/build/main",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build And Run",
+            "dependsOn": [
+                "Build Debug",
+                "Run Build"
+            ],
+            "dependsOrder": "sequence",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": ["$gcc"]
+            "problemMatcher": []
         }
     ]
 }
