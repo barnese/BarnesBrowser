@@ -1,5 +1,10 @@
 #include "url.h"
+#include "constants.h"
 #include <iostream>
+#include <QApplication>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsTextItem>
 
 void show(std::string body)
 {
@@ -23,11 +28,22 @@ void load(std::string urlString)
 
 }
 
-int main() 
+int main(int argc, char *argv[]) 
 {
     //load("http://example.org/");
-    load("https://browser.engineering/http.html");
+    //load("https://browser.engineering/http.html");
     //load("http://localhost:8000/");
-    return 0;
-}
 
+    QApplication app(argc, argv);
+
+    QGraphicsScene scene;
+    scene.setSceneRect(0, 0, Constants::WIDTH, 10000);
+    scene.addText("Hello!")->setPos(100, 200);
+
+    QGraphicsView view(&scene);
+    view.resize(Constants::WIDTH, Constants::HEIGHT);
+    view.show();
+    view.centerOn(0, 0);
+
+    return app.exec();
+}

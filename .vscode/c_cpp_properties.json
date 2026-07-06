@@ -4,7 +4,15 @@
             "name": "macOS",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/homebrew/opt/openssl@3/include"
+                "/opt/homebrew/opt/openssl@3/include",
+                "/opt/homebrew/opt/qt/include",
+                "/opt/homebrew/opt/qt/lib/QtCore.framework/Headers",
+                "/opt/homebrew/opt/qt/lib/QtGui.framework/Headers",
+                "/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers"
+            ],
+            "compilerArgs": [
+                "-iframework",
+                "/opt/homebrew/opt/qt/lib"
             ],
             "compilerPath": "/usr/bin/clang++",
             "cppStandard": "c++23",

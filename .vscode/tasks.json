@@ -16,8 +16,18 @@
                 "build/main",
                 "-I/opt/homebrew/opt/openssl@3/include",
                 "-L/opt/homebrew/opt/openssl@3/lib",
+                "-I/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers",
+                "-I/opt/homebrew/opt/qt/lib/QtGui.framework/Headers",
+                "-I/opt/homebrew/opt/qt/lib/QtCore.framework/Headers",
+                "-F/opt/homebrew/opt/qt/lib",
                 "-lssl",
-                "-lcrypto"
+                "-lcrypto",
+                "-framework",
+                "QtWidgets",
+                "-framework",
+                "QtGui",
+                "-framework",
+                "QtCore"
             ],
             "options": {
                 "cwd": "${workspaceFolder}/cpp"
