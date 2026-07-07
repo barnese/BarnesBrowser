@@ -1,7 +1,7 @@
 #include "string_helpers.h"
 
 // Helper function that splits a string by a delimiter.
-std::vector<std::string> split(const std::string& str, const std::string& delimiter)
+std::vector<std::string> split(const std::string& str, const std::string& delimiter, bool firstOnly)
 {
     std::vector<std::string> result;
 
@@ -12,6 +12,11 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
     {
         result.push_back(str.substr(start, end - start));
         start = end + delimiter.length();
+
+        if (firstOnly) 
+        {
+            break;
+        }
     }
 
     result.push_back(str.substr(start));

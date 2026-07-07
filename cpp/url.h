@@ -1,17 +1,24 @@
 #pragma once
 
 #include <string>
+#include "ssl_helper.h"
+
+struct UrlComponents {
+    std::string scheme;
+    std::string host;
+    std::string path;
+    uint16_t port;
+};
 
 class URL
 {
     public:
         URL(const std::string& url);
         std::string request() const;
-        void describe() const;
     
     private:
-        std::string m_host;
-        std::string m_path;
-        std::string m_scheme;
-        uint16_t m_port;
+        void sendRequest(SSLHelper* ssl, int sock, std::string request) const;
+        std::string receiveResponse(SSLHelper* ssl, int sock) const;
+
+        UrlComponents m_urlComponents;
 };

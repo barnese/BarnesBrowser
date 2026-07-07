@@ -6,9 +6,12 @@
 #include <QGraphicsScene>
 #include <QGraphicsTextItem>
 
-void show(std::string body)
+/// Gets the textual content of an HTML document.
+std::string lex(std::string body)
 {
+    std::string text;
     bool inTag = false;
+
     for (char c : body) 
     {
         if (c == '<')
@@ -16,34 +19,58 @@ void show(std::string body)
         else if (c == '>')
             inTag = false;
         else if (!inTag) 
-            std::cout << c;
+            text += c;
     }
+
+    return text;
 }
 
-void load(std::string urlString)
+/// Loads the HTML page from the given URL.
+void load(QGraphicsScene* scene, std::string urlString)
 {
-    URL url(urlString);
-    auto body = url.request();
-    show(body);
+    try
+    {
+        URL url(urlString);
+        auto body = url.request();
+        auto content = lex(body);
 
+        int cursorX = Constants::HSTEP;
+        int cursorY = Constants::VSTEP;
+
+        QString text = QString::fromUtf8(content.data(), content.size());
+
+        for (QChar c : text)
+        {
+            scene->addText(c)->setPos(cursorX, cursorY);
+            cursorX += Constants::HSTEP;
+
+            if (cursorX >= Constants::WIDTH - Constants::HSTEP)
+            {
+                cursorY += Constants::VSTEP;
+                cursorX = Constants::HSTEP;
+            }
+        }
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << "Error: " << error.what() << "\n";
+    }
 }
 
 int main(int argc, char *argv[]) 
 {
-    //load("http://example.org/");
-    //load("https://browser.engineering/http.html");
-    //load("http://localhost:8000/");
-
     QApplication app(argc, argv);
 
     QGraphicsScene scene;
     scene.setSceneRect(0, 0, Constants::WIDTH, 10000);
-    scene.addText("Hello!")->setPos(100, 200);
 
     QGraphicsView view(&scene);
     view.resize(Constants::WIDTH, Constants::HEIGHT);
     view.show();
     view.centerOn(0, 0);
+
+    std::string url = "https://browser.engineering/examples/xiyouji.html";
+    load(&scene, url);
 
     return app.exec();
 }
