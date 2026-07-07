@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
     BrowserView view(&scene);
     view.show();
     view.centerOn(0, 0);
-    scene.load("https://browser.engineering/examples/xiyouji.html");
+    //scene.load("https://browser.engineering/examples/xiyouji.html");
+    scene.load("https://browser.engineering/graphics.html");
 
     return app.exec();
 }

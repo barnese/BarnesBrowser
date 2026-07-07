@@ -22,6 +22,14 @@ void BrowserScene::draw()
     for (it = m_displayList.begin(); it != m_displayList.end(); ++it)
     {
         Point point = it->first;
+
+        // Skip drawing characters that are off-screen.
+        if (point.y > m_scroll + Constants::HEIGHT || 
+            point.y + Constants::VSTEP < m_scroll) 
+        {
+            continue;
+        }
+
         QChar c = it->second;
         addText(c)->setPos(point.x, point.y - m_scroll);
     }

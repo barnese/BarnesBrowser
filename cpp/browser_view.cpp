@@ -22,3 +22,21 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
         QGraphicsView::keyPressEvent(event);
     }
 }
+
+void BrowserView::wheelEvent(QWheelEvent* event)
+{
+    auto deltaY = event->angleDelta().y();
+
+    if (deltaY > 0)
+    {
+        m_scene->scrollUp();
+    }
+    else if (deltaY < 0)
+    {
+        m_scene->scrollDown();
+    }
+    else
+    {
+        QGraphicsView::wheelEvent(event);
+    }
+}
