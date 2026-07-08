@@ -4,6 +4,10 @@
 #include <string>
 #include <QGraphicsScene>
 #include "point.h"
+#include "element.h"
+
+// Aliases for convenience
+using DisplayList = std::map<Point, std::tuple<QString, QFont>>;
 
 /// Handles rendering the graphics for the browser.
 class BrowserScene: public QGraphicsScene
@@ -16,10 +20,10 @@ class BrowserScene: public QGraphicsScene
 
     protected:
         void draw();
-        void layout(std::string content);
-        std::string lex(std::string body);
+        void layout(std::vector<Element> tokens);
+        std::vector<Element> lex(std::string body);
 
     private:
-        std::map<Point, QChar> m_displayList;
+        DisplayList m_displayList;
         int m_scroll;
 };
