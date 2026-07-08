@@ -17,3 +17,9 @@ Work in progress. See the code under `/cpp`.
 ## Python Version
 
 Partially completed version written in Python. This largely follows the example code in the book. See the code under `/python`.
+
+## Tests
+
+### Test Pages
+
+The `test_pages` folder includes several sample HTML pages to use for testing.
