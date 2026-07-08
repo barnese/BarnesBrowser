@@ -20,7 +20,6 @@ class BrowserScene: public QGraphicsScene
 
     protected:
         void draw();
-        void layout(std::vector<Element> tokens);
         std::vector<Element> lex(std::string body);
 
     private:

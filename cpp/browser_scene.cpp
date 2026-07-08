@@ -1,11 +1,11 @@
 #include "browser_scene.h"
 #include "constants.h"
+#include "layout.h"
 #include "url.h"
 #include <iostream>
 #include <vector>
 #include <QGraphicsTextItem>
 #include <QFont>
-#include <QFontMetrics>
 
 BrowserScene::BrowserScene()
 {
@@ -38,58 +38,6 @@ void BrowserScene::draw()
         QFont font = std::get<1>(item);
         auto text = addText(itemText, font);
         text->setPos(point.x, point.y - m_scroll);
-    }
-}
-
-/// Updates the layout's display list for the given display content.
-/// Layout operates using page coordinates, which represent 
-/// an entire page, not only what is visible on the screen.
-void BrowserScene::layout(std::vector<Element> elements)
-{
-    m_displayList.clear();
-
-    int weight = QFont::Weight::Normal;
-    int style = QFont::Style::StyleNormal;
-    int cursorX = 0;
-    int cursorY = 0;
-
-    for (const auto& element : elements)
-    {
-        if (element.isTag()) 
-        {
-            std::string tag = element.getText();
-
-            if (tag == "i")
-                style = QFont::Style::StyleItalic;
-            else if (tag == "/i")
-                style = QFont::Style::StyleNormal;
-            else if (tag == "b")
-                weight = QFont::Weight::Bold;
-            else if (tag == "/b")
-                weight = QFont::Weight::Normal;
-        }
-        else
-        {
-            QString content(element.getText().c_str());
-            auto words = content.split(' ');
-
-            for (auto word : words)
-            {
-                QFont font("Helvetica", 16, weight, style);
-                QFontMetrics metrics(font);          
-                auto wordWidth = metrics.horizontalAdvance(word);
-
-                if (cursorX + wordWidth >= Constants::WIDTH)
-                {
-                    cursorY += metrics.lineSpacing() * 1.25;
-                    cursorX = 0;
-                }
-                Point point(cursorX, cursorY);
-                m_displayList[point] = {word, font};
-
-                cursorX += wordWidth + metrics.horizontalAdvance(' ');
-            }           
-        }            
     }
 }
 
@@ -140,7 +88,8 @@ void BrowserScene::load(std::string urlString)
         URL url(urlString);
         auto body = url.request();
         auto content = lex(body);
-        layout(content);
+        Layout layout(content);
+        m_displayList = layout.getDisplayList();
         draw();
     }
     catch (const std::runtime_error& error)
