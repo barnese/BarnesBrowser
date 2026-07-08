@@ -21,10 +21,16 @@ public:
 private:
     void processElement(const Element& element);
     void processWord(const QString& word);
+    void processTag(const std::string& tag);
+    void flush();
+    std::tuple<int, int> getMaxAscentAndDescentForLine() const;
 
     int m_cursorX;
     int m_cursorY;
+    QString m_family;
+    int m_size;
     int m_weight;
     int m_style;
     DisplayList m_displayList;
+    std::vector<std::tuple<int, QString, QFont>> m_line;
 };
