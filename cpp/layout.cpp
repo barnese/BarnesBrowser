@@ -1,8 +1,10 @@
 #include "layout.h"
 #include "constants.h"
+#include "html_tree/element.h"
+#include "html_tree/text.h"
 #include <QFontMetrics>
 
-Layout::Layout(std::vector<Element> elements)
+Layout::Layout(const std::vector<std::unique_ptr<Node>>& nodes)
 {
     m_cursorX = 0;
     m_cursorY = 0;
@@ -11,24 +13,24 @@ Layout::Layout(std::vector<Element> elements)
     m_weight = QFont::Weight::Normal;
     m_size = 16;
 
-    for (const auto& element : elements) 
+    for (const auto& node : nodes) 
     {
-        processElement(element);
+        processNode(*node);
     }
 
     flush();
 }
 
-void Layout::processElement(const Element& element) 
+void Layout::processNode(const Node& node) 
 {
-    if (element.isTag()) 
+    if (auto element = dynamic_cast<const Element*>(&node)) 
     {
-        std::string tag = element.getText();
+        std::string tag = element->getTag();
         processTag(tag);
     }
-    else
+    else if (auto text = dynamic_cast<const Text*>(&node))
     {
-        QString content(element.getText().c_str());
+        QString content(text->getText().c_str());
         auto words = content.split(' ');
 
         for (const auto& word : words)

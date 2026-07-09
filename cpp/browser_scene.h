@@ -4,7 +4,7 @@
 #include <string>
 #include <QGraphicsScene>
 #include "point.h"
-#include "element.h"
+#include "html_tree/node.h"
 
 // Aliases for convenience
 using DisplayList = std::map<Point, std::tuple<QString, QFont>>;
@@ -20,7 +20,7 @@ class BrowserScene: public QGraphicsScene
 
     protected:
         void draw();
-        std::vector<Element> lex(std::string body);
+        std::vector<std::unique_ptr<Node>> lex(std::string body);
 
     private:
         DisplayList m_displayList;

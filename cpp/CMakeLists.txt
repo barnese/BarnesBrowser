@@ -12,13 +12,14 @@ find_package(OpenSSL REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Core)
 
 add_executable(main
-    browser_scene.cpp
-    browser_view.cpp
-    element.cpp
-    layout.cpp
-    main.cpp
     helpers/ssl_helper.cpp
     helpers/string_helpers.cpp
+    html_tree/element.cpp
+    html_tree/text.cpp
+    browser_scene.cpp
+    browser_view.cpp
+    layout.cpp
+    main.cpp
     url.cpp
 )
 

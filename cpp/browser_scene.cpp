@@ -2,6 +2,8 @@
 #include "constants.h"
 #include "layout.h"
 #include "url.h"
+#include "html_tree/element.h"
+#include "html_tree/text.h"
 #include <iostream>
 #include <vector>
 #include <QGraphicsTextItem>
@@ -43,9 +45,9 @@ void BrowserScene::draw()
 
 /// Gets the content of an HTML document as a list of tokens.
 /// Tokens are objects for the tags and text of the HTML.
-std::vector<Element> BrowserScene::lex(std::string body)
+std::vector<std::unique_ptr<Node>> BrowserScene::lex(std::string body)
 {
-    std::vector<Element> elements;
+    std::vector<std::unique_ptr<Node>> nodes;
     std::string buffer;
     bool inTag = false;
 
@@ -56,14 +58,14 @@ std::vector<Element> BrowserScene::lex(std::string body)
             inTag = true;
             if (!buffer.empty())
             {
-                elements.emplace_back(Element(buffer, false));
+                nodes.push_back(std::make_unique<Text>(buffer));
                 buffer = "";
             }
         }
         else if (c == '>') 
         {
             inTag = false;
-            elements.emplace_back(Element(buffer, true));
+            nodes.push_back(std::make_unique<Element>(buffer));
             buffer = "";
         }
         else
@@ -82,10 +84,10 @@ std::vector<Element> BrowserScene::lex(std::string body)
 
     if (!inTag && !buffer.empty()) 
     {
-        elements.emplace_back(Element(buffer, false));
+        nodes.push_back(std::make_unique<Text>(buffer));
     }
 
-    return elements;
+    return nodes;
 }
 
 /// Loads the HTML page from the given URL.

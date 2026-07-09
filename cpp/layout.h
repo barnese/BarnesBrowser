@@ -3,7 +3,7 @@
 #include <map>
 #include <tuple>
 #include "point.h"
-#include "element.h"
+#include "html_tree/node.h"
 #include <QGraphicsScene>
 
 // Aliases for convenience
@@ -16,11 +16,11 @@ using DisplayList = std::map<Point, std::tuple<QString, QFont>>;
 class Layout
 {
 public:
-    Layout(std::vector<Element> elements);
+    Layout(const std::vector<std::unique_ptr<Node>>& nodes);
     DisplayList getDisplayList() const;
 
 private:
-    void processElement(const Element& element);
+    void processNode(const Node& node);
     void processWord(const QString& word);
     void processTag(const std::string& tag);
     void flush();
