@@ -68,7 +68,15 @@ std::vector<Element> BrowserScene::lex(std::string body)
         }
         else
         {
-            buffer += c;
+            // Replace line breaks with spaces.
+            if (c == '\n')
+            {
+                buffer += ' ';
+            }
+            else 
+            {
+                buffer += c;
+            }
         }
     }
 
