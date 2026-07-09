@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <tuple>
 #include "point.h"
 #include "element.h"
 #include <QGraphicsScene>
@@ -24,6 +25,7 @@ private:
     void processTag(const std::string& tag);
     void flush();
     std::tuple<int, int> getMaxAscentAndDescentForLine() const;
+    QFont getFont(int size, int weight, int style);
 
     int m_cursorX;
     int m_cursorY;
@@ -31,6 +33,13 @@ private:
     int m_size;
     int m_weight;
     int m_style;
+
+    // List of display content with layout processing applied.
     DisplayList m_displayList;
+    
+    // A temporary buffer for a line of display content.
     std::vector<std::tuple<int, QString, QFont>> m_line;
+    
+    // Font cache indexed by size, weight, style.
+    std::map<std::tuple<int, int, int>, QFont> m_fonts;
 };

@@ -67,7 +67,7 @@ void Layout::processTag(const std::string& tag)
 
 void Layout::processWord(const QString& word)
 {
-    QFont font(m_family, m_size, m_weight, m_style);
+    QFont font = getFont(m_size, m_weight, m_style);
     QFontMetrics metrics(font);
     auto wordWidth = metrics.horizontalAdvance(word);
 
@@ -89,17 +89,12 @@ void Layout::flush()
         return;
     }
    
-    auto tuple = getMaxAscentAndDescentForLine(); 
-    int maxAscent = std::get<0>(tuple);
-    int maxDescent = std::get<1>(tuple);
-
+    auto [maxAscent, maxDescent] = getMaxAscentAndDescentForLine(); 
     int baseline = m_cursorY + 1.25 * maxAscent;
 
     for (const auto& item : m_line)
     {
-        int x = std::get<0>(item);
-        QString word = std::get<1>(item);
-        QFont font = std::get<2>(item);
+        auto [x, word, font] = item;
         QFontMetrics metrics(font);
         int y = baseline - metrics.ascent();
         Point point(x, y);
@@ -136,4 +131,15 @@ std::tuple<int, int> Layout::getMaxAscentAndDescentForLine() const
 DisplayList Layout::getDisplayList() const
 {
     return m_displayList;
+}
+
+QFont Layout::getFont(int size, int weight, int style) 
+{
+    std::tuple<int, int, int> key{size, weight, style};
+    if (!m_fonts.contains(key))
+    {
+        QFont font(m_family, size, weight, style);
+        m_fonts[key] = font;
+    }
+    return m_fonts[key];
 }
