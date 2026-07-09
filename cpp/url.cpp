@@ -1,5 +1,5 @@
 #include "url.h"
-#include "string_helpers.h"
+#include "helpers/string_helpers.h"
 #include "constants.h"
 #include <cassert>
 #include <iostream>

@@ -2,39 +2,25 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build Debug",
+            "label": "CMake Configure",
             "type": "shell",
-            "command": "clang++",
+            "command": "cmake",
             "args": [
-                "-std=c++23",
-                "-g",
-                "-Wall",
-                "-Wextra",
-                "-pedantic",
-                "*.cpp",
-                "-o",
-                "build/main",
-                "-I/opt/homebrew/opt/openssl@3/include",
-                "-L/opt/homebrew/opt/openssl@3/lib",
-                "-I/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers",
-                "-I/opt/homebrew/opt/qt/lib/QtGui.framework/Headers",
-                "-I/opt/homebrew/opt/qt/lib/QtCore.framework/Headers",
-                "-F/opt/homebrew/opt/qt/lib",
-                "-lssl",
-                "-lcrypto",
-                "-framework",
-                "QtWidgets",
-                "-framework",
-                "QtGui",
-                "-framework",
-                "QtCore"
+                "-S", "cpp",
+                "-B", "cpp/build",
+                "-DCMAKE_BUILD_TYPE=Debug",
             ],
-            "options": {
-                "cwd": "${workspaceFolder}/cpp"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake Build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "cpp/build"
+            ],
+            "dependsOn": "CMake Configure",
+            "problemMatcher": "$gcc"
         },
         {
             "label": "Run Build",
@@ -45,7 +31,7 @@
         {
             "label": "Build And Run",
             "dependsOn": [
-                "Build Debug",
+                "CMake Build",
                 "Run Build"
             ],
             "dependsOrder": "sequence",
