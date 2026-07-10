@@ -3,7 +3,20 @@
 #include "constants.h"
 #include <QApplication>
 
-int main(int argc, char *argv[]) 
+#include "url.h"
+#include "html_tree/html_parser.h"
+
+int testHTMLParser() 
+{
+    std::string url = "http://localhost:8000/index.html";
+    std::string body = URL(url).request();
+    auto parser = HTMLParser(body);
+    auto rootNode = parser.parse();
+    parser.printTree(rootNode.get());
+    return 0;
+}
+
+int runBrowser(int argc, char* argv[])
 {
     QApplication app(argc, argv);
 
@@ -19,4 +32,10 @@ int main(int argc, char *argv[])
     //scene.load("http://localhost:8000/fonts.html");
 
     return app.exec();
+}
+
+int main(int argc, char *argv[]) 
+{
+    return runBrowser(argc, argv);
+    //return testHTMLParser();
 }

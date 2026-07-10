@@ -8,6 +8,7 @@ class Node
 {
 public:
     virtual ~Node() = default;
+    virtual std::string describe() const = 0;
 
     Node* getParent() const
     {
@@ -25,7 +26,8 @@ public:
         children.push_back(std::move(child));
     }
 
-private:
     Node* parent = nullptr;
+
+private:
     std::vector<std::unique_ptr<Node>> children;
 };

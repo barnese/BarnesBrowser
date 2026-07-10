@@ -15,6 +15,7 @@ add_executable(main
     helpers/ssl_helper.cpp
     helpers/string_helpers.cpp
     html_tree/element.cpp
+    html_tree/html_parser.cpp
     html_tree/text.cpp
     browser_scene.cpp
     browser_view.cpp

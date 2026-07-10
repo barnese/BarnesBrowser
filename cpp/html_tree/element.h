@@ -7,8 +7,10 @@
 class Element : public Node
 {
 public:
-    Element(const std::string& tag);
+    Element(const std::string& tag, Node* parent = nullptr);
     std::string getTag() const;
+    std::string describe() const override;
+
 private:
     std::string tag;
 };

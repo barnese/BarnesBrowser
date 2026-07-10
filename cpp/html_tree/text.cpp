@@ -9,3 +9,8 @@ std::string Text::getText() const
 {
     return text;
 }
+
+std::string Text::describe() const
+{
+    return text;
+}
