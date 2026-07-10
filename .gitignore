@@ -4,3 +4,5 @@ __pycache__/
 /.DS_Store
 /cpp/.DS_Store
 /cpp/build/
+/cpp/.cache/
+/build/

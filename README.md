@@ -17,12 +17,20 @@ cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Debug
 cmake --build cpp/build
 ```
 
-This will put the executable in the `/build` folder. 
+This will put the executable in the `cpp/build` folder. To run it: `./cpp/build/main`.
 
-Note: if you use Visual Studio Code, the `tasks.json` file allows building by task for convenience.
+### Visual Studio Code Setup
+
+If you use Visual Studio Code to run this project, consider adding the following extensions:
+
+1. CMake Tools - for extended CMake support
+2. clangd - for code completion
+
+The `.vscode/tasks.json` file includes various tasks for building the project. The default is a task to build and run, so Shift+Command+B should execute this task.
+
 Also note the `CMakeLists.txt` uses explicit list of `.cpp` files, so if you add a new one, be sure to add it to `add_executable`.
 
-### Dependencies
+### Project Dependencies
 
 These are the dependencies used in this project.
 
