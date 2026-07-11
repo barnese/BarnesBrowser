@@ -1,16 +1,18 @@
 #include "string_helpers.h"
+#include <algorithm>
+#include <cctype>
 
-// Helper function that splits a string by a delimiter.
-std::vector<std::string> split(const std::string& str, const std::string& delimiter, bool firstOnly)
+// Helper function that splits a texting by a delimiter.
+std::vector<std::string> split(std::string text, std::string delimiter, bool firstOnly)
 {
     std::vector<std::string> result;
 
     std::size_t start = 0;
     std::size_t end;
 
-    while ((end = str.find(delimiter, start)) != std::string::npos)
+    while ((end = text.find(delimiter, start)) != std::string::npos)
     {
-        result.push_back(str.substr(start, end - start));
+        result.push_back(text.substr(start, end - start));
         start = end + delimiter.length();
 
         if (firstOnly) 
@@ -19,30 +21,41 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
         }
     }
 
-    result.push_back(str.substr(start));
+    result.push_back(text.substr(start));
 
     return result;
 }
 
-std::string trim(const std::string& str) 
+std::string trim(std::string text) 
 {
-    return trimRight(trimLeft(str));
+    return trimRight(trimLeft(text));
 }
 
-std::string trimLeft(const std::string& str)
+std::string trimLeft(std::string text)
 {
-    std::size_t start = str.find_first_not_of(" \t\n\r\f\v");
+    std::size_t start = text.find_first_not_of(" \t\n\r\f\v");
 
     if (start == std::string::npos) 
         return "";
 
-    return str.substr(start);
+    return text.substr(start);
 }
 
-std::string trimRight(const std::string& str)
+std::string trimRight(std::string text)
 {
-    std::size_t end = str.find_last_not_of(" \t\n\r\f\v");
+    std::size_t end = text.find_last_not_of(" \t\n\r\f\v");
     if (end == std::string::npos)
         return "";
-    return str.substr(0, end + 1);
+    return text.substr(0, end + 1);
+}
+
+std::string toLowercase(std::string text)
+{
+    std::ranges::transform(text, text.begin(),
+        [](unsigned char c)
+        {
+            return static_cast<char>(std::tolower(c));
+        });
+
+    return text;
 }

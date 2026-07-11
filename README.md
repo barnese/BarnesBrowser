@@ -36,7 +36,19 @@ These are the dependencies used in this project.
 
 1. [OpenSLL](https://www.openssl.org/) - used for SLL network connections
 2. [Qt](https://doc.qt.io/) - used for the graphical user interface
+3. [Catch2](https://github.com/catchorg/Catch2) - used for unit tests
 
+## Unit Tests
+
+This project uses the library [Catch2](https://github.com/catchorg/Catch2) for unit testing. The tests are located until `/cpp/tests/`. The tests are run using CTest. For VS Code, see `tasks.json`'s "Build Tests" and "Run Tests" tasks.
+
+For convenience, consider adding a keybinding for quickly running tests, such as:
+```
+{
+    "key": "cmd+shift+t",
+    "command": "workbench.action.tasks.test"
+}
+```
 
 ## Python Version
 

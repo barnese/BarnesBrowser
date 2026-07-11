@@ -8,6 +8,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(FetchContent)
+
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.11.0
+)
+
+FetchContent_MakeAvailable(Catch2)
+
 find_package(OpenSSL REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Core)
 
@@ -37,3 +47,21 @@ target_link_libraries(main PRIVATE
     Qt6::Gui
     Qt6::Core
 )
+
+add_executable(tests
+    tests/string_helpers_tests.cpp
+    helpers/string_helpers.cpp
+)
+
+target_include_directories(tests PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp
+)
+
+target_link_libraries(tests PRIVATE
+    Catch2::Catch2WithMain
+)
+
+include(CTest)
+include(Catch)
+
+catch_discover_tests(tests)

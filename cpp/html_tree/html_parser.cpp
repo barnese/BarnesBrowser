@@ -145,3 +145,13 @@ void HTMLParser::printTree(Node* node, int indent)
         printTree(node.get(), indent + 2);
     }
 }
+
+TagAttributes HTMLParser::getTagAttributes(std::string text)
+{
+    TagAttributes attributes;
+    auto parts = split(text, " ", false);
+    
+    // TODO
+
+    return attributes;
+}

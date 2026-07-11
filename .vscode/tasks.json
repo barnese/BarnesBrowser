@@ -17,7 +17,10 @@
             "type": "shell",
             "command": "cmake",
             "args": [
-                "--build", "cpp/build"
+                "--build", 
+                "cpp/build",
+                "--target",
+                "main"
             ],
             "dependsOn": "CMake Configure",
             "problemMatcher": "$gcc"
@@ -37,6 +40,38 @@
             "dependsOrder": "sequence",
             "group": {
                 "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Tests",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/build",
+                "--target",
+                "tests"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "ctest",
+            "args": [
+                "--test-dir",
+                "${workspaceFolder}/build",
+                "--output-on-failure"
+            ],
+            "dependsOn": "Build Tests",
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "test",
                 "isDefault": true
             },
             "problemMatcher": []
