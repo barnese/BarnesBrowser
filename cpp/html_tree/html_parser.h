@@ -21,20 +21,26 @@ public:
     std::unique_ptr<Node> parse();
     void printTree(Node* node, int indent = 0);
 
+    const std::vector<std::string> HEAD_TAGS = 
+    {
+        "base", "basefont", "bgsound", "noscript",
+        "link", "meta", "title", "style", "script"
+    };
+
     const std::vector<std::string> SELF_CLOSING_TAGS = 
     {
         "area", "base", "br", "col", "embed", "hr", "img", "input",
         "link", "meta", "param", "source", "track", "wbr"
     };
 
-protected:
-    void addTag(std::string tag);
-    void addText(std::string text);
+private:
+    void addTag(const std::string& tag);
+    void addText(const std::string& text);
+    void addImplicitTags(const std::optional<std::string>& tag = std::nullopt);
+    TagAttributes getTagAttributes(const std::string& text);
     std::unique_ptr<Node> finish();
     Node* getLastUnfinishedNode();
-    TagAttributes getTagAttributes(std::string text);
 
-private:
     std::string m_body;
     std::vector<std::unique_ptr<Node>> m_unfinished;
 };

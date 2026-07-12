@@ -64,7 +64,7 @@ Node* HTMLParser::getLastUnfinishedNode()
     return m_unfinished.back().get();
 }
 
-void HTMLParser::addTag(std::string text)
+void HTMLParser::addTag(const std::string& text)
 {
     auto components = getTagAttributes(text);
     auto tag = components.tag;
@@ -75,6 +75,8 @@ void HTMLParser::addTag(std::string text)
     {
         return;
     }
+
+    addImplicitTags(tag);
 
     if (tag.starts_with('/'))
     {
@@ -114,7 +116,7 @@ void HTMLParser::addTag(std::string text)
     } 
 }
 
-void HTMLParser::addText(std::string text)
+void HTMLParser::addText(const std::string& text)
 {
     // Ignore whitespace.
     if (trim(text) == "") 
@@ -122,45 +124,66 @@ void HTMLParser::addText(std::string text)
         return;
     }
 
+    addImplicitTags();
+
     // Adds the text as a child node to the last unfinished node.
     const auto& parent = m_unfinished.back();
     auto node = std::make_unique<Text>(text);
     parent->addChild(std::move(node));
 }
 
-std::unique_ptr<Node> HTMLParser::finish()
+/// Adds some missing required tags implicitly, such as an omitted <html> tag.
+/// This is a very basic implementation and needs to be expanded in the future.
+void HTMLParser::addImplicitTags(const std::optional<std::string>& tag)
 {
-    // Turn an incomplete tree into a complete tree
-    // by finishing any unfinished nodes.
-    while (m_unfinished.size() > 1)
+    while (true)
     {
-        auto node = std::move(m_unfinished.back());
-        m_unfinished.pop_back();
-        const auto& parent = m_unfinished.back();
-        parent->addChild(std::move(node));
+        std::vector<std::string> openTags;
+        
+        for (const auto& node : m_unfinished)
+        {
+            if (auto element = dynamic_cast<const Element*>(node.get())) 
+            {
+                openTags.push_back(element->tag);
+            }
+        }
+
+        // Add an implicit <html> tag if the first tag in the document
+        // is something other than an <html> tag.
+        if (openTags.empty() && tag != "html")
+        {
+            addTag("html");
+        }
+        else if (openTags.size() == 1 
+            && openTags[0] == "html" 
+            && !std::ranges::contains(std::vector{"head", "body", "/html"}, tag))
+        {
+            // Add an implicit <head> or <body> tag. 
+            if (std::ranges::contains(HEAD_TAGS, tag))
+            {
+                addTag("head");
+            }
+            else
+            {
+                addTag("body");
+            }
+        }
+        else if (openTags.size() == 2 
+            && openTags[0] == "html" 
+            && openTags[1] == "head"
+            && tag != "/head"
+            && !std::ranges::contains(HEAD_TAGS, tag))
+        {
+            addTag("/head");
+        }
+        else 
+        {
+            break;
+        }
     }
-    auto node = std::move(m_unfinished.back());
-    m_unfinished.pop_back();
-    return node;
 }
 
-void HTMLParser::printTree(Node* node, int indent)
-{
-    std::string spaces;
-    for (int i = 0; i < indent; ++i) 
-    {
-        spaces += " ";
-    }
-
-    std::cout << spaces << node->describe() << "\n";
-
-    for (const auto& node : node->getChildren())
-    {
-        printTree(node.get(), indent + 2);
-    }
-}
-
-TagAttributes HTMLParser::getTagAttributes(std::string text)
+TagAttributes HTMLParser::getTagAttributes(const std::string& text)
 {
     auto parts = split(text, " ", false);
     auto tag = toLowercase(parts[0]);
@@ -197,4 +220,37 @@ TagAttributes HTMLParser::getTagAttributes(std::string text)
     }
 
     return TagAttributes(tag, attributes);
+}
+
+std::unique_ptr<Node> HTMLParser::finish()
+{
+    // Turn an incomplete tree into a complete tree
+    // by finishing any unfinished nodes.
+    while (m_unfinished.size() > 1)
+    {
+        addImplicitTags();
+        auto node = std::move(m_unfinished.back());
+        m_unfinished.pop_back();
+        const auto& parent = m_unfinished.back();
+        parent->addChild(std::move(node));
+    }
+    auto node = std::move(m_unfinished.back());
+    m_unfinished.pop_back();
+    return node;
+}
+
+void HTMLParser::printTree(Node* node, int indent)
+{
+    std::string spaces;
+    for (int i = 0; i < indent; ++i) 
+    {
+        spaces += " ";
+    }
+
+    std::cout << spaces << node->describe() << "\n";
+
+    for (const auto& node : node->getChildren())
+    {
+        printTree(node.get(), indent + 2);
+    }
 }

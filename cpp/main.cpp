@@ -8,7 +8,8 @@
 
 int testHTMLParser() 
 {
-    std::string url = "http://localhost:8000/index.html";
+    //std::string url = "http://localhost:8000/index.html";
+    std::string url = "http://localhost:8000/simple_invalid.html";
     std::string body = URL(url).request();
     auto parser = HTMLParser(body);
     auto rootNode = parser.parse();
