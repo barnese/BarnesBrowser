@@ -52,7 +52,7 @@ void BrowserScene::load(std::string urlString)
         URL url(urlString);
         auto body = url.request();
         auto nodes = HTMLParser(body).parse();
-        Layout layout(nodes);
+        Layout layout(nodes.get());
         m_displayList = layout.getDisplayList();
         draw();
     }

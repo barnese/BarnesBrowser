@@ -4,7 +4,7 @@
 #include "html_tree/text.h"
 #include <QFontMetrics>
 
-Layout::Layout(const std::unique_ptr<Node>& nodes)
+Layout::Layout(const Node* node)
 {
     m_cursorX = 0;
     m_cursorY = 0;
@@ -13,22 +13,22 @@ Layout::Layout(const std::unique_ptr<Node>& nodes)
     m_weight = QFont::Weight::Normal;
     m_size = 16;
 
-    recurse(*nodes);
+    recurse(node);
     flush();
 }
 
-void Layout::recurse(const Node& node) 
+void Layout::recurse(const Node* node) 
 {
-    if (auto element = dynamic_cast<const Element*>(&node)) 
+    if (auto element = dynamic_cast<const Element*>(node)) 
     {
         processOpenTag(element->tag);
         for (const auto& child : element->getChildren())
         {
-            recurse(*child);
+            recurse(child.get());
         }
         processCloseTag(element->tag);
     }
-    else if (auto text = dynamic_cast<const Text*>(&node))
+    else if (auto text = dynamic_cast<const Text*>(node))
     {
         QString content(text->getText().c_str());
         auto words = content.split(' ');

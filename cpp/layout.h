@@ -16,11 +16,11 @@ using DisplayList = std::map<Point, std::tuple<QString, QFont>>;
 class Layout
 {
 public:
-    Layout(const std::unique_ptr<Node>& nodes);
+    Layout(const Node* node);
     DisplayList getDisplayList() const;
 
 private:
-    void recurse(const Node& node);
+    void recurse(const Node* node);
     void processWord(const QString& word);
     void processOpenTag(const std::string& tag);
     void processCloseTag(const std::string& tag);
