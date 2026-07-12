@@ -4,7 +4,6 @@
 #include <string>
 #include <QGraphicsScene>
 #include "point.h"
-#include "html_tree/node.h"
 
 // Aliases for convenience
 using DisplayList = std::map<Point, std::tuple<QString, QFont>>;
@@ -18,11 +17,8 @@ class BrowserScene: public QGraphicsScene
         void scrollDown();
         void scrollUp();
 
-    protected:
-        void draw();
-        std::vector<std::unique_ptr<Node>> lex(std::string body);
-
     private:
+        void draw();
         DisplayList m_displayList;
         int m_scroll;
 };

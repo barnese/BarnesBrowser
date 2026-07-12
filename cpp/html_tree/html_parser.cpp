@@ -34,7 +34,15 @@ std::unique_ptr<Node> HTMLParser::parse()
         }
         else
         {
-            buffer += c;
+            // Replace line breaks with spaces.
+            if (c == '\n')
+            {
+                buffer += ' ';
+            } 
+            else 
+            {
+                buffer += c;
+            }
         }        
     }
 
@@ -56,8 +64,12 @@ Node* HTMLParser::getLastUnfinishedNode()
     return m_unfinished.back().get();
 }
 
-void HTMLParser::addTag(std::string tag)
+void HTMLParser::addTag(std::string text)
 {
+    auto components = getTagAttributes(text);
+    auto tag = components.tag;
+    auto attributes = components.attributes;
+
     // Ignore special tags like doctype.
     if (tag.starts_with('!'))
     {
@@ -88,6 +100,7 @@ void HTMLParser::addTag(std::string tag)
         // Add a closing tag for self-closing tags, such as link or br.
         auto parent = getLastUnfinishedNode();
         auto node = std::make_unique<Element>(tag, parent);
+        node->attributes = attributes;
         parent->addChild(std::move(node));
     }
     else
@@ -96,6 +109,7 @@ void HTMLParser::addTag(std::string tag)
         // If the list is empty, parent will be a nullptr.
         auto parent = getLastUnfinishedNode();
         auto node = std::make_unique<Element>(tag, parent);
+        node->attributes = attributes;
         m_unfinished.push_back(std::move(node));
     } 
 }
@@ -148,10 +162,39 @@ void HTMLParser::printTree(Node* node, int indent)
 
 TagAttributes HTMLParser::getTagAttributes(std::string text)
 {
-    TagAttributes attributes;
     auto parts = split(text, " ", false);
-    
-    // TODO
+    auto tag = toLowercase(parts[0]);
+    std::map<std::string, std::string> attributes;
 
-    return attributes;
+    for (size_t i = 1; i < parts.size(); ++i)
+    {
+        auto attrpair = parts[i];
+        if (attrpair == "/")
+        {
+            // Ignore a slash at the end of a self closing tag.
+            continue;
+        }
+        else if (attrpair.contains("="))
+        {
+            // Handle the case where the key/value pair is separated by an = sign.
+            auto pair = split(attrpair, "=");
+            auto key = pair[0];
+            auto value = pair[1];
+
+            // If the value is quoted, strip the quotes.
+            if (value.size() > 2 && (value[0] == '\'' || value[0] == '"')) 
+            {
+                value = value.substr(1, value.size() - 2);
+            }
+
+            attributes[toLowercase(key)] = value;
+        }
+        else 
+        {
+            // Handle the case where there is no value.
+            attributes[toLowercase(attrpair)] = "";
+        }
+    }
+
+    return TagAttributes(tag, attributes);
 }

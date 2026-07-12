@@ -29,6 +29,7 @@ int runBrowser(int argc, char* argv[])
     //scene.load("https://browser.engineering/examples/xiyouji.html");
     scene.load("https://browser.engineering/graphics.html");
     //scene.load("https://browser.engineering/examples/example1-simple.html");
+    //scene.load("http://localhost:8000/index.html");
     //scene.load("http://localhost:8000/fonts.html");
 
     return app.exec();

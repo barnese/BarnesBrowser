@@ -6,12 +6,19 @@ Element::Element(const std::string& tag, Node* myParent)
     parent = myParent;
 }
 
-std::string Element::getTag() const
-{
-    return tag;
-}
-
 std::string Element::describe() const
 {
-    return "<" + tag + ">";
+    std::string text = "<" + tag;
+    
+    for (const auto& attribute : attributes)
+    {
+        text += " ";
+        text += attribute.first;
+        text += "=\"";
+        text += attribute.second;
+        text += "\"";
+    }
+
+    text += ">";
+    return text;
 }

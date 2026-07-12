@@ -6,7 +6,11 @@
 #include <vector>
 #include "node.h"
 
-using TagAttributes = std::map<std::string, std::map<std::string, std::string>>;
+struct TagAttributes
+{
+    std::string tag;
+    std::map<std::string, std::string> attributes;
+};
 
 /// Parses HTML text into an HTML tree.
 /// The HTML tree contains Element nodes for tags and Text nodes for text.

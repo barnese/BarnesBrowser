@@ -1,5 +1,6 @@
 #include "browser_scene.h"
 #include "constants.h"
+#include "html_tree/html_parser.h"
 #include "layout.h"
 #include "url.h"
 #include "html_tree/element.h"
@@ -43,53 +44,6 @@ void BrowserScene::draw()
     }
 }
 
-/// Gets the content of an HTML document as a list of tokens.
-/// Tokens are objects for the tags and text of the HTML.
-std::vector<std::unique_ptr<Node>> BrowserScene::lex(std::string body)
-{
-    std::vector<std::unique_ptr<Node>> nodes;
-    std::string buffer;
-    bool inTag = false;
-
-    for (char c : body) 
-    {
-        if (c == '<') 
-        {
-            inTag = true;
-            if (!buffer.empty())
-            {
-                nodes.push_back(std::make_unique<Text>(buffer));
-                buffer = "";
-            }
-        }
-        else if (c == '>') 
-        {
-            inTag = false;
-            nodes.push_back(std::make_unique<Element>(buffer));
-            buffer = "";
-        }
-        else
-        {
-            // Replace line breaks with spaces.
-            if (c == '\n')
-            {
-                buffer += ' ';
-            }
-            else 
-            {
-                buffer += c;
-            }
-        }
-    }
-
-    if (!inTag && !buffer.empty()) 
-    {
-        nodes.push_back(std::make_unique<Text>(buffer));
-    }
-
-    return nodes;
-}
-
 /// Loads the HTML page from the given URL.
 void BrowserScene::load(std::string urlString)
 {
@@ -97,8 +51,8 @@ void BrowserScene::load(std::string urlString)
     {
         URL url(urlString);
         auto body = url.request();
-        auto content = lex(body);
-        Layout layout(content);
+        auto nodes = HTMLParser(body).parse();
+        Layout layout(nodes);
         m_displayList = layout.getDisplayList();
         draw();
     }

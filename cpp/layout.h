@@ -16,13 +16,14 @@ using DisplayList = std::map<Point, std::tuple<QString, QFont>>;
 class Layout
 {
 public:
-    Layout(const std::vector<std::unique_ptr<Node>>& nodes);
+    Layout(const std::unique_ptr<Node>& nodes);
     DisplayList getDisplayList() const;
 
 private:
-    void processNode(const Node& node);
+    void recurse(const Node& node);
     void processWord(const QString& word);
-    void processTag(const std::string& tag);
+    void processOpenTag(const std::string& tag);
+    void processCloseTag(const std::string& tag);
     void flush();
     std::tuple<int, int> getMaxAscentAndDescentForLine() const;
     QFont getFont(int size, int weight, int style);

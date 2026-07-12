@@ -4,7 +4,7 @@
 #include "html_tree/text.h"
 #include <QFontMetrics>
 
-Layout::Layout(const std::vector<std::unique_ptr<Node>>& nodes)
+Layout::Layout(const std::unique_ptr<Node>& nodes)
 {
     m_cursorX = 0;
     m_cursorY = 0;
@@ -13,20 +13,20 @@ Layout::Layout(const std::vector<std::unique_ptr<Node>>& nodes)
     m_weight = QFont::Weight::Normal;
     m_size = 16;
 
-    for (const auto& node : nodes) 
-    {
-        processNode(*node);
-    }
-
+    recurse(*nodes);
     flush();
 }
 
-void Layout::processNode(const Node& node) 
+void Layout::recurse(const Node& node) 
 {
     if (auto element = dynamic_cast<const Element*>(&node)) 
     {
-        std::string tag = element->getTag();
-        processTag(tag);
+        processOpenTag(element->tag);
+        for (const auto& child : element->getChildren())
+        {
+            recurse(*child);
+        }
+        processCloseTag(element->tag);
     }
     else if (auto text = dynamic_cast<const Text*>(&node))
     {
@@ -40,33 +40,35 @@ void Layout::processNode(const Node& node)
     }
 }
 
-void Layout::processTag(const std::string& tag)
+void Layout::processOpenTag(const std::string& tag)
 {
     if (tag == "i")
         m_style = QFont::Style::StyleItalic;
-    else if (tag == "/i")
-        m_style = QFont::Style::StyleNormal;
     else if (tag == "b")
         m_weight = QFont::Weight::Bold;
-    else if (tag == "/b")
-        m_weight = QFont::Weight::Normal;
     else if (tag == "small")
         m_size -= 2;
-    else if (tag == "/small")
-        m_size += 2;
     else if (tag == "big")
         m_size += 4;
-    else if (tag == "/big")
-        m_size -= 4;
     else if (tag == "br")
         flush();
-    else if (tag == "/p")
+}
+void Layout::processCloseTag(const std::string& tag)
+{
+    if (tag == "i")
+        m_style = QFont::Style::StyleNormal;
+    else if (tag == "b")
+        m_weight = QFont::Weight::Normal;
+    else if (tag == "small")
+        m_size += 2;
+    else if (tag == "big")
+        m_size -= 4;
+    else if (tag == "p")
     {
         flush();
         m_cursorY += Constants::VSTEP;
     }
 }
-
 void Layout::processWord(const QString& word)
 {
     QFont font = getFont(m_size, m_weight, m_style);
