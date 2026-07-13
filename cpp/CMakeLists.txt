@@ -22,6 +22,8 @@ find_package(OpenSSL REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Core)
 
 add_executable(main
+    commands/draw_rect.cpp
+    commands/draw_text.cpp
     helpers/ssl_helper.cpp
     helpers/string_helpers.cpp
     html_tree/element.cpp

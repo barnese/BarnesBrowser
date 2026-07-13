@@ -11,5 +11,5 @@ class DocumentLayout : public Layout
 public:
     DocumentLayout(const Node* node);
     void layout() override;
-    DisplayList paint() const override;
+    std::vector<std::unique_ptr<Command>> paint() const override;
 };

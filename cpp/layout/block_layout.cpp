@@ -1,5 +1,7 @@
 #include "block_layout.h"
 
+#include "commands/draw_rect.h"
+#include "commands/draw_text.h"
 #include "constants.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
@@ -19,6 +21,7 @@ BlockLayout::BlockLayout(const Node* node, const Layout* parent, const Layout* p
     height = 0;
 }
 
+/// Contructs the layout tree for the current tree node.
 void BlockLayout::layout()
 {
     x = parent->x;
@@ -50,7 +53,6 @@ void BlockLayout::layout()
     }
 }
 
-/// Contructs the layout tree for the current tree node.
 void BlockLayout::layoutBlock()
 {
     previous = nullptr;
@@ -77,7 +79,7 @@ void BlockLayout::layoutText()
 }
 
 /// Determines if any children contain block elements.
-bool BlockLayout::areAnyChildBlockElements()
+bool BlockLayout::areAnyChildBlockElements() const
 {
     for (const auto& child : node->getChildren())
     {
@@ -94,7 +96,7 @@ bool BlockLayout::areAnyChildBlockElements()
 }
 
 /// Determines what layout mode we're using based on our HTML node.
-BlockLayoutMode BlockLayout::getLayoutMode()
+BlockLayoutMode BlockLayout::getLayoutMode() const
 {
     if (dynamic_cast<const Text*>(node))
     {
@@ -230,9 +232,34 @@ std::tuple<int, int> BlockLayout::getMaxAscentAndDescentForLine() const
     return {maxAscent, maxDescent};
 }
 
-DisplayList BlockLayout::paint() const
+std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 {
-    return m_displayList;
+    std::vector<std::unique_ptr<Command>> commands;
+
+    if (auto element = dynamic_cast<const Element*>(node)) 
+    {
+        if (element->tag == "pre")
+        {
+            int x2 = x + width;
+            int y2 = y + height;
+            auto command = std::make_unique<DrawRect>(x, y, x2, y2, "gray");
+            commands.push_back(std::move(command));
+        }
+    }
+
+    if (getLayoutMode() == INLINE)
+    {
+        for (const auto& item : m_displayList)
+        {
+            Point point = item.first;
+            QString text = std::get<0>(item.second);
+            QFont font = std::get<1>(item.second);
+            auto command = std::make_unique<DrawText>(point.x, point.y, text, font);
+            commands.push_back(std::move(command));
+        }
+    }
+
+    return commands;
 }
 
 QFont BlockLayout::getFont(int size, int weight, int style) 

@@ -1,6 +1,8 @@
 #pragma once
 
+#include "commands/command.h"
 #include "layout/layout.h"
+#include "layout/document_layout.h"
 
 #include <string>
 #include <QGraphicsScene>
@@ -16,6 +18,8 @@ public:
 
 private:
     void draw();
-    DisplayList m_displayList;
+    
+    std::vector<std::unique_ptr<Command>> m_displayCommands;
     int m_scroll;
+    std::unique_ptr<DocumentLayout> m_document;
 };

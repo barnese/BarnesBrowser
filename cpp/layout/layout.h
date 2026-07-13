@@ -1,13 +1,11 @@
 #pragma once
 
-#include "point.h"
+#include "commands/command.h"
 #include "html_tree/node.h"
 
 #include <memory>
 #include <QGraphicsScene>
 #include <vector>
-
-using DisplayList = std::map<Point, std::tuple<QString, QFont>>; 
 
 /// Abstract base class that represents a layout.
 class Layout
@@ -15,7 +13,7 @@ class Layout
 public:
     virtual ~Layout() = default;
     virtual void layout() = 0;
-    virtual DisplayList paint() const = 0;
+    virtual std::vector<std::unique_ptr<Command>> paint() const = 0;
 
     void addChild(std::unique_ptr<Layout> child)
     {

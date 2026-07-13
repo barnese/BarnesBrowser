@@ -2,7 +2,6 @@
 
 #include "block_layout.h"
 #include "constants.h"
-#include "layout.h"
 
 DocumentLayout::DocumentLayout(const Node* node)
 {
@@ -27,7 +26,7 @@ void DocumentLayout::layout()
     height = childPtr->height;
 }
 
-DisplayList DocumentLayout::paint() const
+std::vector<std::unique_ptr<Command>> DocumentLayout::paint() const
 {
     return {};
 }
