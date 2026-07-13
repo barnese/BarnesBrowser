@@ -18,3 +18,17 @@ void DrawText::execute(QGraphicsScene* scene, int scroll)
     auto text = scene->addText(m_text, m_font);
     text->setPos(left, top - scroll);
 }
+
+std::string DrawText::describe() const
+{
+    std::stringstream s; 
+    s << "DrawText { ";
+    s << "left: " << left << ", ";
+    s << "top: " << top << ", ";
+    s << "right: " << right << ", ";
+    s << "bottom: " << bottom << ", ";
+    s << "text: \"" << m_text.toStdString() << "\", ";
+    s << "font: " << m_font.family().toStdString();
+    s << " }";
+    return s.str();
+}

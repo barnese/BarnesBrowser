@@ -170,6 +170,9 @@ void BlockLayout::processCloseTag(const std::string& tag)
 }
 void BlockLayout::processWord(const QString& word)
 {
+    if (word.isEmpty())
+        return;
+    
     QFont font = getFont(m_size, m_weight, m_style);
     QFontMetrics metrics(font);
     auto wordWidth = metrics.horizontalAdvance(word);

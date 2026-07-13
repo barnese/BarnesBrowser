@@ -37,6 +37,7 @@ void BrowserScene::draw()
             continue;
         }
 
+        //std::cout << command->describe() << "\n";
         command->execute(this, m_scroll);
     }
 }
