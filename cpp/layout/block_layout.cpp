@@ -1,8 +1,10 @@
 #include "block_layout.h"
-#include "../constants.h"
-#include "../html_tree/element.h"
-#include "../html_tree/text.h"
+
+#include "constants.h"
+#include "html_tree/element.h"
+#include "html_tree/text.h"
 #include "layout.h"
+
 #include <QFontMetrics>
 #include <memory>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include "node.h"
+#include <string>
 
 /// Represents a text node in a tree.
 class Text : public Node

@@ -1,9 +1,10 @@
 #include "html_parser.h"
+
+#include "element.h"
+#include "helpers/string_helpers.h"
+#include "text.h"
 #include <algorithm>
 #include <iostream>
-#include "element.h"
-#include "text.h"
-#include "../helpers/string_helpers.h"
 
 HTMLParser::HTMLParser(std::string body)
     : m_body(body)

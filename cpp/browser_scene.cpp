@@ -1,11 +1,13 @@
 #include "browser_scene.h"
+
 #include "constants.h"
-#include "layout/document_layout.h"
 #include "html_tree/html_parser.h"
+#include "layout/document_layout.h"
 #include "url.h"
+
 #include <iostream>
-#include <QGraphicsTextItem>
 #include <QFont>
+#include <QGraphicsTextItem>
 
 BrowserScene::BrowserScene()
 {

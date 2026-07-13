@@ -1,7 +1,8 @@
 #pragma once
 
 #include "layout.h"
-#include "../html_tree/node.h"
+#include "html_tree/node.h"
+
 #include <QGraphicsScene>
 
 /// Represents the layout of the root HTML document.

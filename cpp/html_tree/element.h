@@ -1,8 +1,8 @@
 #pragma once
 
+#include "node.h"
 #include <string>
 #include <map>
-#include "node.h"
 
 /// Represents a tag or "element" node in a tree.
 class Element : public Node

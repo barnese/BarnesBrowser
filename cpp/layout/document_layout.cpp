@@ -1,6 +1,7 @@
 #include "document_layout.h"
+
 #include "block_layout.h"
-#include "../constants.h"
+#include "constants.h"
 #include "layout.h"
 
 DocumentLayout::DocumentLayout(const Node* node)

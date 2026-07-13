@@ -1,6 +1,7 @@
 #pragma once
 
 #include "browser_scene.h"
+
 #include <QGraphicsView>
 #include <QKeyEvent>
 #include <QWheelEvent>

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "layout/layout.h"
+
 #include <string>
 #include <QGraphicsScene>
-#include "layout/layout.h"
 
 /// Handles rendering the graphics for the browser.
 class BrowserScene: public QGraphicsScene

@@ -1,5 +1,4 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#pragma once
 
 namespace Constants
 {
@@ -10,5 +9,3 @@ namespace Constants
     const std::string HTML_HEADER_SEPARATOR = "\r\n\r\n";
     const int SCROLL_STEP = 100;
 }
-
-#endif

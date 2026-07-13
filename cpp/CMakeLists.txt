@@ -35,6 +35,10 @@ add_executable(main
     url.cpp
 )
 
+target_include_directories(main PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
 target_compile_options(main PRIVATE
     -Wall
     -Wextra

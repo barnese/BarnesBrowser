@@ -1,10 +1,11 @@
 #pragma once
 
+#include "point.h"
+#include "html_tree/node.h"
+
 #include <memory>
-#include <vector>
-#include "../point.h"
 #include <QGraphicsScene>
-#include "../html_tree/node.h"
+#include <vector>
 
 using DisplayList = std::map<Point, std::tuple<QString, QFont>>; 
 

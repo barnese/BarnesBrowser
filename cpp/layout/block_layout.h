@@ -1,10 +1,11 @@
 #pragma once
 
+#include "layout.h"
+#include "html_tree/node.h"
+
 #include <map>
 #include <tuple>
 #include <QGraphicsScene>
-#include "layout.h"
-#include "../html_tree/node.h"
 
 enum BlockLayoutMode {
     INLINE,

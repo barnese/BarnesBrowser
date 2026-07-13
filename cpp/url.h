@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include "helpers/ssl_helper.h"
+#include <string>
 
 struct UrlComponents {
     std::string scheme;

@@ -1,6 +1,8 @@
 #include "url.h"
+
 #include "helpers/string_helpers.h"
 #include "constants.h"
+
 #include <cassert>
 #include <iostream>
 #include <map>
