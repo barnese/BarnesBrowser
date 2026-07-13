@@ -2,13 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug C++",
+            "name": "Debug Application",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/cpp/main",
+            "program": "${workspaceFolder}/cpp/build/main",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "Build Debug"
+            "preLaunchTask": "CMake Build"
         }
     ]
 }

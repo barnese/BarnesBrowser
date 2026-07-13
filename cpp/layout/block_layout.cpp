@@ -1,10 +1,66 @@
+#include "block_layout.h"
+#include "../constants.h"
+#include "../html_tree/element.h"
+#include "../html_tree/text.h"
 #include "layout.h"
-#include "constants.h"
-#include "html_tree/element.h"
-#include "html_tree/text.h"
 #include <QFontMetrics>
+#include <memory>
 
-Layout::Layout(const Node* node)
+BlockLayout::BlockLayout(const Node* node, const Layout* parent, const Layout* previous)
+{
+    this->node = node;
+    this->parent = parent;
+    this->previous = previous;
+    x = 0;
+    y = 0;
+    width = 0;
+    height = 0;
+}
+
+void BlockLayout::layout()
+{
+    x = parent->x;
+    width = parent->width;
+
+    if (previous)
+        y = previous->y + previous->height;
+    else 
+        y = parent->y;
+
+    auto mode = getLayoutMode();
+    if (mode == BLOCK)
+        layoutBlock();
+    else 
+        layoutText();
+
+    for (const auto& child : children)
+        child->layout();
+
+    if (mode == BLOCK)
+    {
+        height = 0;
+        for (const auto& child : children)
+            height += child->height;
+    }
+    else 
+    {
+        height = m_cursorY;
+    }
+}
+
+/// Contructs the layout tree for the current tree node.
+void BlockLayout::layoutBlock()
+{
+    previous = nullptr;
+    for (const auto& child : node->getChildren())
+    {
+        auto next = std::make_unique<BlockLayout>(child.get(), this, previous);
+        previous = next.get();
+        children.push_back(std::move(next));
+    }
+}
+
+void BlockLayout::layoutText() 
 {
     m_cursorX = 0;
     m_cursorY = 0;
@@ -13,11 +69,50 @@ Layout::Layout(const Node* node)
     m_weight = QFont::Weight::Normal;
     m_size = 16;
 
+    m_line = {};
     recurse(node);
-    flush();
+    flush(); 
 }
 
-void Layout::recurse(const Node* node) 
+/// Determines if any children contain block elements.
+bool BlockLayout::areAnyChildBlockElements()
+{
+    for (const auto& child : node->getChildren())
+    {
+        if (auto element = dynamic_cast<const Element*>(child.get()))
+        {
+            if (std::ranges::contains(BLOCK_ELEMENTS, element->tag))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/// Determines what layout mode we're using based on our HTML node.
+BlockLayoutMode BlockLayout::getLayoutMode()
+{
+    if (dynamic_cast<const Text*>(node))
+    {
+        return INLINE;
+    }
+    else if (areAnyChildBlockElements()) 
+    {
+        return BLOCK;
+    }
+    else if (!node->getChildren().empty())
+    {
+        return INLINE;
+    }
+    else 
+    {
+        return BLOCK;
+    }
+}
+
+void BlockLayout::recurse(const Node* node) 
 {
     if (auto element = dynamic_cast<const Element*>(node)) 
     {
@@ -40,7 +135,7 @@ void Layout::recurse(const Node* node)
     }
 }
 
-void Layout::processOpenTag(const std::string& tag)
+void BlockLayout::processOpenTag(const std::string& tag)
 {
     if (tag == "i")
         m_style = QFont::Style::StyleItalic;
@@ -53,7 +148,7 @@ void Layout::processOpenTag(const std::string& tag)
     else if (tag == "br")
         flush();
 }
-void Layout::processCloseTag(const std::string& tag)
+void BlockLayout::processCloseTag(const std::string& tag)
 {
     if (tag == "i")
         m_style = QFont::Style::StyleNormal;
@@ -69,13 +164,13 @@ void Layout::processCloseTag(const std::string& tag)
         m_cursorY += Constants::VSTEP;
     }
 }
-void Layout::processWord(const QString& word)
+void BlockLayout::processWord(const QString& word)
 {
     QFont font = getFont(m_size, m_weight, m_style);
     QFontMetrics metrics(font);
     auto wordWidth = metrics.horizontalAdvance(word);
 
-    if (m_cursorX + wordWidth > Constants::WIDTH)
+    if (m_cursorX + wordWidth > width)
     {
         flush();
     }
@@ -86,7 +181,7 @@ void Layout::processWord(const QString& word)
 }
 
 /// Align the words in a line along the baseline and add them to the display list.
-void Layout::flush()
+void BlockLayout::flush()
 {
     if (m_line.empty())
     {
@@ -98,10 +193,11 @@ void Layout::flush()
 
     for (const auto& item : m_line)
     {
-        auto [x, word, font] = item;
+        auto [itemX, word, font] = item;
         QFontMetrics metrics(font);
-        int y = baseline - metrics.ascent();
-        Point point(x, y);
+        int posX = x + itemX;
+        int posY = y + baseline - metrics.ascent();
+        Point point(posX, posY);
         m_displayList[point] = {word, font};
     }
 
@@ -110,7 +206,7 @@ void Layout::flush()
     m_line.clear();
 }
 
-std::tuple<int, int> Layout::getMaxAscentAndDescentForLine() const
+std::tuple<int, int> BlockLayout::getMaxAscentAndDescentForLine() const
 {
     int maxAscent = 0;
     int maxDescent = 0;
@@ -132,12 +228,12 @@ std::tuple<int, int> Layout::getMaxAscentAndDescentForLine() const
     return {maxAscent, maxDescent};
 }
 
-DisplayList Layout::getDisplayList() const
+DisplayList BlockLayout::paint() const
 {
     return m_displayList;
 }
 
-QFont Layout::getFont(int size, int weight, int style) 
+QFont BlockLayout::getFont(int size, int weight, int style) 
 {
     std::tuple<int, int, int> key{size, weight, style};
     if (!m_fonts.contains(key))

@@ -27,9 +27,10 @@ add_executable(main
     html_tree/element.cpp
     html_tree/html_parser.cpp
     html_tree/text.cpp
+    layout/block_layout.cpp
+    layout/document_layout.cpp
     browser_scene.cpp
     browser_view.cpp
-    layout.cpp
     main.cpp
     url.cpp
 )

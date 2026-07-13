@@ -1,12 +1,9 @@
 #include "browser_scene.h"
 #include "constants.h"
+#include "layout/document_layout.h"
 #include "html_tree/html_parser.h"
-#include "layout.h"
 #include "url.h"
-#include "html_tree/element.h"
-#include "html_tree/text.h"
 #include <iostream>
-#include <vector>
 #include <QGraphicsTextItem>
 #include <QFont>
 
@@ -44,6 +41,19 @@ void BrowserScene::draw()
     }
 }
 
+/// Recursively paints all layout objects, combining the 
+/// results into the provided display list reference.
+void paintTree(const Layout* layout, DisplayList &displayList)
+{
+    auto layoutDisplayList = layout->paint();
+    displayList.insert(layoutDisplayList.begin(), layoutDisplayList.end());
+
+    for (const auto& child : layout->children)
+    {
+        paintTree(child.get(), displayList);
+    }
+}
+
 /// Loads the HTML page from the given URL.
 void BrowserScene::load(std::string urlString)
 {
@@ -52,8 +62,10 @@ void BrowserScene::load(std::string urlString)
         URL url(urlString);
         auto body = url.request();
         auto nodes = HTMLParser(body).parse();
-        Layout layout(nodes.get());
-        m_displayList = layout.getDisplayList();
+        DocumentLayout document(nodes.get());
+        document.layout();
+        m_displayList = {};
+        paintTree(&document, m_displayList);
         draw();
     }
     catch (const std::runtime_error& error)
