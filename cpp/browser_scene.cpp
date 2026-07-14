@@ -2,8 +2,11 @@
 
 #include "constants.h"
 #include "html_tree/html_parser.h"
+#include "html_tree/node.h"
+#include "html_tree/element.h"
 #include "layout/document_layout.h"
 #include "layout/layout.h"
+#include "styles/css_parser.h"
 #include "url.h"
 
 #include <algorithm>
@@ -60,6 +63,28 @@ void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &comm
     }
 }
 
+/// Adds styles to the given node and its children. 
+void addStyles(Node &node)
+{
+   if (auto* element = dynamic_cast<Element*>(&node))
+   {
+        if (element->attributes.contains("style"))
+        {
+            auto parser = CSSParser(element->attributes["style"]);
+            auto pairs = parser.body();
+            for (const auto& pair : pairs)
+            {
+                element->styles[pair.first] = pair.second;
+            }
+        }
+   } 
+
+   for (auto& child : node.children)
+   {
+        addStyles(*child);
+   }
+}
+
 /// Loads the HTML page from the given URL.
 void BrowserScene::load(std::string urlString)
 {
@@ -68,6 +93,7 @@ void BrowserScene::load(std::string urlString)
         URL url(urlString);
         auto body = url.request();
         auto nodes = HTMLParser(body).parse();
+        addStyles(*nodes);
         m_document = std::make_unique<DocumentLayout>(nodes.get());
         m_document->layout();
         m_displayCommands.clear();

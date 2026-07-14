@@ -10,11 +10,6 @@ public:
     virtual ~Node() = default;
     virtual std::string describe() const = 0;
 
-    Node* getParent() const
-    {
-        return parent;
-    }
-
     const std::vector<std::unique_ptr<Node>>& getChildren() const
     {
         return children;
@@ -27,7 +22,5 @@ public:
     }
 
     Node* parent = nullptr;
-
-private:
     std::vector<std::unique_ptr<Node>> children;
 };

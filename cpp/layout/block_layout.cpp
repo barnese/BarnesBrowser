@@ -241,12 +241,16 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 
     if (auto element = dynamic_cast<const Element*>(node)) 
     {
-        if (element->tag == "pre")
+        if ((element->tag == "pre" || element->tag == "div"))
         {
-            int x2 = x + width;
-            int y2 = y + height;
-            auto command = std::make_unique<DrawRect>(x, y, x2, y2, "gray");
-            commands.push_back(std::move(command));
+            if (auto search = element->styles.find("background-color"); search != element->styles.end())
+            {
+                int x2 = x + width;
+                int y2 = y + height;
+                QString color(search->second.c_str());
+                auto command = std::make_unique<DrawRect>(x, y, x2, y2, color);
+                commands.push_back(std::move(command));
+            }
         }
     }
 

@@ -31,6 +31,7 @@ add_executable(main
     html_tree/text.cpp
     layout/block_layout.cpp
     layout/document_layout.cpp
+    styles/css_parser.cpp
     browser_scene.cpp
     browser_view.cpp
     main.cpp

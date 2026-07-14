@@ -3,6 +3,7 @@
 #include "element.h"
 #include "helpers/string_helpers.h"
 #include "text.h"
+
 #include <algorithm>
 #include <iostream>
 

@@ -1,15 +1,22 @@
 #pragma once
 
 #include "node.h"
-#include <map>
+#include "tag_attributes.h"
+
 #include <memory>
 #include <string>
 #include <vector>
 
-struct TagAttributes
+const std::vector<std::string> HEAD_TAGS = 
 {
-    std::string tag;
-    std::map<std::string, std::string> attributes;
+    "base", "basefont", "bgsound", "noscript",
+    "link", "meta", "title", "style", "script"
+};
+
+const std::vector<std::string> SELF_CLOSING_TAGS = 
+{
+    "area", "base", "br", "col", "embed", "hr", "img", "input",
+    "link", "meta", "param", "source", "track", "wbr"
 };
 
 /// Parses HTML text into an HTML tree.
@@ -20,18 +27,6 @@ public:
     HTMLParser(std::string body);
     std::unique_ptr<Node> parse();
     void printTree(Node* node, int indent = 0);
-
-    const std::vector<std::string> HEAD_TAGS = 
-    {
-        "base", "basefont", "bgsound", "noscript",
-        "link", "meta", "title", "style", "script"
-    };
-
-    const std::vector<std::string> SELF_CLOSING_TAGS = 
-    {
-        "area", "base", "br", "col", "embed", "hr", "img", "input",
-        "link", "meta", "param", "source", "track", "wbr"
-    };
 
 private:
     void addTag(const std::string& tag);

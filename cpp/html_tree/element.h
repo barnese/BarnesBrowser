@@ -13,4 +13,5 @@ public:
 
     std::string tag;
     std::map<std::string, std::string> attributes;
+    std::map<std::string, std::string> styles;
 };
