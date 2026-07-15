@@ -7,7 +7,7 @@
             "command": "cmake",
             "args": [
                 "-S", "cpp",
-                "-B", "cpp/build",
+                "-B", "build",
                 "-DCMAKE_BUILD_TYPE=Debug",
             ],
             "problemMatcher": []
@@ -18,7 +18,7 @@
             "command": "cmake",
             "args": [
                 "--build", 
-                "cpp/build",
+                "build",
                 "--target",
                 "main"
             ],
@@ -28,7 +28,7 @@
         {
             "label": "Run Build",
             "type": "shell",
-            "command": "./cpp/build/main",
+            "command": "./build/main",
             "problemMatcher": []
         },
         {
@@ -50,7 +50,7 @@
             "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "build",
                 "--target",
                 "tests"
             ],
@@ -65,7 +65,7 @@
             "command": "ctest",
             "args": [
                 "--test-dir",
-                "${workspaceFolder}/build",
+                "build",
                 "--output-on-failure"
             ],
             "dependsOn": "Build Tests",

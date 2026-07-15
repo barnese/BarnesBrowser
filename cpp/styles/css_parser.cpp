@@ -2,6 +2,9 @@
 
 #include "css_parser_exception.h"
 #include "helpers/string_helpers.h"
+#include "styles/descendant_selector.h"
+#include "styles/selector.h"
+#include "styles/tag_selector.h"
 
 #include <algorithm>
 
@@ -67,7 +70,7 @@ std::map<std::string, std::string> CSSParser::body()
     std::map<std::string, std::string> pairs;
 
     // Parse sequences of styles by calling parsing functions in a loop.
-    while (m_i < m_text.size())
+    while (m_i < m_text.size() && m_text[m_i] != '}')
     {
         try
         {
@@ -81,7 +84,7 @@ std::map<std::string, std::string> CSSParser::body()
         {
             // We failed to parse a property-value pair, so skip either 
             // to the next semicolon or to the end of the string.
-            auto why = ignoreUntil({';'});
+            auto why = ignoreUntil({';', '}'});
             if (why == ';')
             {
                 literal(';');
@@ -112,4 +115,54 @@ std::optional<char> CSSParser::ignoreUntil(std::vector<char> chars)
     }
 
     return {};
+}
+
+std::unique_ptr<Selector> CSSParser::selector()
+{
+    auto tag = toLowercase(word());
+    std::unique_ptr<Selector> out = std::make_unique<TagSelector>(tag);
+    whitespace();
+    while (m_i < m_text.size() && m_text[m_i] != '{')
+    {
+        tag = toLowercase(word());
+        auto descendant = std::make_unique<TagSelector>(tag);
+        out = std::make_unique<DescendantSelector>(out.get(), descendant.get());        
+        whitespace();
+    }
+    return out;
+}
+
+std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>> CSSParser::parse()
+{
+    std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>> rules;
+
+    while (m_i < m_text.size())
+    {
+        try 
+        {
+            whitespace();
+            auto selector = this->selector();
+            literal('{');
+            whitespace();
+            auto body = this->body();
+            literal('}');
+            rules[std::move(selector)] = body;
+        } 
+        catch (const CSSParserException& e) 
+        {
+            // We failed to parse the selector, so skip the whole rule.
+            auto why = ignoreUntil({'}'});
+            if (why == '}')
+            {
+                literal('}');
+                whitespace();
+            }
+            else 
+            {
+                break;
+            }
+        }
+    }
+
+    return rules;
 }

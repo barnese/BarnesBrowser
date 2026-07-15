@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "../helpers/string_helpers.h"
+#include "helpers/string_helpers.h"
 
 TEST_CASE("split() splits a string by the delimiter")
 {

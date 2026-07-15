@@ -1,6 +1,9 @@
 #pragma once
 
+#include "selector.h"
+
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -20,6 +23,8 @@ private:
     void literal(char literal);
     std::tuple<std::string, std::string> pair();
     std::optional<char> ignoreUntil(std::vector<char> chars);
+    std::unique_ptr<Selector> selector();
+    std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>> parse();
 
     // The text to be parsed.
     std::string m_text;

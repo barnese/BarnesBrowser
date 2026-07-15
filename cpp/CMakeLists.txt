@@ -32,6 +32,8 @@ add_executable(main
     layout/block_layout.cpp
     layout/document_layout.cpp
     styles/css_parser.cpp
+    styles/descendant_selector.cpp
+    styles/tag_selector.cpp
     browser_scene.cpp
     browser_view.cpp
     main.cpp
@@ -57,12 +59,20 @@ target_link_libraries(main PRIVATE
 )
 
 add_executable(tests
+    tests/css_parser_tests.cpp
     tests/string_helpers_tests.cpp
+
     helpers/string_helpers.cpp
+    html_tree/element.cpp
+    html_tree/html_parser.cpp
+    html_tree/text.cpp
+    styles/css_parser.cpp
+    styles/descendant_selector.cpp
+    styles/tag_selector.cpp
 )
 
 target_include_directories(tests PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_link_libraries(tests PRIVATE

@@ -1,5 +1,7 @@
 {
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "cmake.sourceDirectory": "/Users/ericbarnes/Source/BarnesBrowser/cpp",
-    "editor.inlayHints.enabled": "off"
+    "cmake.sourceDirectory": "${workspaceFolder}/cpp",
+    "editor.inlayHints.enabled": "off",
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build"
+    ]
 }
