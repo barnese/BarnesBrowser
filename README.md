@@ -40,13 +40,21 @@ These are the dependencies used in this project.
 
 ## Unit Tests
 
-This project uses the library [Catch2](https://github.com/catchorg/Catch2) for unit testing. The tests are located until `/cpp/tests/`. The tests are run using CTest. For VS Code, see `tasks.json`'s "Build Tests" and "Run Tests" tasks.
-
-For convenience, consider adding a keybinding for quickly running tests, such as:
+This project uses the library [Catch2](https://github.com/catchorg/Catch2) for unit testing. The tests are located until `/cpp/tests/`. The tests are run using CTest. For VS Code, see `tasks.json`'s "Build Tests" and "Run Tests" tasks. For convenience, consider adding a keybinding in `keybindings.json` for quickly running tests, such as:
 ```
 {
     "key": "cmd+shift+t",
-    "command": "workbench.action.tasks.test"
+    "command": "workbench.action.tasks.runTask",
+    "args": "Run Tests"
+}
+```
+
+If you want to run tests in the current file, you can use the "Run Tests in Current File" task. In order for this to work, the tests have to use a tag that matches the current file's name. For example, the file `css_parser_tests.cpp` has the tag `[css_parser_tests]`. That tag is passed to Catch2 in each test case, so when "Run Tests in Current File" is run, it filters the tests by `[${fileBasenameNoExtension}]`. You may want to set up a keybinding for this as well:
+```
+{
+    "key": "shift+cmd+y",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Run Tests in Current File"
 }
 ```
 

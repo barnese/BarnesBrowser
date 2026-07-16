@@ -75,6 +75,21 @@
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Run Tests in Current File",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/tests",
+            "args": [
+                "\"[${fileBasenameNoExtension}]\""
+            ],
+            "dependsOn": "Build Tests",
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            },
+            "problemMatcher": []
         }
     ]
 }
