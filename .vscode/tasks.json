@@ -6,7 +6,7 @@
             "type": "shell",
             "command": "cmake",
             "args": [
-                "-S", "cpp",
+                "-S", ".",
                 "-B", "build",
                 "-DCMAKE_BUILD_TYPE=Debug",
             ],

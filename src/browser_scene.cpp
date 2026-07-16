@@ -10,6 +10,7 @@
 #include "url.h"
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <QFont>
 #include <QGraphicsTextItem>
@@ -64,25 +65,56 @@ void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &comm
 }
 
 /// Adds styles to the given node and its children. 
-void addStyles(Node &node)
+void addStyles(Node &node, const CSSRules& rules)
 {
    if (auto* element = dynamic_cast<Element*>(&node))
    {
+        // Add style sheet styles to the element nodes.
+        for (const auto& [selector, body] : rules)
+        {
+            if (!selector->matches(&node))
+            {
+                continue;
+            }
+
+            for (const auto& [property, value] : body)
+            {
+                element->styles[property] = value;
+            }
+        }
+
+        // Add style attribute styles. Note that the order is important
+        // here because the style attribute overrides style sheet values.
         if (element->attributes.contains("style"))
         {
             auto parser = CSSParser(element->attributes["style"]);
             auto pairs = parser.body();
-            for (const auto& pair : pairs)
+            for (const auto& [property, value] : pairs)
             {
-                element->styles[pair.first] = pair.second;
+                element->styles[property] = value;
             }
         }
    } 
 
    for (auto& child : node.children)
    {
-        addStyles(*child);
+        addStyles(*child, rules);
    }
+}
+
+CSSRules getDefaultStyleSheet()
+{
+    std::ifstream file("assets/browser.css");
+    if (!file.is_open())
+    {
+        std::cerr << "Error opening default style sheet!";
+        return {};
+    }
+    std::string fileContents = {std::istreambuf_iterator<char>(file),
+        std::istreambuf_iterator<char>()};
+
+    auto parser = CSSParser(fileContents);
+    return parser.parse();
 }
 
 /// Loads the HTML page from the given URL.
@@ -93,7 +125,7 @@ void BrowserScene::load(std::string urlString)
         URL url(urlString);
         auto body = url.request();
         auto nodes = HTMLParser(body).parse();
-        addStyles(*nodes);
+        //addStyles(*nodes); TODO FIX THIS
         m_document = std::make_unique<DocumentLayout>(nodes.get());
         m_document->layout();
         m_displayCommands.clear();

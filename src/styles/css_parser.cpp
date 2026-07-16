@@ -132,9 +132,9 @@ std::unique_ptr<Selector> CSSParser::selector()
     return out;
 }
 
-std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>> CSSParser::parse()
+CSSRules CSSParser::parse()
 {
-    std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>> rules;
+    CSSRules rules;
 
     while (m_i < m_text.size())
     {

@@ -9,6 +9,8 @@
 #include <tuple>
 #include <vector>
 
+using CSSRules = std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>>;
+
 /// Defines a parser for parsing CSS. This class uses parsing
 /// functions to parse the property-value format of stylesheets.
 class CSSParser
@@ -16,6 +18,7 @@ class CSSParser
 public:
     CSSParser(std::string text);
     std::map<std::string, std::string> body();
+    CSSRules parse();
 
 private:
     void whitespace();
@@ -24,7 +27,6 @@ private:
     std::tuple<std::string, std::string> pair();
     std::optional<char> ignoreUntil(std::vector<char> chars);
     std::unique_ptr<Selector> selector();
-    std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>> parse();
 
     // The text to be parsed.
     std::string m_text;

@@ -5,7 +5,7 @@
             "name": "Debug Application",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/cpp/build/main",
+            "program": "${workspaceFolder}/build/main",
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "CMake Build"

@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "${workspaceFolder}/cpp",
+    "cmake.sourceDirectory": "${workspaceFolder}/src",
     "editor.inlayHints.enabled": "off",
     "clangd.arguments": [
         "--compile-commands-dir=${workspaceFolder}/build"

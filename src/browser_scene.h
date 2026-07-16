@@ -1,7 +1,6 @@
 #pragma once
 
 #include "commands/command.h"
-#include "layout/layout.h"
 #include "layout/document_layout.h"
 
 #include <string>
