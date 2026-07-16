@@ -125,7 +125,8 @@ void BrowserScene::load(std::string urlString)
         URL url(urlString);
         auto body = url.request();
         auto nodes = HTMLParser(body).parse();
-        //addStyles(*nodes); TODO FIX THIS
+        auto rules = getDefaultStyleSheet();
+        addStyles(*nodes, rules);
         m_document = std::make_unique<DocumentLayout>(nodes.get());
         m_document->layout();
         m_displayCommands.clear();
