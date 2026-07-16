@@ -4,24 +4,13 @@ This is a simple, experimental browser written to explore browser concepts for e
 
 It is based on the excellent [Web Browser Engineering](https://browser.engineering/) by Pavel Panchekha & Chris Harrelson.
 
-## C++ Version
+## Building the Project
 
-Work in progress. See the code under `/cpp`.
-
-### How to Build the Project
-
-For building, this project uses CMake. See `CMakeLists.txt` for the setup. To do a debug build, run the following commands:
-
-```
-cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Debug
-cmake --build cpp/build
-```
-
-This will put the executable in the `cpp/build` folder. To run it: `./cpp/build/main`.
+This project is written in C++. See the code under `/src`. It uses CMake for building and package management.
 
 ### Visual Studio Code Setup
 
-If you use Visual Studio Code to run this project, consider adding the following extensions:
+To set up Visual Studio Code to run this project, add the following extensions:
 
 1. CMake Tools - for extended CMake support
 2. clangd - for code completion
@@ -40,7 +29,7 @@ These are the dependencies used in this project.
 
 ## Unit Tests
 
-This project uses the library [Catch2](https://github.com/catchorg/Catch2) for unit testing. The tests are located until `/cpp/tests/`. The tests are run using CTest. For VS Code, see `tasks.json`'s "Build Tests" and "Run Tests" tasks. For convenience, consider adding a keybinding in `keybindings.json` for quickly running tests, such as:
+This project uses the library [Catch2](https://github.com/catchorg/Catch2) for unit testing. The tests are located until `/src/tests/`. The tests are run using CTest. For VS Code, see `tasks.json`'s "Build Tests" and "Run Tests" tasks. For convenience, consider adding a keybinding in `keybindings.json` for quickly running tests, such as:
 ```
 {
     "key": "cmd+shift+t",
@@ -57,10 +46,6 @@ If you want to run tests in the current file, you can use the "Run Tests in Curr
     "args": "Run Tests in Current File"
 }
 ```
-
-## Python Version
-
-Partially completed version written in Python. This largely follows the example code in the book. See the code under `/python`.
 
 ## Tests
 
