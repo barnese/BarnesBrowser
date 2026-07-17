@@ -1,6 +1,7 @@
 #include "browser_scene.h"
 
 #include "constants.h"
+#include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
 #include "html_tree/node.h"
 #include "html_tree/element.h"
@@ -113,7 +114,7 @@ CSSRules getDefaultStyleSheet()
     std::string fileContents = {std::istreambuf_iterator<char>(file),
         std::istreambuf_iterator<char>()};
 
-    auto parser = CSSParser(fileContents);
+    auto parser = CSSParser(trim(fileContents));
     return parser.parse();
 }
 

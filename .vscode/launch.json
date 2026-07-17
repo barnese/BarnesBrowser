@@ -7,7 +7,6 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/main",
             "args": [],
-            "cwd": "${workspaceFolder}",
             "preLaunchTask": "CMake Build"
         }
     ]
