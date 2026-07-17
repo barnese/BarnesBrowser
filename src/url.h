@@ -8,6 +8,14 @@ struct UrlComponents {
     std::string host;
     std::string path;
     uint16_t port;
+
+    bool operator==(const UrlComponents& other) const
+    {
+        return scheme == other.scheme &&
+            host == other.host &&
+            path == other.path &&
+            port == other.port;
+    }
 };
 
 class URL
@@ -15,6 +23,8 @@ class URL
     public:
         URL(const std::string& url);
         std::string request() const;
+        URL resolve(std::string url);
+        bool operator==(const URL& other) const;
     
     private:
         void sendRequest(SSLHelper* ssl, int sock, std::string request) const;

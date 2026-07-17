@@ -62,7 +62,9 @@ file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 add_executable(tests
     src/tests/css_parser_tests.cpp
     src/tests/string_helpers_tests.cpp
+    src/tests/url_tests.cpp
 
+    src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp
     src/html_tree/element.cpp
     src/html_tree/html_parser.cpp
@@ -70,12 +72,15 @@ add_executable(tests
     src/styles/css_parser.cpp
     src/styles/descendant_selector.cpp
     src/styles/tag_selector.cpp
+    src/url.cpp
 )
 
 target_include_directories(tests PRIVATE src)
 
 target_link_libraries(tests PRIVATE
     Catch2::Catch2WithMain
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 
 include(CTest)

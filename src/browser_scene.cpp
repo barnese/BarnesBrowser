@@ -118,6 +118,40 @@ CSSRules getDefaultStyleSheet()
     return parser.parse();
 }
 
+/// Converts a tree into a list of nodes.
+std::vector<const Node*> treeToList(const Node* tree, std::vector<const Node*>& list)
+{
+    list.push_back(tree);
+    for (const auto& child : tree->getChildren())
+    {
+        treeToList(child.get(), list);
+    }
+    return list;
+}
+
+std::vector<std::string> getStyleSheetLinks(const Node* tree)
+{
+    std::vector<std::string> links;
+    std::vector<const Node*> nodeList;
+    nodeList = treeToList(tree, nodeList);
+
+    for (const auto& node : nodeList) 
+    {    
+        if (auto element = dynamic_cast<const Element*>(node))
+        {
+            auto attributes = element->attributes;
+            if (element->tag == "link" && 
+                attributes["rel"] == "stylesheet" &&
+                attributes.contains("href"))
+            {
+                links.push_back(attributes["href"]);
+            }
+        }
+    }
+
+    return links;
+}
+
 /// Loads the HTML page from the given URL.
 void BrowserScene::load(std::string urlString)
 {

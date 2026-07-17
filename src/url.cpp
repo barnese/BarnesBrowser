@@ -237,3 +237,47 @@ std::string URL::request() const
 
     return "Error: Too many redirects!";
 }
+
+/// Converts a relative URL into a full URL based on the current URL.
+URL URL::resolve(std::string url)
+{
+    if (url.contains("://"))
+    {
+        return URL(url);
+    }
+
+    if (!url.starts_with("/"))
+    {
+        auto dir = split(m_urlComponents.path, "/")[0];
+        while (url.starts_with("../"))
+        {
+            url = split(url, "/")[1];
+            if (dir.contains("/"))
+            {
+                dir = split(dir, "/")[0];
+            }
+        }
+        url = dir + "/" + url;
+    }
+
+    if (url.starts_with("//"))
+    {
+        return URL(m_urlComponents.scheme + ":" + url);
+    }
+    else 
+    {
+        std::stringstream ss;
+        ss << m_urlComponents.scheme;
+        ss << "://";
+        ss << m_urlComponents.host;
+        ss << ":";
+        ss << m_urlComponents.port;
+        ss << url;
+        return URL(ss.str());
+    }
+}
+
+bool URL::operator==(const URL& other) const
+{
+    return m_urlComponents == other.m_urlComponents;
+}
