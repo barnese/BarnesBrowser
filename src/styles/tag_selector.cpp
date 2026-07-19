@@ -4,7 +4,8 @@
 
 TagSelector::TagSelector(std::string tag)
     : m_tag(tag)
-{   
+{
+    m_priority = 1;
 }
 
 bool TagSelector::matches(const Node* node) const
@@ -20,4 +21,9 @@ bool TagSelector::matches(const Node* node) const
 std::string TagSelector::getName() const
 {
     return m_tag;
+}
+
+int TagSelector::getPriority() const
+{
+    return m_priority;
 }

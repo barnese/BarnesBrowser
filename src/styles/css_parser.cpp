@@ -169,3 +169,40 @@ CSSRules CSSParser::parse()
 
     return rules;
 }
+
+/// Helper function that sorts a map of CSSRules by priority while 
+/// maintaining the original order as much as possible, returning
+/// the results as a vector of pairs.
+SortedCSSRules sort(const CSSRules& rules)
+{
+    SortedCSSRules sortedRules;
+    for (const auto& rule : rules)
+    {
+        if (auto tagSelector = dynamic_cast<TagSelector*>(rule.first.get()))
+        {
+            sortedRules.push_back({
+                std::make_unique<TagSelector>(tagSelector->getName()), 
+                rule.second
+            });
+        }
+        else if (auto s = dynamic_cast<DescendantSelector*>(rule.first.get()))
+        {
+            sortedRules.push_back({
+                std::make_unique<DescendantSelector>(
+                    std::move(s->ancestor), 
+                    std::move(s->descendant)
+                ), 
+                rule.second
+            });
+        }
+    }
+
+    std::stable_sort(sortedRules.begin(), sortedRules.end(), 
+        [](const auto& lhs, const auto& rhs) 
+        {
+            return lhs.first->getPriority() > rhs.first->getPriority();
+        }
+    );
+   
+    return sortedRules;
+}

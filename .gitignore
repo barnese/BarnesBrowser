@@ -6,3 +6,5 @@ __pycache__/
 /src/build/
 /src/.cache/
 /build/
+*.swp
+

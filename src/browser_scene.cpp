@@ -66,7 +66,7 @@ void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &comm
 }
 
 /// Adds styles to the given node and its children. 
-void addStyles(Node &node, const CSSRules& rules)
+void addStyles(Node &node, const SortedCSSRules& rules)
 {
    if (auto* element = dynamic_cast<Element*>(&node))
    {
@@ -151,17 +151,16 @@ std::vector<std::string> getStyleSheetLinks(const Node* tree)
 
     return links;
 }
-
 /// Loads the HTML page from the given URL.
 void BrowserScene::load(std::string urlString)
 {
     try
     {
+        std::cout << "Fetching URL: " << urlString << "\n";
         URL url(urlString);
         auto body = url.request();
         auto nodes = HTMLParser(body).parse();
-        //auto rules = getDefaultStyleSheet();
-        CSSRules rules;
+        auto rules = getDefaultStyleSheet();
         auto links = getStyleSheetLinks(nodes.get());
         for (const auto& link : links)
         {
@@ -170,7 +169,8 @@ void BrowserScene::load(std::string urlString)
             auto linkResults = CSSParser(trim(linkBody)).parse();
             rules.merge(linkResults);
         }
-        addStyles(*nodes, rules);
+        auto sortedRules = sort(rules);
+        addStyles(*nodes, sortedRules);
         m_document = std::make_unique<DocumentLayout>(nodes.get());
         m_document->layout();
         m_displayCommands.clear();

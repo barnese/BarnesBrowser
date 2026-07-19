@@ -12,7 +12,9 @@ public:
     TagSelector(std::string tag);
     bool matches(const Node* node) const override;
     std::string getName() const override;
+    int getPriority() const override;
 
 private:
     std::string m_tag;
+    int m_priority;
 };

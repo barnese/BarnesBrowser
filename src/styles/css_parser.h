@@ -10,6 +10,9 @@
 #include <vector>
 
 using CSSRules = std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>>;
+using SortedCSSRules = std::vector<std::pair<std::unique_ptr<Selector>, std::map<std::string, std::string>>>;
+
+SortedCSSRules sort(const CSSRules& rules);
 
 /// Defines a parser for parsing CSS. This class uses parsing
 /// functions to parse the property-value format of stylesheets.

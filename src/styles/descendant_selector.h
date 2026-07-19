@@ -13,7 +13,11 @@ public:
 
     bool matches(const Node* node) const override;
     std::string getName() const override;
+    int getPriority() const override;
 
     std::unique_ptr<Selector> ancestor;
     std::unique_ptr<Selector> descendant;
+
+private:
+    int m_priority;
 };
