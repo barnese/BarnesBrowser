@@ -1,6 +1,6 @@
 #include "string_helpers.h"
 #include <algorithm>
-#include <cctype>
+#include <regex>
 
 // Helper function that splits a texting by a delimiter.
 std::vector<std::string> split(std::string text, std::string delimiter, bool firstOnly)
@@ -58,4 +58,11 @@ std::string toLowercase(std::string text)
         });
 
     return text;
+}
+
+std::string removeComments(std::string text)
+{
+    // Replace /* */ style comments with an empty string.
+    std::regex regex("/\\*(.|[\r\n])*?\\*/");
+    return std::regex_replace(text, regex, "");
 }

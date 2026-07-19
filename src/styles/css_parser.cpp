@@ -12,6 +12,8 @@ CSSParser::CSSParser(std::string text)
     : m_text(text),
       m_i(0)
 {
+    // Remove comments from the entire text.
+    m_text = removeComments(m_text);
 }
 
 void CSSParser::whitespace()
@@ -28,7 +30,8 @@ std::string CSSParser::word()
     while (m_i < m_text.size())
     {
         std::vector<char> specials = {'#', '-', '.', '%'};
-        if (std::isalnum(m_text[m_i]) || std::ranges::contains(specials, m_text[m_i]))
+        if (std::isalnum(m_text[m_i]) || 
+            std::ranges::contains(specials, m_text[m_i]))
         {
             m_i += 1;
         }
@@ -119,14 +122,14 @@ std::optional<char> CSSParser::ignoreUntil(std::vector<char> chars)
 
 std::unique_ptr<Selector> CSSParser::selector()
 {
-    auto tag = toLowercase(word());
-    std::unique_ptr<Selector> out = std::make_unique<TagSelector>(tag);
+    auto w = toLowercase(word());
+    std::unique_ptr<Selector> out = std::make_unique<TagSelector>(w);
     whitespace();
     while (m_i < m_text.size() && m_text[m_i] != '{')
     {
-        tag = toLowercase(word());
-        auto descendant = std::make_unique<TagSelector>(tag);
-        out = std::make_unique<DescendantSelector>(out.get(), descendant.get());        
+        w = toLowercase(word());
+        auto descendant = std::make_unique<TagSelector>(w);
+        out = std::make_unique<DescendantSelector>(std::move(out), std::move(descendant));
         whitespace();
     }
     return out;

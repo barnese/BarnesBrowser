@@ -1,8 +1,10 @@
 #include "descendant_selector.h"
 
-DescendantSelector::DescendantSelector(Selector* ancestor, Selector* descendant)
-    : ancestor(ancestor),
-      descendant(descendant)
+DescendantSelector::DescendantSelector(
+    std::unique_ptr<Selector> ancestor, 
+    std::unique_ptr<Selector> descendant)
+    : ancestor(std::move(ancestor)),
+      descendant(std::move(descendant))
 {
 }
 
@@ -21,4 +23,9 @@ bool DescendantSelector::matches(const Node* node) const
         node = node->parent;
     }
     return false;
+}
+
+std::string DescendantSelector::getName() const
+{
+    return ancestor->getName() + " " + descendant->getName();
 }

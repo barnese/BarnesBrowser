@@ -16,3 +16,8 @@ bool TagSelector::matches(const Node* node) const
 
     return false;
 }
+
+std::string TagSelector::getName() const
+{
+    return m_tag;
+}

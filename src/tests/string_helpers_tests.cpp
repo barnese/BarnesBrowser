@@ -40,3 +40,23 @@ TEST_CASE("toLowercase() converts text to lowercase", TAG)
 {
     REQUIRE(toLowercase("Hello")== "hello");
 }
+
+TEST_CASE("remove comments after code", TAG)
+{
+    REQUIRE(removeComments("int a = 0; /* comment after */") == "int a = 0; ");
+}
+
+TEST_CASE("remove comments before code", TAG)
+{
+    REQUIRE(removeComments("/* comment */int a = 0;") == "int a = 0;");
+}
+
+TEST_CASE("remove comments inside code", TAG)
+{
+    REQUIRE(removeComments("int a = 0/* comment */;") == "int a = 0;");
+}
+
+TEST_CASE("remove multiline comments", TAG)
+{
+    REQUIRE(removeComments("/* line one\nline two\nline three */\nint a = 0;") == "\nint a = 0;");
+}

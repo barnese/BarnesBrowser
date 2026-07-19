@@ -105,8 +105,6 @@ void URL::sendRequest(SSLHelper* ssl, int sock, std::string request) const
 
         totalSent += sent; 
     }
-
-    std::cout << "Sent request: " << totalSent << " bytes.\n";
 }
 
 /// Receives the response from a URL request.

@@ -160,7 +160,16 @@ void BrowserScene::load(std::string urlString)
         URL url(urlString);
         auto body = url.request();
         auto nodes = HTMLParser(body).parse();
-        auto rules = getDefaultStyleSheet();
+        //auto rules = getDefaultStyleSheet();
+        CSSRules rules;
+        auto links = getStyleSheetLinks(nodes.get());
+        for (const auto& link : links)
+        {
+            auto linkUrl = url.resolve(link);
+            auto linkBody = linkUrl.request();
+            auto linkResults = CSSParser(trim(linkBody)).parse();
+            rules.merge(linkResults);
+        }
         addStyles(*nodes, rules);
         m_document = std::make_unique<DocumentLayout>(nodes.get());
         m_document->layout();
@@ -168,9 +177,9 @@ void BrowserScene::load(std::string urlString)
         paintTree(m_document.get(), m_displayCommands);
         draw();
     }
-    catch (const std::runtime_error& error)
+    catch (...)
     {
-        std::cerr << "Error: " << error.what() << "\n";
+        std::cerr << "Failed to load the browser!\n";
     }
 }
 

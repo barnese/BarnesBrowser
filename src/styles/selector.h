@@ -8,4 +8,5 @@ class Selector
 public:
     virtual ~Selector() = default;
     virtual bool matches(const Node* node) const = 0;
+    virtual std::string getName() const = 0;
 };
