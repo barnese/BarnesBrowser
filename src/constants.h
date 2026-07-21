@@ -24,10 +24,50 @@ namespace Constants
     };
 
     // Defaults for inherited CSS properties.
-    const std::map<std::string, std::string> INHERITED_PROPERTIES = {
+    const std::map<std::string, std::string> INHERITED_PROPERTIES = 
+    {
         { "font-size", "16px" },
         { "font-style", "normal" },
         { "font-weight", "normal" },
         { "color", "black" },
+    };
+
+    const std::map<std::string, std::string> HTML_CHARACTER_ENTITIES = 
+    {
+        { "&nbsp;", " " },
+        { "&lt;", "<" },
+        { "&gt;", ">" },
+        { "&amp;", "&" },
+        { "&quot;", "\"" },
+        { "&apos;", "'" },
+        { "&cent;", "¢" },
+        { "&pound;", "£" },
+        { "&yen;", "¥" },
+        { "&euro;", "€" },
+        { "&copy;", "©" },
+        { "&reg;", "®" },
+        { "&trade;", "™" },
+        { "&ndash;", "–" },
+        { "&mdash;", "—" },
+        { "&sect;", "§" }, 
+        { "&deg;", "°" }, 
+        { "&para;", "¶" },
+        { "&times;", "×" }, 
+        { "&divide;", "÷" }, 
+        { "&plusmn;", "±" }, 
+        { "&infin;", "∞" }, 
+        { "&ne;", "≠" }, 
+        { "&le;", "≤" }, 
+        { "&ge;", "≥" },
+        { "&hellip;", "…" }, 
+        { "&bull;", "•" }, 
+        { "&ldquo;", "“" },
+        { "&rdquo;", "”" }, 
+        { "&lsquo;", "‘" }, 
+        { "&rsquo;", "’" },
+        { "&larr;", "←" }, 
+        { "&rarr;", "→" }, 
+        { "&uarr;", "↑" }, 
+        { "&darr;", "↓" }
     };
 }

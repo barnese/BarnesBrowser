@@ -33,7 +33,7 @@ private:
     void layoutText();
     bool areAnyChildBlockElements() const;
     void recurse(const Node* node);
-    void processWord(const Node* node, const QString& word);
+    void processWord(const Node* node, QString& word);
     void flush();
     std::tuple<int, int> getMaxAscentAndDescentForLine() const;
     QFont getFont(int size, int weight, int style);

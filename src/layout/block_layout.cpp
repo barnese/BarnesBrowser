@@ -137,7 +137,7 @@ void BlockLayout::recurse(const Node* node)
         QString content(text->getText().c_str());
         auto words = content.split(' ');
 
-        for (const auto& word : words)
+        for (auto& word : words)
         {
             processWord(node, word);
         }
@@ -182,11 +182,23 @@ static std::string findStyle(const Node* node, const std::string& styleName, con
     return (it != node->styles.end()) ? it->second : defaultValue;
 }
 
-void BlockLayout::processWord(const Node* node, const QString& word)
+static void replaceHTMLCharacterEntities(QString& word)
+{
+    for (const auto& entity : Constants::HTML_CHARACTER_ENTITIES)
+    {
+        auto code = QString::fromStdString(entity.first);
+        auto symbol = QString::fromStdString(entity.second);
+        word.replace(code, symbol);
+    }
+}
+
+void BlockLayout::processWord(const Node* node, QString& word)
 {
     if (word.isEmpty())
         return;
     
+    replaceHTMLCharacterEntities(word);
+
     auto weightString = findStyle(node, "font-weight", "normal");
     auto weight = cssFontWeightToQt(weightString);
 
