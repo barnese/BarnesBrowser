@@ -1,10 +1,11 @@
 #include "browser_view.h"
 #include "browser_scene.h"
 #include "constants.h"
-#include <QApplication>
-
-#include "url.h"
 #include "html_tree/html_parser.h"
+#include "url.h"
+
+#include <QApplication>
+#include <QStyleHints>
 
 int testHTMLParser() 
 {
@@ -20,6 +21,9 @@ int testHTMLParser()
 int runBrowser(int argc, char* argv[])
 {
     QApplication app(argc, argv);
+
+    // Force the application to use light mode.
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
 
     BrowserScene scene;
     scene.setSceneRect(0, 0, Constants::WIDTH + 15, Constants::HEIGHT);

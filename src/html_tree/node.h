@@ -1,6 +1,8 @@
 #pragma once
 
+#include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 /// Abstract base class that represents a node of a tree.
@@ -23,4 +25,5 @@ public:
 
     Node* parent = nullptr;
     std::vector<std::unique_ptr<Node>> children;
+    std::map<std::string, std::string> styles;
 };

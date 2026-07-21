@@ -3,6 +3,7 @@
 #include "commands/draw_rect.h"
 #include "commands/draw_text.h"
 #include "constants.h"
+#include "helpers/string_helpers.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout.h"
@@ -69,10 +70,6 @@ void BlockLayout::layoutText()
     m_cursorX = 0;
     m_cursorY = 0;
     m_family = "Helvetica";
-    m_style = QFont::Style::StyleNormal;
-    m_weight = QFont::Weight::Normal;
-    m_size = 16;
-
     m_line = {};
     recurse(node);
     flush(); 
@@ -85,7 +82,7 @@ bool BlockLayout::areAnyChildBlockElements() const
     {
         if (auto element = dynamic_cast<const Element*>(child.get()))
         {
-            if (std::ranges::contains(BLOCK_ELEMENTS, element->tag))
+            if (std::ranges::contains(Constants::BLOCK_ELEMENTS, element->tag))
             {
                 return true;
             }
@@ -120,12 +117,20 @@ void BlockLayout::recurse(const Node* node)
 {
     if (auto element = dynamic_cast<const Element*>(node)) 
     {
-        processOpenTag(element->tag);
+        if (element->tag == "br")
+        {
+            flush();
+        } 
+        else if (element->tag == "p")
+        {
+            flush();
+            m_cursorY += Constants::VSTEP;
+        }
+
         for (const auto& child : element->getChildren())
         {
             recurse(child.get());
         }
-        processCloseTag(element->tag);
     }
     else if (auto text = dynamic_cast<const Text*>(node))
     {
@@ -134,46 +139,67 @@ void BlockLayout::recurse(const Node* node)
 
         for (const auto& word : words)
         {
-            processWord(word);   
+            processWord(node, word);
         }
     }
 }
 
-void BlockLayout::processOpenTag(const std::string& tag)
+static QFont::Weight cssFontWeightToQt(const std::string& input)
 {
-    if (tag == "i")
-        m_style = QFont::Style::StyleItalic;
-    else if (tag == "b")
-        m_weight = QFont::Weight::Bold;
-    else if (tag == "small")
-        m_size -= 2;
-    else if (tag == "big")
-        m_size += 4;
-    else if (tag == "br")
-        flush();
-}
-void BlockLayout::processCloseTag(const std::string& tag)
-{
-    if (tag == "i")
-        m_style = QFont::Style::StyleNormal;
-    else if (tag == "b")
-        m_weight = QFont::Weight::Normal;
-    else if (tag == "small")
-        m_size += 2;
-    else if (tag == "big")
-        m_size -= 4;
-    else if (tag == "p")
+    if (input == "thin")       return QFont::Thin;
+    if (input == "extralight") return QFont::ExtraLight;
+    if (input == "light")      return QFont::Light;
+    if (input == "normal")     return QFont::Normal;
+    if (input == "medium")     return QFont::Medium;
+    if (input == "semibold")   return QFont::DemiBold;
+    if (input == "demibold")   return QFont::DemiBold;
+    if (input == "bold")       return QFont::Bold;
+    if (input == "extrabold")  return QFont::ExtraBold;
+    if (input == "black")      return QFont::Black;
+
+    // Fallback: try numeric.
+    try 
     {
-        flush();
-        m_cursorY += Constants::VSTEP;
+        int weight = std::stoi(input);
+        return static_cast<QFont::Weight>(weight);
+    } 
+    catch (...) 
+    {
+        return QFont::Weight::Normal;
     }
 }
-void BlockLayout::processWord(const QString& word)
+
+static QFont::Style cssFontStyleToQt(const std::string& style)
+{
+    if (style == "italic")  return QFont::Style::StyleItalic;
+    if (style == "oblique") return QFont::Style::StyleOblique;
+    return QFont::Style::StyleNormal;
+}
+
+static std::string findStyle(const Node* node, const std::string& styleName, const std::string& defaultValue)
+{
+    auto it = node->styles.find(styleName);
+    return (it != node->styles.end()) ? it->second : defaultValue;
+}
+
+void BlockLayout::processWord(const Node* node, const QString& word)
 {
     if (word.isEmpty())
         return;
     
-    QFont font = getFont(m_size, m_weight, m_style);
+    auto weightString = findStyle(node, "font-weight", "normal");
+    auto weight = cssFontWeightToQt(weightString);
+
+    auto styleString = findStyle(node, "font-style", "normal");
+    auto style = cssFontStyleToQt(styleString);
+
+    auto sizeString = findStyle(node, "font-size", "14px");
+    auto size = static_cast<int>(pixelsToFloat(sizeString));
+
+    auto colorString = findStyle(node, "color", "black");
+    QString color = QString::fromStdString(colorString);
+
+    QFont font = getFont(size, weight, style);
     QFontMetrics metrics(font);
     auto wordWidth = metrics.horizontalAdvance(word);
 
@@ -182,7 +208,7 @@ void BlockLayout::processWord(const QString& word)
         flush();
     }
 
-    m_line.push_back({m_cursorX, word, font});
+    m_line.push_back({m_cursorX, word, font, color});
 
     m_cursorX += wordWidth + metrics.horizontalAdvance(' '); 
 }
@@ -198,14 +224,13 @@ void BlockLayout::flush()
     auto [maxAscent, maxDescent] = getMaxAscentAndDescentForLine(); 
     int baseline = m_cursorY + 1.25 * maxAscent;
 
-    for (const auto& item : m_line)
+    for (const auto& [itemX, word, font, color] : m_line)
     {
-        auto [itemX, word, font] = item;
         QFontMetrics metrics(font);
         int posX = x + itemX;
         int posY = y + baseline - metrics.ascent();
         Point point(posX, posY);
-        m_displayList[point] = {word, font};
+        m_displayList[point] = {word, font, color};
     }
 
     m_cursorY = baseline + 1.25 * maxDescent;
@@ -261,7 +286,8 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
             Point point = item.first;
             QString text = std::get<0>(item.second);
             QFont font = std::get<1>(item.second);
-            auto command = std::make_unique<DrawText>(point.x, point.y, text, font);
+            QString color = std::get<2>(item.second);
+            auto command = std::make_unique<DrawText>(point.x, point.y, text, font, color);
             commands.push_back(std::move(command));
         }
     }

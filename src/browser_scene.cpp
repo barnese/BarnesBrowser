@@ -22,6 +22,9 @@
 BrowserScene::BrowserScene()
 {
     m_scroll = 0;
+
+    // Set the background to white.
+    setBackgroundBrush(Qt::white);
 }
 
 /// Draws the display list to the screen.
@@ -68,9 +71,24 @@ void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &comm
 /// Adds styles to the given node and its children. 
 void addStyles(Node &node, const SortedCSSRules& rules)
 {
-   if (auto* element = dynamic_cast<Element*>(&node))
-   {
-        // Add style sheet styles to the element nodes.
+    // Apply default styling for inherited properties first
+    // since these can be overridden by explicit rules below.
+    for (const auto& [property, defaultValue] : Constants::INHERITED_PROPERTIES)
+    {
+        if (node.parent)
+        {
+            node.styles[property] = node.parent->styles[property];
+        }
+        else 
+        {
+            node.styles[property] = defaultValue;
+        }
+    }
+
+    if (auto* element = dynamic_cast<Element*>(&node))
+    {
+        // Add style sheet styles to the element nodes based on the 
+        // given explicit CSS rules.
         for (const auto& [selector, body] : rules)
         {
             if (!selector->matches(&node))
@@ -95,12 +113,31 @@ void addStyles(Node &node, const SortedCSSRules& rules)
                 element->styles[property] = value;
             }
         }
-   } 
+        
+        // Handle font-size percentages.
+        if (element->styles["font-size"].ends_with('%'))
+        {
+            std::string parentFontSize;
 
-   for (auto& child : node.children)
-   {
+            if (auto* parent = dynamic_cast<Element*>(element->parent))
+            {
+                parentFontSize = parent->styles["font-size"];
+            }
+            else 
+            {
+                parentFontSize = Constants::INHERITED_PROPERTIES.at("font-size");
+            }
+
+            float nodePercent = percentToFloat(element->styles["font-size"]);
+            float parentPixels = pixelsToFloat(parentFontSize);
+            element->styles["font-size"] = std::format("{}px", nodePercent * parentPixels);
+        }
+    } 
+
+    for (auto& child : node.children)
+    {
         addStyles(*child, rules);
-   }
+    }
 }
 
 CSSRules getDefaultStyleSheet()

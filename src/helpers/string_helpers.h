@@ -9,3 +9,5 @@ std::string trimLeft(std::string text);
 std::string trimRight(std::string text);
 std::string toLowercase(std::string text);
 std::string removeComments(std::string text);
+float percentToFloat(std::string percentString);
+float pixelsToFloat(std::string pixelString);

@@ -171,8 +171,8 @@ CSSRules CSSParser::parse()
 }
 
 /// Helper function that sorts a map of CSSRules by priority while 
-/// maintaining the original order as much as possible, returning
-/// the results as a vector of pairs.
+/// maintaining the original order as much as possible (AKA cascade 
+/// ordering), returning the results as a vector of pairs.
 SortedCSSRules sort(const CSSRules& rules)
 {
     SortedCSSRules sortedRules;
