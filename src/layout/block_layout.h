@@ -1,8 +1,8 @@
 #pragma once
 
 #include "layout.h"
+#include "line_layout.h"
 #include "html_tree/node.h"
-#include "html_tree/text.h"
 #include "point.h"
 
 #include <map>
@@ -34,20 +34,11 @@ private:
     bool areAnyChildBlockElements() const;
     void recurse(const Node* node);
     void processWord(const Node* node, QString& word);
-    void flush();
-    std::tuple<int, int> getMaxAscentAndDescentForLine() const;
+    void newLine();
     QFont getFont(int size, int weight, int style);
 
     int m_cursorX;
-    int m_cursorY;
-    QString m_family;
 
-    // List of display content with layout processing applied.
-    std::map<Point, std::tuple<QString, QFont, QString>> m_displayList;
-
-    // A temporary buffer for a line of display content: x, word, font, color.
-    std::vector<std::tuple<int, QString, QFont, QString>> m_line;
-    
     // Font cache indexed by size, weight, style.
     std::map<std::tuple<int, int, int>, QFont> m_fonts;
 };

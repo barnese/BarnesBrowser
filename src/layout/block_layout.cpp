@@ -1,12 +1,14 @@
 #include "block_layout.h"
 
 #include "commands/draw_rect.h"
-#include "commands/draw_text.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout.h"
+#include "layout/line_layout.h"
+#include "styles/style_helpers.h"
+#include "text_layout.h"
 
 #include <QFontMetrics>
 #include <memory>
@@ -42,16 +44,9 @@ void BlockLayout::layout()
     for (const auto& child : children)
         child->layout();
 
-    if (mode == BLOCK)
-    {
-        height = 0;
-        for (const auto& child : children)
-            height += child->height;
-    }
-    else 
-    {
-        height = m_cursorY;
-    }
+    height = 0;
+    for (const auto& child : children)
+        height += child->height;
 }
 
 void BlockLayout::layoutBlock()
@@ -68,11 +63,8 @@ void BlockLayout::layoutBlock()
 void BlockLayout::layoutText() 
 {
     m_cursorX = 0;
-    m_cursorY = 0;
-    m_family = "Helvetica";
-    m_line = {};
+    newLine();
     recurse(node);
-    flush(); 
 }
 
 /// Determines if any children contain block elements.
@@ -119,12 +111,14 @@ void BlockLayout::recurse(const Node* node)
     {
         if (element->tag == "br")
         {
-            flush();
-        } 
+            newLine();
+        }
         else if (element->tag == "p")
         {
-            flush();
-            m_cursorY += Constants::VSTEP;
+            newLine();
+            auto space = QString(" ");
+            processWord(node, space);
+            newLine();
         }
 
         for (const auto& child : element->getChildren())
@@ -144,54 +138,6 @@ void BlockLayout::recurse(const Node* node)
     }
 }
 
-static QFont::Weight cssFontWeightToQt(const std::string& input)
-{
-    if (input == "thin")       return QFont::Thin;
-    if (input == "extralight") return QFont::ExtraLight;
-    if (input == "light")      return QFont::Light;
-    if (input == "normal")     return QFont::Normal;
-    if (input == "medium")     return QFont::Medium;
-    if (input == "semibold")   return QFont::DemiBold;
-    if (input == "demibold")   return QFont::DemiBold;
-    if (input == "bold")       return QFont::Bold;
-    if (input == "extrabold")  return QFont::ExtraBold;
-    if (input == "black")      return QFont::Black;
-
-    // Fallback: try numeric.
-    try 
-    {
-        int weight = std::stoi(input);
-        return static_cast<QFont::Weight>(weight);
-    } 
-    catch (...) 
-    {
-        return QFont::Weight::Normal;
-    }
-}
-
-static QFont::Style cssFontStyleToQt(const std::string& style)
-{
-    if (style == "italic")  return QFont::Style::StyleItalic;
-    if (style == "oblique") return QFont::Style::StyleOblique;
-    return QFont::Style::StyleNormal;
-}
-
-static std::string findStyle(const Node* node, const std::string& styleName, const std::string& defaultValue)
-{
-    auto it = node->styles.find(styleName);
-    return (it != node->styles.end()) ? it->second : defaultValue;
-}
-
-static void replaceHTMLCharacterEntities(QString& word)
-{
-    for (const auto& entity : Constants::HTML_CHARACTER_ENTITIES)
-    {
-        auto code = QString::fromStdString(entity.first);
-        auto symbol = QString::fromStdString(entity.second);
-        word.replace(code, symbol);
-    }
-}
-
 void BlockLayout::processWord(const Node* node, QString& word)
 {
     if (word.isEmpty())
@@ -199,16 +145,16 @@ void BlockLayout::processWord(const Node* node, QString& word)
     
     replaceHTMLCharacterEntities(word);
 
-    auto weightString = findStyle(node, "font-weight", "normal");
+    auto weightString = node->findStyle("font-weight", "normal");
     auto weight = cssFontWeightToQt(weightString);
 
-    auto styleString = findStyle(node, "font-style", "normal");
+    auto styleString = node->findStyle("font-style", "normal");
     auto style = cssFontStyleToQt(styleString);
 
-    auto sizeString = findStyle(node, "font-size", "14px");
+    auto sizeString = node->findStyle("font-size", "14px");
     auto size = static_cast<int>(pixelsToFloat(sizeString));
 
-    auto colorString = findStyle(node, "color", "black");
+    auto colorString = node->findStyle("color", "black");
     QString color = QString::fromStdString(colorString);
 
     QFont font = getFont(size, weight, style);
@@ -217,59 +163,25 @@ void BlockLayout::processWord(const Node* node, QString& word)
 
     if (m_cursorX + wordWidth > width)
     {
-        flush();
+        newLine();
     }
 
-    m_line.push_back({m_cursorX, word, font, color});
+    // Add the word as a TextLayout to the end of the current line.
+    auto line = children.back().get();
+    auto previousWord = (line->children.empty()) ? nullptr : line->children.back().get();
+    auto text = std::make_unique<TextLayout>(node, word, line, previousWord);
+    line->children.push_back(std::move(text));
 
     m_cursorX += wordWidth + metrics.horizontalAdvance(' '); 
 }
 
-/// Align the words in a line along the baseline and add them to the display list.
-void BlockLayout::flush()
+/// Creates a new line layout and reset some fields.
+void BlockLayout::newLine()
 {
-    if (m_line.empty())
-    {
-        return;
-    }
-   
-    auto [maxAscent, maxDescent] = getMaxAscentAndDescentForLine(); 
-    int baseline = m_cursorY + 1.25 * maxAscent;
-
-    for (const auto& [itemX, word, font, color] : m_line)
-    {
-        QFontMetrics metrics(font);
-        int posX = x + itemX;
-        int posY = y + baseline - metrics.ascent();
-        Point point(posX, posY);
-        m_displayList[point] = {word, font, color};
-    }
-
-    m_cursorY = baseline + 1.25 * maxDescent;
     m_cursorX = 0;
-    m_line.clear();
-}
-
-std::tuple<int, int> BlockLayout::getMaxAscentAndDescentForLine() const
-{
-    int maxAscent = 0;
-    int maxDescent = 0;
-
-    for (const auto& item : m_line)
-    {
-        QFont font = std::get<2>(item);
-        QFontMetrics metrics(font);
-        if (metrics.ascent() > maxAscent)
-        {
-            maxAscent = metrics.ascent();
-        }
-        if (metrics.descent() > maxDescent)
-        {
-            maxDescent = metrics.descent();
-        }
-    }
-
-    return {maxAscent, maxDescent};
+    auto lastLine = (children.empty()) ? nullptr : children.back().get();
+    auto newLine = std::make_unique<LineLayout>(node, this, lastLine);
+    children.push_back(std::move(newLine));
 }
 
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
@@ -291,19 +203,6 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
         }
     }
 
-    if (getLayoutMode() == INLINE)
-    {
-        for (const auto& item : m_displayList)
-        {
-            Point point = item.first;
-            QString text = std::get<0>(item.second);
-            QFont font = std::get<1>(item.second);
-            QString color = std::get<2>(item.second);
-            auto command = std::make_unique<DrawText>(point.x, point.y, text, font, color);
-            commands.push_back(std::move(command));
-        }
-    }
-
     return commands;
 }
 
@@ -312,7 +211,7 @@ QFont BlockLayout::getFont(int size, int weight, int style)
     std::tuple<int, int, int> key{size, weight, style};
     if (!m_fonts.contains(key))
     {
-        QFont font(m_family, size, weight, style);
+        QFont font("Helvetica", size, weight, style);
         m_fonts[key] = font;
     }
     return m_fonts[key];

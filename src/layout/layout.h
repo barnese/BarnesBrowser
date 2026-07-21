@@ -4,6 +4,7 @@
 #include "html_tree/node.h"
 
 #include <memory>
+#include <QFont>
 #include <QGraphicsScene>
 #include <vector>
 
@@ -31,4 +32,5 @@ public:
     int y;
     int width;
     int height;
+    QFont font;
 };

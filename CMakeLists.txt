@@ -31,8 +31,11 @@ add_executable(main
     src/html_tree/text.cpp
     src/layout/block_layout.cpp
     src/layout/document_layout.cpp
+    src/layout/line_layout.cpp
+    src/layout/text_layout.cpp
     src/styles/css_parser.cpp
     src/styles/descendant_selector.cpp
+    src/styles/style_helpers.cpp
     src/styles/tag_selector.cpp
     src/browser_scene.cpp
     src/browser_view.cpp

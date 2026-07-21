@@ -23,6 +23,12 @@ public:
         children.push_back(std::move(child));
     }
 
+    std::string findStyle(const std::string& styleName, const std::string& defaultValue) const   
+    {
+        auto it = styles.find(styleName);
+        return (it != styles.end()) ? it->second : defaultValue;
+    }
+
     Node* parent = nullptr;
     std::vector<std::unique_ptr<Node>> children;
     std::map<std::string, std::string> styles;
