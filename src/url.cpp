@@ -279,3 +279,15 @@ bool URL::operator==(const URL& other) const
 {
     return m_urlComponents == other.m_urlComponents;
 }
+
+std::string URL::describe() const
+{
+    std::stringstream ss;
+    ss << m_urlComponents.scheme;
+    ss << "://";
+    ss << m_urlComponents.host;
+    ss << ":";
+    ss << m_urlComponents.port;
+    ss << m_urlComponents.path;
+    return ss.str();
+}

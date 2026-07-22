@@ -3,14 +3,11 @@
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
-#include "html_tree/node.h"
 #include "html_tree/element.h"
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "styles/css_parser.h"
-#include "url.h"
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <QFont>
@@ -20,6 +17,7 @@
 #include <vector>
 
 BrowserScene::BrowserScene()
+    : m_url("")
 {
     m_scroll = 0;
 
@@ -156,12 +154,22 @@ CSSRules getDefaultStyleSheet()
 }
 
 /// Converts a tree into a list of nodes.
-std::vector<const Node*> treeToList(const Node* tree, std::vector<const Node*>& list)
+std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list)
 {
     list.push_back(tree);
     for (const auto& child : tree->getChildren())
     {
-        treeToList(child.get(), list);
+        nodeTreeToList(child.get(), list);
+    }
+    return list;
+}
+
+std::vector<const Layout*> layoutTreeToList(const Layout* tree, std::vector<const Layout*> &list)
+{
+    list.push_back(tree);
+    for (const auto& child : tree->children)
+    {
+        layoutTreeToList(child.get(), list);
     }
     return list;
 }
@@ -170,7 +178,7 @@ std::vector<std::string> getStyleSheetLinks(const Node* tree)
 {
     std::vector<std::string> links;
     std::vector<const Node*> nodeList;
-    nodeList = treeToList(tree, nodeList);
+    nodeList = nodeTreeToList(tree, nodeList);
 
     for (const auto& node : nodeList) 
     {    
@@ -188,27 +196,35 @@ std::vector<std::string> getStyleSheetLinks(const Node* tree)
 
     return links;
 }
+
 /// Loads the HTML page from the given URL.
 void BrowserScene::load(std::string urlString)
 {
+    URL url(urlString);
+    load(url);
+}
+
+void BrowserScene::load(URL url)
+{
     try
     {
-        std::cout << "Fetching URL: " << urlString << "\n";
-        URL url(urlString);
-        auto body = url.request();
-        auto nodes = HTMLParser(body).parse();
+        std::cout << "Fetching URL: " << url.describe() << "\n";
+        m_url = url;
+        auto body = m_url.request();
+        auto resultNodes = HTMLParser(body).parse();
+        m_node = std::move(resultNodes);
         auto rules = getDefaultStyleSheet();
-        auto links = getStyleSheetLinks(nodes.get());
+        auto links = getStyleSheetLinks(m_node.get());
         for (const auto& link : links)
         {
-            auto linkUrl = url.resolve(link);
+            auto linkUrl = m_url.resolve(link);
             auto linkBody = linkUrl.request();
             auto linkResults = CSSParser(trim(linkBody)).parse();
             rules.merge(linkResults);
         }
         auto sortedRules = sort(rules);
-        addStyles(*nodes, sortedRules);
-        m_document = std::make_unique<DocumentLayout>(nodes.get());
+        addStyles(*m_node, sortedRules);
+        m_document = std::make_unique<DocumentLayout>(m_node.get());
         m_document->layout();
         m_displayCommands.clear();
         paintTree(m_document.get(), m_displayCommands);
@@ -217,6 +233,50 @@ void BrowserScene::load(std::string urlString)
     catch (...)
     {
         std::cerr << "Failed to load the browser!\n";
+    }
+}
+
+void BrowserScene::click(Point point)
+{
+    auto x = point.x;
+    auto y = point.y + m_scroll;
+
+    std::vector<const Layout*> list;
+    list = layoutTreeToList(m_document.get(), list);
+
+    std::vector<const Layout*> filteredList;
+    for (const auto& layout : list)
+    {
+        if (layout->x <= x && x < layout->x + layout->width &&
+            layout->y <= y && y < layout->y + layout->height)
+        {
+            filteredList.push_back(layout);
+        }
+    }
+
+    if (filteredList.empty())
+    {
+        return;
+    }
+
+    auto last = filteredList.back();
+    const Node* elt = last->node;
+    while (elt != nullptr)
+    {
+        if (auto element = dynamic_cast<const Element*>(elt))
+        {
+            if (element->tag == "a" && element->attributes.contains("href"))
+            {
+                auto it = element->attributes.find("href");
+                if (it != element->attributes.end())
+                {
+                    auto url = m_url.resolve(it->second);
+                    load(url);
+                    break;
+                }
+            }
+        }
+        elt = elt->parent;
     }
 }
 

@@ -12,10 +12,10 @@ class BrowserView : public QGraphicsView
     public:
         explicit BrowserView(BrowserScene* scene, QWidget* parent = nullptr);
 
-    protected:
+    private:
         void keyPressEvent(QKeyEvent* event) override;
+        void mousePressEvent(QMouseEvent* event) override;
         void wheelEvent(QWheelEvent* event) override;
 
-    private:
         BrowserScene* m_scene;
 };

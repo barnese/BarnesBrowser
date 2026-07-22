@@ -23,6 +23,19 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
     }
 }
 
+void BrowserView::mousePressEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        auto point = Point(event->pos().x(), event->pos().y());
+        m_scene->click(point);
+    }
+    else 
+    {
+        QGraphicsView::mousePressEvent(event);
+    }
+}
+
 void BrowserView::wheelEvent(QWheelEvent* event)
 {
     auto deltaY = event->angleDelta().y();
