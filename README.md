@@ -47,8 +47,8 @@ If you want to run tests in the current file, you can use the "Run Tests in Curr
 }
 ```
 
-## Tests
+## Test Pages
 
-### Test Pages
+The `assets/test_pages` folder includes several sample HTML pages to use for testing.
 
-The `test_pages` folder includes several sample HTML pages to use for testing.
+To run a local web server, run `./run_local_server.sh` in the terminal. (Note: this script requires python3.) This will allow running those web pages at http://localhost:8000/.
