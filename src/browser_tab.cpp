@@ -1,4 +1,4 @@
-#include "browser_scene.h"
+#include "browser_tab.h"
 
 #include "constants.h"
 #include "helpers/string_helpers.h"
@@ -16,8 +16,10 @@
 #include <memory>
 #include <vector>
 
-BrowserScene::BrowserScene()
-    : m_url("")
+BrowserTab::BrowserTab(int width, int height)
+    : m_url(""),
+      m_width(width),
+      m_height(height)
 {
     m_scroll = 0;
 
@@ -29,7 +31,7 @@ BrowserScene::BrowserScene()
 /// Draw operates using screen coordinates, which are the
 /// visible coordinates on the screen based on the current
 /// scroll value.
-void BrowserScene::draw()
+void BrowserTab::draw()
 {
     // Erase the entire scene so we can redraw its contents.
     clear();
@@ -37,7 +39,7 @@ void BrowserScene::draw()
     for (const auto& command : m_displayCommands)
     {
         // Prevent drawing off-screen content.
-        if (command->top > m_scroll + Constants::HEIGHT ||
+        if (command->top > m_scroll + m_height ||
             command->bottom < m_scroll)
         {
             continue;
@@ -64,6 +66,25 @@ void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &comm
     {
         paintTree(child.get(), commands);
     }
+}
+
+/// Reconstructs the document layout and redraws its contents.
+void BrowserTab::layout()
+{
+    m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
+    m_document->layout();
+    m_displayCommands.clear();
+    paintTree(m_document.get(), m_displayCommands);
+    draw();
+}
+
+/// Resizes the scene and reconstructs the layout.
+void BrowserTab::resize(int width, int height)
+{
+    m_width = width;
+    m_height = height;
+    setSceneRect(QRect(0, 0, width, height));
+    layout();
 }
 
 /// Adds styles to the given node and its children. 
@@ -198,13 +219,13 @@ std::vector<std::string> getStyleSheetLinks(const Node* tree)
 }
 
 /// Loads the HTML page from the given URL.
-void BrowserScene::load(std::string urlString)
+void BrowserTab::load(std::string urlString)
 {
     URL url(urlString);
     load(url);
 }
 
-void BrowserScene::load(URL url)
+void BrowserTab::load(URL url)
 {
     try
     {
@@ -224,11 +245,7 @@ void BrowserScene::load(URL url)
         }
         auto sortedRules = sort(rules);
         addStyles(*m_node, sortedRules);
-        m_document = std::make_unique<DocumentLayout>(m_node.get());
-        m_document->layout();
-        m_displayCommands.clear();
-        paintTree(m_document.get(), m_displayCommands);
-        draw();
+        layout();
     }
     catch (...)
     {
@@ -236,7 +253,7 @@ void BrowserScene::load(URL url)
     }
 }
 
-void BrowserScene::click(Point point)
+void BrowserTab::click(Point point)
 {
     auto x = point.x;
     auto y = point.y + m_scroll;
@@ -280,16 +297,16 @@ void BrowserScene::click(Point point)
     }
 }
 
-void BrowserScene::scrollDown()
+void BrowserTab::scrollDown()
 {
     // Scroll down, but prevent scrolling past the bottom of the document.
     int verticalPadding = 2 * Constants::VSTEP;
-    int maxY = std::max(m_document->height + verticalPadding - Constants::HEIGHT, 0);
+    int maxY = std::max(m_document->height + verticalPadding - m_height, 0);
     m_scroll = std::min(m_scroll + Constants::SCROLL_STEP, maxY);
     draw();
 }
 
-void BrowserScene::scrollUp()
+void BrowserTab::scrollUp()
 {
     m_scroll -= Constants::SCROLL_STEP;
     if (m_scroll < 0) 

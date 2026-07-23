@@ -37,7 +37,8 @@ add_executable(main
     src/styles/descendant_selector.cpp
     src/styles/style_helpers.cpp
     src/styles/tag_selector.cpp
-    src/browser_scene.cpp
+    src/browser.cpp
+    src/browser_tab.cpp
     src/browser_view.cpp
     src/main.cpp
     src/url.cpp

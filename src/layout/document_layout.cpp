@@ -3,13 +3,14 @@
 #include "block_layout.h"
 #include "constants.h"
 
-DocumentLayout::DocumentLayout(const Node* node)
+DocumentLayout::DocumentLayout(const Node* node, int parentWidth)
 {
     this->node = node;
     x = 0;
     y = 0;
     width = 0;
     height = 0;
+    m_parentWidth = parentWidth;
 }
 
 void DocumentLayout::layout()
@@ -18,7 +19,7 @@ void DocumentLayout::layout()
     auto* childPtr = child.get();
     children.push_back(std::move(child));
    
-    width = Constants::WIDTH - 2 * Constants::HSTEP;
+    width = m_parentWidth - 2 * Constants::HSTEP;
     x = Constants::HSTEP;
     y = Constants::VSTEP;
 

@@ -9,16 +9,18 @@
 #include <string>
 #include <QGraphicsScene>
 
-/// Handles rendering the graphics for the browser.
-class BrowserScene: public QGraphicsScene
+/// Handles rendering the graphics for a browser tab.
+class BrowserTab: public QGraphicsScene
 {
 public:
-    BrowserScene();
+    BrowserTab(int width, int height);
     void load(std::string url);
     void load(URL url);
     void click(Point point);
     void scrollDown();
     void scrollUp();
+    void resize(int width, int height);
+    void layout();
 
 private:
     void draw();
@@ -28,4 +30,6 @@ private:
     std::unique_ptr<DocumentLayout> m_document;
     URL m_url;
     std::unique_ptr<Node> m_node;
+    int m_width;
+    int m_height;
 };

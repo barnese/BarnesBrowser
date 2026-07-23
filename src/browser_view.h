@@ -1,21 +1,23 @@
 #pragma once
 
-#include "browser_scene.h"
+#include "browser_tab.h"
 
 #include <QGraphicsView>
 #include <QKeyEvent>
 #include <QWheelEvent>
 
-/// Handles user interactions with the browser.
+/// Holds the browser's graphical window and handles user interactions.
 class BrowserView : public QGraphicsView
 {
     public:
-        explicit BrowserView(BrowserScene* scene, QWidget* parent = nullptr);
+        explicit BrowserView(QWidget* parent = nullptr);
+        void setTab(BrowserTab* tab);
 
     private:
+        void resizeEvent(QResizeEvent* event) override;
         void keyPressEvent(QKeyEvent* event) override;
         void mousePressEvent(QMouseEvent* event) override;
         void wheelEvent(QWheelEvent* event) override;
 
-        BrowserScene* m_scene;
+        BrowserTab* m_activeTab; 
 };
