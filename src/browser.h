@@ -2,6 +2,7 @@
 
 #include "browser_view.h"
 #include "browser_tab.h"
+#include "chrome.h"
 #include "url.h"
 
 #include <memory>
@@ -16,6 +17,7 @@ public:
     void newTab(const URL url);
 
 private:
-    std::unique_ptr<BrowserView> m_view;
+    BrowserView* m_view;
+    Chrome* m_chrome;
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
 };

@@ -1,15 +1,14 @@
 #include "browser.h"
-#include "browser_tab.h"
-#include "browser_view.h"
 
 #include <QBoxLayout>
-#include <memory>
 
 Browser::Browser(QWidget* parent) : QWidget(parent)
 {
     auto* layout = new QVBoxLayout(this);
-    m_view = std::make_unique<BrowserView>(this);
-    layout->addWidget(m_view.get());
+    m_chrome = new Chrome(this);
+    m_view = new BrowserView(this);
+    layout->addWidget(m_chrome);
+    layout->addWidget(m_view);
     layout->setContentsMargins(0, 0, 0, 0);
 }
 

@@ -40,6 +40,7 @@ add_executable(main
     src/browser.cpp
     src/browser_tab.cpp
     src/browser_view.cpp
+    src/chrome.cpp
     src/main.cpp
     src/url.cpp
 )
