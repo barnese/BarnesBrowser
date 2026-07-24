@@ -79,8 +79,10 @@ int lookupDNSAndConnect(std::string host, uint16_t port)
 std::string formatRequest(std::string path, std::string host)
 {
     std::ostringstream out;
-    out << "GET " << path << " HTTP/1.0\r\n";
+    out << "GET " << path << " HTTP/1.1\r\n";
     out << "Host: " << host << "\r\n";
+    out << "Connection: close\r\n";
+    out << "User-Agent: BBrowser/1.0\r\n";
     out << "\r\n";
     return out.str();
 }
