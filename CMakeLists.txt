@@ -40,9 +40,14 @@ add_executable(main
     src/browser.cpp
     src/browser_tab.cpp
     src/browser_view.cpp
-    src/chrome.cpp
+    src/chrome/chrome.cpp
     src/main.cpp
     src/url.cpp
+)
+
+# Enable automatic Meta-Object compiler support (used by Qt).
+set_target_properties(main PROPERTIES 
+    AUTOMOC ON
 )
 
 target_include_directories(main PRIVATE src)

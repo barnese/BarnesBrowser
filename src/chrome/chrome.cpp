@@ -25,14 +25,13 @@ void Chrome::createTabBar()
     m_addTabButton->setFont(*m_font);
 
     m_tabBar = new QTabBar(this);
-    m_tabBar->setMinimumWidth(200);
-    m_tabBar->addTab("Tab 1");
 
     m_tabBarLayout->addWidget(m_addTabButton);
     m_tabBarLayout->addWidget(m_tabBar);
     m_tabBarLayout->addStretch();
     m_tabBarLayout->setSpacing(10);
 
+    connect(m_addTabButton, &QPushButton::clicked, this, &Chrome::newTabRequested);
     connect(m_tabBar, &QTabBar::currentChanged, this, &Chrome::handleTabChanged);
 }
 
@@ -44,7 +43,6 @@ void Chrome::createAddressBar()
     m_backButton->setFont(*m_font);
 
     m_addressBar = new QLineEdit(this);
-    m_addressBar->setText("https://example.com");
     m_addressBar->setFont(*m_font);
 
     m_addressBarLayout->addWidget(m_backButton);
@@ -55,4 +53,17 @@ void Chrome::createAddressBar()
 void Chrome::handleTabChanged(int index)
 {
     std::cout << "Tab changed to " << index << "\n";
+    tabChanged(index);
+}
+
+void Chrome::addTab(QString tabName, QString address, size_t index)
+{
+    m_tabBar->addTab(tabName);
+    m_addressBar->setText(address);
+    m_tabBar->setCurrentIndex(index);
+}
+
+void Chrome::setAddress(QString address)
+{
+    m_addressBar->setText(address);
 }

@@ -2,19 +2,24 @@
 
 #include "browser_view.h"
 #include "browser_tab.h"
-#include "chrome.h"
+#include "chrome/chrome.h"
 #include "url.h"
 
 #include <memory>
+#include <optional>
 #include <QWidget>
 #include <vector>
 
 /// Main browser UI.
 class Browser : public QWidget
 {
+    Q_OBJECT
+
 public:
     Browser(QWidget *parent = nullptr);
-    void newTab(const URL url);
+    void newTab(std::optional<URL> url = std::nullopt);
+    void createNewTab();
+    void changeTab(size_t index);
 
 private:
     BrowserView* m_view;

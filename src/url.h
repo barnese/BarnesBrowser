@@ -25,7 +25,7 @@ class URL
         std::string request() const;
         URL resolve(std::string url);
         bool operator==(const URL& other) const;
-        std::string describe() const;
+        std::string describe(bool showPort = true) const;
     
     private:
         void sendRequest(SSLHelper* ssl, int sock, std::string request) const;

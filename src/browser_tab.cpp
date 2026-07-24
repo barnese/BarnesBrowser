@@ -161,7 +161,7 @@ void addStyles(Node &node, const SortedCSSRules& rules)
 
 CSSRules getDefaultStyleSheet()
 {
-    std::ifstream file("assets/browser.css");
+    std::ifstream file("assets/styles/browser.css");
     if (!file.is_open())
     {
         std::cerr << "Error opening default style sheet!";
