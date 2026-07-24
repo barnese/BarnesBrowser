@@ -14,6 +14,7 @@
 #include <QGraphicsTextItem>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <vector>
 
 BrowserTab::BrowserTab(int width, int height)
@@ -231,6 +232,7 @@ void BrowserTab::load(URL url)
     {
         std::cout << "Fetching URL: " << url.describe() << "\n";
         m_url = url;
+        m_history.push_back(url);
         auto body = m_url.request();
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
@@ -289,12 +291,27 @@ void BrowserTab::click(Point point)
                 {
                     auto url = m_url.resolve(it->second);
                     load(url);
+                    linkClicked(url);
                     break;
                 }
             }
         }
         elt = elt->parent;
     }
+}
+
+std::optional<URL> BrowserTab::goBack()
+{
+    if (m_history.size() <= 1)
+    {
+        return std::nullopt;
+    }
+
+    m_history.pop_back();
+    auto url = m_history.back();
+    m_history.pop_back();
+    load(url);
+    return url;
 }
 
 void BrowserTab::scrollDown()

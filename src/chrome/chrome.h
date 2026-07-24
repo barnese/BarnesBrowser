@@ -20,6 +20,7 @@ signals:
     void newTabRequested();
     void tabChanged(int index);
     void addressChanged(QString newAddress);
+    void navigateBackRequested();
 
 private:
     void createTabBar();

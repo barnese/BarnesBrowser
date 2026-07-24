@@ -13,16 +13,18 @@ Chrome::Chrome(QWidget* parent) : QWidget(parent)
     auto* layout = new QVBoxLayout(this);
     layout->addLayout(m_tabBarLayout);
     layout->addLayout(m_addressBarLayout);
-    layout->setContentsMargins(10, 0, 10, 0);
+    layout->setContentsMargins(10, 8, 10, 0);
     layout->setSpacing(0);
 }
 
 void Chrome::createTabBar()
 {
     m_tabBarLayout = new QHBoxLayout();
+    m_tabBarLayout->setContentsMargins(0, 0, 0, 4);
 
     m_addTabButton = new QPushButton("+");
     m_addTabButton->setFont(*m_font);
+    m_addTabButton->setProperty("class", "navButton");
 
     m_tabBar = new QTabBar(this);
 
@@ -39,8 +41,9 @@ void Chrome::createAddressBar()
 {
     m_addressBarLayout = new QHBoxLayout();
 
-    m_backButton = new QPushButton("<");
+    m_backButton = new QPushButton("←");
     m_backButton->setFont(*m_font);
+    m_backButton->setProperty("class", "navButton");
 
     m_addressBar = new QLineEdit(this);
     m_addressBar->setFont(*m_font);
@@ -49,6 +52,7 @@ void Chrome::createAddressBar()
     m_addressBarLayout->addWidget(m_addressBar);
     m_addressBarLayout->setSpacing(10);
 
+    connect(m_backButton, &QPushButton::clicked, this, &Chrome::navigateBackRequested);
     connect(m_addressBar, &QLineEdit::returnPressed, this, &Chrome::handleReturnPressed);
 }
 

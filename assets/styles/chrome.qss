@@ -13,3 +13,25 @@ QTabBar::tab {
 QTabBar::tab:selected {
     background-color: #999999;
 }
+
+QPushButton {
+    background-color: #dddddd;
+    color: #2e2e2e;
+    border-radius: 4px;
+    border: none;
+    margin: 2px;
+}
+
+QPushButton.navButton {
+    width: 35px;
+    height: 30px;
+}
+
+QPushButton.navButton:hover {
+    background-color: #bbbbbb;
+}
+
+QPushButton.navButton:pressed {
+    background-color: #888888;
+    color: #ffffff;
+}

@@ -21,6 +21,8 @@ public:
     void createNewTab();
     void changeTab(size_t index);
     void changeAddress(QString newAddress);
+    void goBack();
+    void linkClicked(URL url);
 
 private:
     BrowserView* m_view;
