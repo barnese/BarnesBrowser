@@ -10,6 +10,7 @@ namespace Constants
     const int VSTEP = 18;
     const std::string HTML_HEADER_SEPARATOR = "\r\n\r\n";
     const int SCROLL_STEP = 100;
+    const int INPUT_WIDTH_PX = 200;
 
     const std::vector<std::string> BLOCK_ELEMENTS = 
     {

@@ -13,4 +13,10 @@ public:
 
     std::string tag;
     std::map<std::string, std::string> attributes;
+
+    std::string findAttribute(const std::string& name, const std::string& defaultValue) const   
+    {
+        auto it = attributes.find(name);
+        return (it != attributes.end()) ? it->second : defaultValue;
+    }
 };
