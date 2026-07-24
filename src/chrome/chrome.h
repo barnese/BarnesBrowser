@@ -19,12 +19,14 @@ public:
 signals:
     void newTabRequested();
     void tabChanged(int index);
+    void addressChanged(QString newAddress);
 
 private:
     void createTabBar();
     void createAddressBar();
 
     void handleTabChanged(int index);
+    void handleReturnPressed();
 
     QHBoxLayout* m_tabBarLayout;
     QHBoxLayout* m_addressBarLayout;

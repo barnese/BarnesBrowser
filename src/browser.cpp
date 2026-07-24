@@ -13,6 +13,7 @@ Browser::Browser(QWidget* parent) : QWidget(parent)
 
     connect(m_chrome, &Chrome::newTabRequested, this, &Browser::createNewTab);
     connect(m_chrome, &Chrome::tabChanged, this, &Browser::changeTab);
+    connect(m_chrome, &Chrome::addressChanged, this, &Browser::changeAddress);
 }
 
 void Browser::newTab(std::optional<URL> url)
@@ -34,7 +35,8 @@ void Browser::newTab(std::optional<URL> url)
         tabName = "New Tab";
     }
     m_tabs.push_back(std::move(tab));
-    m_view->setTab(m_tabs.back().get());
+    m_activeTab = m_tabs.back().get();
+    m_view->setTab(m_activeTab);
     m_view->centerOn(0, 0);
     m_view->setFocus();
     m_chrome->addTab(tabName, address, m_tabs.size() - 1);
@@ -54,4 +56,19 @@ void Browser::changeTab(size_t index)
 
     const auto& tab = m_tabs.at(index);
     m_view->setTab(tab.get());
+}
+
+void Browser::changeAddress(QString newAddress)
+{
+    if (m_tabs.empty())
+    {
+        newTab(URL(newAddress.toStdString()));
+    }
+    else 
+    {
+        m_activeTab->load(newAddress.toStdString());
+        m_view->centerOn(0, 0);
+        m_view->setFocus();
+        m_chrome->setAddress(newAddress);
+    }
 }

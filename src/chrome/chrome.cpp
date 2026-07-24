@@ -48,12 +48,18 @@ void Chrome::createAddressBar()
     m_addressBarLayout->addWidget(m_backButton);
     m_addressBarLayout->addWidget(m_addressBar);
     m_addressBarLayout->setSpacing(10);
+
+    connect(m_addressBar, &QLineEdit::returnPressed, this, &Chrome::handleReturnPressed);
 }
 
 void Chrome::handleTabChanged(int index)
 {
-    std::cout << "Tab changed to " << index << "\n";
     tabChanged(index);
+}
+
+void Chrome::handleReturnPressed()
+{
+    addressChanged(m_addressBar->text());
 }
 
 void Chrome::addTab(QString tabName, QString address, size_t index)

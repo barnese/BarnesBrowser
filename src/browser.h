@@ -20,9 +20,11 @@ public:
     void newTab(std::optional<URL> url = std::nullopt);
     void createNewTab();
     void changeTab(size_t index);
+    void changeAddress(QString newAddress);
 
 private:
     BrowserView* m_view;
     Chrome* m_chrome;
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
+    BrowserTab* m_activeTab;
 };
