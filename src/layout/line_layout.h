@@ -17,4 +17,5 @@ public:
     );
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
+    bool shouldPaint() const override;
 };

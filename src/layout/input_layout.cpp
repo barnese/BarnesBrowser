@@ -21,17 +21,16 @@ InputLayout::InputLayout(
     this->node = node;
     this->parent = parent;
     this->previous = previous;
-    width = Constants::INPUT_WIDTH_PX;
 }
 
 void InputLayout::layout()
 {
+    width = Constants::INPUT_WIDTH_PX;
+
     auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
     auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));
     auto size = static_cast<int>(pixelsToFloat(node->findStyle("font-size", "14px")));
-    
     font = getFont(size, weight, style);
-    
     QFontMetrics metrics(font);
 
     if (previous)
@@ -48,6 +47,11 @@ void InputLayout::layout()
     height = metrics.lineSpacing();
 }
 
+bool InputLayout::shouldPaint() const
+{
+    return true;
+}
+
 std::vector<std::unique_ptr<Command>> InputLayout::paint() const
 {
     std::vector<std::unique_ptr<Command>> commands;
@@ -55,7 +59,7 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
     auto bgColor = QString::fromStdString(node->findStyle("background-color", "transparent"));
     if (bgColor != "transparent")
     {
-        auto command = std::make_unique<DrawRect>(x, y, width, height, bgColor);
+        auto command = std::make_unique<DrawRect>(x, y, x + width, y + height, bgColor);
         commands.push_back(std::move(command));
     }
 

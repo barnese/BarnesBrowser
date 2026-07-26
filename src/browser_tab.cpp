@@ -55,14 +55,15 @@ void BrowserTab::draw()
 /// results into the provided display commands reference.
 void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &commands)
 {
-    auto paintList = layout->paint();
-
-    commands.insert(
-        commands.end(), 
-        std::make_move_iterator(paintList.begin()), 
-        std::make_move_iterator(paintList.end())
-    );
-
+    if (layout->shouldPaint())
+    {
+        auto paintList = layout->paint();
+        commands.insert(
+            commands.end(), 
+            std::make_move_iterator(paintList.begin()), 
+            std::make_move_iterator(paintList.end())
+        );
+    }
     for (const auto& child : layout->children)
     {
         paintTree(child.get(), commands);

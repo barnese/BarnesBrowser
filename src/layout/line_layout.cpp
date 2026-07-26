@@ -56,6 +56,11 @@ void LineLayout::layout()
     height = 1.25 * (maxAscent + maxDescent);
 }
 
+bool LineLayout::shouldPaint() const 
+{
+    return true;
+}
+
 std::vector<std::unique_ptr<Command>> LineLayout::paint() const
 {
     // There is nothing to paint for a line.

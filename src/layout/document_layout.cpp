@@ -27,6 +27,11 @@ void DocumentLayout::layout()
     height = childPtr->height;
 }
 
+bool DocumentLayout::shouldPaint() const 
+{
+    return true;
+}
+
 std::vector<std::unique_ptr<Command>> DocumentLayout::paint() const
 {
     return {};

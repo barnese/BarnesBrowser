@@ -6,6 +6,7 @@
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout.h"
+#include "layout/input_layout.h"
 #include "layout/line_layout.h"
 #include "styles/style_helpers.h"
 #include "text_layout.h"
@@ -99,10 +100,15 @@ BlockLayoutMode BlockLayout::getLayoutMode() const
     {
         return INLINE;
     }
-    else 
+    else if (auto element = dynamic_cast<const Element*>(node))
     {
-        return BLOCK;
+        if (element->tag == "input") 
+        {
+            return INLINE;
+        }
     }
+
+    return BLOCK;
 }
 
 void BlockLayout::recurse(const Node* node) 
@@ -113,17 +119,16 @@ void BlockLayout::recurse(const Node* node)
         {
             newLine();
         }
-        else if (element->tag == "p")
+        else if (element->tag == "input" || element->tag == "button")
         {
-            newLine();
-            auto space = QString(" ");
-            processWord(node, space);
-            newLine();
+            processInput(node);
         }
-
-        for (const auto& child : element->getChildren())
+        else 
         {
-            recurse(child.get());
+            for (const auto& child : element->getChildren())
+            {
+                recurse(child.get());
+            }
         }
     }
     else if (auto text = dynamic_cast<const Text*>(node))
@@ -136,6 +141,35 @@ void BlockLayout::recurse(const Node* node)
             processWord(node, word);
         }
     }
+}
+
+void BlockLayout::processInput(const Node* node)
+{
+    const auto inputWidth = Constants::INPUT_WIDTH_PX;
+    if (m_cursorX + inputWidth > width)
+    {
+        newLine();
+    }
+
+    auto line = children.back().get();
+    auto previousWord = (line->children.empty()) ? nullptr : line->children.back().get();
+    auto input = std::make_unique<InputLayout>(node, line, previousWord);
+    line->children.push_back(std::move(input));
+
+    const auto weightString = node->findStyle("font-weight", "normal");
+    const auto weight = cssFontWeightToQt(weightString);
+
+    const auto styleString = node->findStyle("font-style", "normal");
+    const auto style = cssFontStyleToQt(styleString);
+
+    const auto sizeString = node->findStyle("font-size", "14px");
+    const auto size = static_cast<int>(pixelsToFloat(sizeString));
+
+    const QFont font = getFont(size, weight, style);
+    const QFontMetrics metrics(font);
+    const auto spaceWidth = metrics.horizontalAdvance(" ");
+
+    m_cursorX += inputWidth + spaceWidth;
 }
 
 void BlockLayout::processWord(const Node* node, QString& word)
@@ -182,6 +216,24 @@ void BlockLayout::newLine()
     auto lastLine = (children.empty()) ? nullptr : children.back().get();
     auto newLine = std::make_unique<LineLayout>(node, this, lastLine);
     children.push_back(std::move(newLine));
+}
+
+bool BlockLayout::shouldPaint() const
+{
+    if (dynamic_cast<const Text*>(node))
+    {
+        return true;
+    }
+
+    if (auto element = dynamic_cast<const Element*>(node))
+    {
+        if (element->tag != "input" && element->tag != "button")
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const

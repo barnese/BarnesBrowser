@@ -20,6 +20,7 @@ public:
     );
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
+    bool shouldPaint() const override;
 
 private:
     QFont getFont(int size, int weight, int style);

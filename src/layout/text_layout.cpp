@@ -45,6 +45,11 @@ void TextLayout::layout()
     height = metrics.lineSpacing();
 }
 
+bool TextLayout::shouldPaint() const 
+{
+    return true;
+}
+
 std::vector<std::unique_ptr<Command>> TextLayout::paint() const
 {
     std::vector<std::unique_ptr<Command>> commands;

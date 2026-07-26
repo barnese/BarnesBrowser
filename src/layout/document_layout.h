@@ -12,6 +12,7 @@ public:
     DocumentLayout(const Node* node, int parentWidth);
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
+    bool shouldPaint() const override;
 
 private:
     int m_parentWidth;
