@@ -88,11 +88,11 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
                 std::cout << "Ignoring HTML contents inside button!\n";
                 text = "";
             }
-
-            auto color = QString::fromStdString(node->findStyle("color", "black"));
-            auto command = std::make_unique<DrawText>(x, y, text, font, color);
-            commands.push_back(std::move(command));
         }
+
+        auto color = QString::fromStdString(node->findStyle("color", "black"));
+        auto command = std::make_unique<DrawText>(x, y, text, font, color);
+        commands.push_back(std::move(command));
     }
     
     return commands;
