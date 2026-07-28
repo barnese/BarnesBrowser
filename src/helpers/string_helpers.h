@@ -11,3 +11,4 @@ std::string toLowercase(std::string text);
 std::string removeComments(std::string text);
 float percentToFloat(std::string percentString);
 float pixelsToFloat(std::string pixelString);
+std::string urlEncode(const std::string& value);

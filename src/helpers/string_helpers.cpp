@@ -2,6 +2,10 @@
 #include <algorithm>
 #include <regex>
 #include <string>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cctype>
 
 // Helper function that splits a texting by a delimiter.
 std::vector<std::string> split(std::string text, std::string delimiter, bool firstOnly)
@@ -89,4 +93,31 @@ float pixelsToFloat(std::string pixelString)
         return std::stof(numericPart);
     }
     return std::stof(pixelString);
+}
+
+/// Percent URL encodes a string.
+std::string urlEncode(const std::string& value) 
+{
+    std::ostringstream escaped;
+    escaped << std::hex << std::uppercase;
+
+    for (char c : value) 
+    {
+        // Keep alphanumeric and other safe characters intact
+        if (std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_' || c == '.' || c == '~') 
+        {
+            escaped << c;
+        } 
+        else 
+        {
+            // Percent-encode everything else
+            escaped 
+                << '%' 
+                << std::setw(2) 
+                << std::setfill('0') 
+                << static_cast<int>(static_cast<unsigned char>(c));
+        }
+    }
+
+    return escaped.str();
 }

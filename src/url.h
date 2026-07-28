@@ -2,6 +2,7 @@
 
 #include "helpers/ssl_helper.h"
 #include <string>
+#include <optional>
 
 struct UrlComponents {
     std::string scheme;
@@ -22,7 +23,7 @@ class URL
 {
     public:
         URL(const std::string& url);
-        std::string request() const;
+        std::string request(std::optional<std::string> payload=std::nullopt) const;
         URL resolve(std::string url);
         bool operator==(const URL& other) const;
         std::string describe(bool showPort = true) const;

@@ -60,3 +60,16 @@ TEST_CASE("remove multiline comments", TAG)
 {
     REQUIRE(removeComments("/* line one\nline two\nline three */\nint a = 0;") == "\nint a = 0;");
 }
+
+TEST_CASE("urlEncode() encodes various strings", TAG)
+{
+    REQUIRE(urlEncode("") == "");
+    REQUIRE(urlEncode("abcdefghijklmnopqrstuvwxyz") == "abcdefghijklmnopqrstuvwxyz");
+    REQUIRE(urlEncode("-1234567890~") == "-1234567890~");
+    REQUIRE(urlEncode("C++ & C#") == "C%2B%2B%20%26%20C%23");
+    REQUIRE(urlEncode("café") == "caf%C3%A9");
+    REQUIRE(urlEncode("[]{}()") == "%5B%5D%7B%7D%28%29");
+    REQUIRE(urlEncode("\"`'") == "%22%60%27");
+    REQUIRE(urlEncode("<=>") == "%3C%3D%3E");
+    REQUIRE(urlEncode("|@") == "%7C%40");
+}

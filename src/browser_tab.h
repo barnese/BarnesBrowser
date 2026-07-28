@@ -8,6 +8,7 @@
 #include "url.h"
 
 #include <string>
+#include <optional>
 #include <QGraphicsScene>
 
 /// Handles rendering the graphics for a browser tab.
@@ -18,8 +19,7 @@ class BrowserTab: public QGraphicsScene
 public:
     BrowserTab(int width, int height);
     void load(std::string url);
-    void load(URL url);
-    void render();
+    void load(URL url, std::optional<std::string> payload=std::nullopt);
     void click(Point point);
     std::optional<URL> goBack();
     void scrollDown();
@@ -32,6 +32,8 @@ signals:
 
 private:
     void draw();
+    void render();
+    void submitForm(Element* element);
     
     std::unique_ptr<Node> m_node;
     std::vector<std::unique_ptr<Command>> m_displayCommands;

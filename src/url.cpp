@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -79,7 +80,7 @@ int lookupDNSAndConnect(std::string host, uint16_t port)
 }
 
 /// Formats a HTTP GET request.
-std::string formatRequest(std::string path, std::string host)
+std::string formatGetRequest(std::string path, std::string host)
 {
     std::ostringstream out;
     out << "GET " << path << " HTTP/1.1\r\n";
@@ -87,6 +88,19 @@ std::string formatRequest(std::string path, std::string host)
     out << "Connection: close\r\n";
     out << "User-Agent: BBrowser/1.0\r\n";
     out << "\r\n";
+    return out.str();
+}
+
+std::string formatPostRequest(std::string path, std::string host, std::string payload)
+{
+    std::ostringstream out;
+    out << "POST " << path << " HTTP/1.1\r\n";
+    out << "Host: " << host << "\r\n";
+    out << "Connection: close\r\n";
+    out << "User-Agent: BBrowser/1.0\r\n";
+    out << "Content-Length: " << payload.size() << "\r\n";
+    out << "\r\n";
+    out << payload;
     return out.str();
 }
 
@@ -197,8 +211,9 @@ std::map<std::string, std::string> parseHeaders(std::string headerText)
 }
 
 /// @brief Performs a request for this URL.
+/// @param payload - optionally allows sending a payload via POST request.
 /// @return Returns the body of the response, if successful.
-std::string URL::request() const
+std::string URL::request(std::optional<std::string> payload) const
 {
     UrlComponents urlComponents = m_urlComponents;
 
@@ -207,7 +222,15 @@ std::string URL::request() const
     for (int redirectCount = 0; redirectCount < 10; ++redirectCount)
     {
         int sock = lookupDNSAndConnect(urlComponents.host, urlComponents.port);
-        std::string request = formatRequest(urlComponents.path, urlComponents.host);
+        std::string request;
+        if (payload == std::nullopt)
+        {
+            request = formatGetRequest(urlComponents.path, urlComponents.host);
+        }
+        else
+        {
+            request = formatPostRequest(urlComponents.path, urlComponents.host, payload.value());
+        }
 
         SSLHelper ssl;
         if (urlComponents.scheme == "https")

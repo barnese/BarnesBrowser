@@ -219,14 +219,14 @@ void BrowserTab::load(std::string urlString)
     load(url);
 }
 
-void BrowserTab::load(URL url)
+void BrowserTab::load(URL url, std::optional<std::string> payload)
 {
     try
     {
         std::cout << "Fetching URL: " << url.describe() << "\n";
         m_url = url;
         m_history.push_back(url);
-        auto body = m_url.request();
+        auto body = m_url.request(payload);
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
         auto rules = getDefaultStyleSheet();
@@ -311,10 +311,69 @@ void BrowserTab::click(Point point)
                 render();
                 break;
             }
+            else if (element->tag == "button")
+            {
+                // Find the button's form by walking up the HTML tree.
+                // If we find it, submit the form.
+                Node* n = element;
+                while (n != nullptr)
+                {
+                    if (auto e = dynamic_cast<Element*>(n)) 
+                    {
+                        if (e->tag == "form" && e->attributes.contains("action"))
+                        {
+                            submitForm(e);
+                            return;
+                        }
+                    }
+                    n = n->parent;
+                }
+            }
         }
         elt = elt->parent;
     }
     render();
+}
+
+/// Finds all the input elements, encodes their values 
+/// and submits them in a POST request.
+void BrowserTab::submitForm(Element* element)
+{
+    std::vector<const Element*> inputs;
+    std::vector<const Node*> nodeList;
+    nodeList = nodeTreeToList(element, nodeList);
+
+    for (const auto& item : nodeList) 
+    {    
+        if (auto element = dynamic_cast<const Element*>(item))
+        {
+            if (element->tag == "input" && 
+                element->attributes.contains("name"))
+            {
+                inputs.push_back(element);
+            }
+        }
+    }
+
+    std::string body = "";
+
+    for (auto& input : inputs)
+    {
+        auto name = input->findAttribute("name", "");
+        auto value = input->findAttribute("value", "");
+        auto actionUrl = input->findAttribute("action", "");
+
+        if (!name.empty() && !actionUrl.empty()) 
+        {
+            if (!body.empty())
+            {
+                body += "&";
+            }
+            body += urlEncode(name) + "=" + urlEncode(value);
+            auto url = m_url.resolve(actionUrl);
+            load(url, body);
+        }
+    }
 }
 
 std::optional<URL> BrowserTab::goBack()
