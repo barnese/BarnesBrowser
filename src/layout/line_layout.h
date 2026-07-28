@@ -11,7 +11,7 @@ class LineLayout : public Layout
 {
 public: 
     LineLayout(
-        const Node* node, 
+        Node* node, 
         const Layout* parent, 
         const Layout* previous = nullptr
     );

@@ -3,7 +3,7 @@
 #include "block_layout.h"
 #include "constants.h"
 
-DocumentLayout::DocumentLayout(const Node* node, int parentWidth)
+DocumentLayout::DocumentLayout(Node* node, int parentWidth)
 {
     this->node = node;
     x = 0;

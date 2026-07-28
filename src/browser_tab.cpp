@@ -26,6 +26,8 @@ BrowserTab::BrowserTab(int width, int height)
 
     // Set the background to white.
     setBackgroundBrush(Qt::white);
+
+    m_focus = nullptr;
 }
 
 /// Draws the display list to the screen.
@@ -70,23 +72,13 @@ void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &comm
     }
 }
 
-/// Reconstructs the document layout and redraws its contents.
-void BrowserTab::layout()
-{
-    m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
-    m_document->layout();
-    m_displayCommands.clear();
-    paintTree(m_document.get(), m_displayCommands);
-    draw();
-}
-
 /// Resizes the scene and reconstructs the layout.
 void BrowserTab::resize(int width, int height)
 {
     m_width = width;
     m_height = height;
     setSceneRect(QRect(0, 0, width, height));
-    layout();
+    render();
 }
 
 /// Adds styles to the given node and its children. 
@@ -187,7 +179,7 @@ std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node
     return list;
 }
 
-std::vector<const Layout*> layoutTreeToList(const Layout* tree, std::vector<const Layout*> &list)
+std::vector<Layout*> layoutTreeToList(Layout* tree, std::vector<Layout*> &list)
 {
     list.push_back(tree);
     for (const auto& child : tree->children)
@@ -248,7 +240,7 @@ void BrowserTab::load(URL url)
         }
         auto sortedRules = sort(rules);
         addStyles(*m_node, sortedRules);
-        layout();
+        render();
     }
     catch (...)
     {
@@ -256,15 +248,24 @@ void BrowserTab::load(URL url)
     }
 }
 
+void BrowserTab::render()
+{
+    m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
+    m_document->layout();
+    m_displayCommands.clear();
+    paintTree(m_document.get(), m_displayCommands);
+    draw();
+}
+
 void BrowserTab::click(Point point)
 {
     auto x = point.x;
     auto y = point.y + m_scroll;
 
-    std::vector<const Layout*> list;
+    std::vector<Layout*> list;
     list = layoutTreeToList(m_document.get(), list);
 
-    std::vector<const Layout*> filteredList;
+    std::vector<Layout*> filteredList;
     for (const auto& layout : list)
     {
         if (layout->x <= x && x < layout->x + layout->width &&
@@ -279,11 +280,16 @@ void BrowserTab::click(Point point)
         return;
     }
 
+    if (m_focus)
+    {
+        m_focus->isFocused = false;
+    }
+
     auto last = filteredList.back();
-    const Node* elt = last->node;
+    Node* elt = last->node;
     while (elt != nullptr)
     {
-        if (auto element = dynamic_cast<const Element*>(elt))
+        if (auto element = dynamic_cast<Element*>(elt))
         {
             if (element->tag == "a" && element->attributes.contains("href"))
             {
@@ -295,10 +301,20 @@ void BrowserTab::click(Point point)
                     linkClicked(url);
                     break;
                 }
+            } 
+            else if (element->tag == "input")
+            {
+                // Clicking an input element should clear its value.
+                element->attributes["value"] = "";
+                m_focus = element;
+                element->isFocused = true;
+                render();
+                break;
             }
         }
         elt = elt->parent;
     }
+    render();
 }
 
 std::optional<URL> BrowserTab::goBack()
@@ -332,4 +348,21 @@ void BrowserTab::scrollUp()
         m_scroll = 0;
     }
     draw();
+}
+
+void BrowserTab::keyPress(std::string text)
+{
+    if (m_focus)
+    {
+        if (text == "\U0000007f")
+        {
+            // Handle backspace by removing the last character.
+            m_focus->attributes["value"].pop_back();
+        }
+        else 
+        {
+            m_focus->attributes["value"] += text;
+        }
+        render();
+    }
 }

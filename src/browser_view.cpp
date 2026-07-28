@@ -36,6 +36,7 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
         break;
 
     default:
+        m_activeTab->keyPress(event->text().toStdString());
         QGraphicsView::keyPressEvent(event);
     }
 }

@@ -23,7 +23,7 @@ public:
         children.push_back(std::move(child));
     }
 
-    const Node* node;
+    Node* node;
     const Layout* parent;
     const Layout* previous;
     std::vector<std::unique_ptr<Layout>> children;

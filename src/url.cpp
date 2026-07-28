@@ -43,7 +43,10 @@ UrlComponents getUrlComponents(std::string url)
 /// Constructor
 URL::URL(const std::string& url)
 {
-    m_urlComponents = getUrlComponents(url);
+    if (!url.empty())
+    {
+        m_urlComponents = getUrlComponents(url);
+    }
 }
 
 /// Looks up an address given a host and port.

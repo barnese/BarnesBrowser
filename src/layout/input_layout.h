@@ -14,7 +14,7 @@ class InputLayout : public Layout
 {
 public: 
     InputLayout(
-        const Node* node, 
+        Node* node, 
         const Layout* parent, 
         const Layout* previous = nullptr
     );

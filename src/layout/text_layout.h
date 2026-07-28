@@ -13,7 +13,7 @@ class TextLayout : public Layout
 {
 public: 
     TextLayout(
-        const Node* node, 
+        Node* node, 
         QString word, 
         const Layout* parent, 
         const Layout* previous = nullptr

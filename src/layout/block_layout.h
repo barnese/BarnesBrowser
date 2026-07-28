@@ -21,7 +21,7 @@ enum BlockLayoutMode {
 class BlockLayout : public Layout
 {
 public:
-    BlockLayout(const Node* node, const Layout* parent, const Layout* previous = nullptr);
+    BlockLayout(Node* node, const Layout* parent, const Layout* previous = nullptr);
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;
@@ -31,9 +31,9 @@ private:
     void layoutBlock();
     void layoutText();
     bool areAnyChildBlockElements() const;
-    void recurse(const Node* node);
-    void processInput(const Node* node);
-    void processWord(const Node* node, QString& word);
+    void recurse(Node* node);
+    void processInput(Node* node);
+    void processWord(Node* node, QString& word);
     void newLine();
     QFont getFont(int size, int weight, int style);
 

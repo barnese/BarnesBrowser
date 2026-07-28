@@ -14,7 +14,7 @@
 #include <QFontMetrics>
 #include <memory>
 
-BlockLayout::BlockLayout(const Node* node, const Layout* parent, const Layout* previous)
+BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previous)
 {
     this->node = node;
     this->parent = parent;
@@ -111,7 +111,7 @@ BlockLayoutMode BlockLayout::getLayoutMode() const
     return BLOCK;
 }
 
-void BlockLayout::recurse(const Node* node) 
+void BlockLayout::recurse(Node* node) 
 {
     if (auto element = dynamic_cast<const Element*>(node)) 
     {
@@ -143,7 +143,7 @@ void BlockLayout::recurse(const Node* node)
     }
 }
 
-void BlockLayout::processInput(const Node* node)
+void BlockLayout::processInput(Node* node)
 {
     const auto inputWidth = Constants::INPUT_WIDTH_PX;
     if (m_cursorX + inputWidth > width)
@@ -172,7 +172,7 @@ void BlockLayout::processInput(const Node* node)
     m_cursorX += inputWidth + spaceWidth;
 }
 
-void BlockLayout::processWord(const Node* node, QString& word)
+void BlockLayout::processWord(Node* node, QString& word)
 {
     if (word.isEmpty())
         return;

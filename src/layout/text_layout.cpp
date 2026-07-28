@@ -8,7 +8,7 @@
 #include <memory>
 
 TextLayout::TextLayout(
-    const Node* node, 
+    Node* node, 
     QString word,
     const Layout* parent, 
     const Layout* previous

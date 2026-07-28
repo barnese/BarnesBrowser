@@ -3,7 +3,7 @@
 #include <QFontMetrics>
 
 LineLayout::LineLayout(
-    const Node* node, 
+    Node* node, 
     const Layout* parent, 
     const Layout* previous
 )

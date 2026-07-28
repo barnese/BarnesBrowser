@@ -32,4 +32,5 @@ public:
     Node* parent = nullptr;
     std::vector<std::unique_ptr<Node>> children;
     std::map<std::string, std::string> styles;
+    bool isFocused;
 };

@@ -4,6 +4,7 @@ Element::Element(const std::string& tag, Node* myParent)
     : tag(tag)
 {
     parent = myParent;
+    isFocused = false;
 }
 
 std::string Element::describe() const

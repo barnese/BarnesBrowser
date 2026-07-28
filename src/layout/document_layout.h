@@ -9,7 +9,7 @@
 class DocumentLayout : public Layout
 {
 public:
-    DocumentLayout(const Node* node, int parentWidth);
+    DocumentLayout(Node* node, int parentWidth);
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;

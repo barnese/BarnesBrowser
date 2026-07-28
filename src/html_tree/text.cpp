@@ -3,6 +3,7 @@
 Text::Text(const std::string& text)
     : text(text)
 {
+    isFocused = false;
 }
 
 std::string Text::getText() const

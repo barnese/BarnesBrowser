@@ -1,5 +1,6 @@
 #include "input_layout.h"
 
+#include "commands/draw_line.h"
 #include "commands/draw_rect.h"
 #include "commands/draw_text.h"
 #include "constants.h"
@@ -13,7 +14,7 @@
 #include <iostream>
 
 InputLayout::InputLayout(
-    const Node* node, 
+    Node* node, 
     const Layout* parent, 
     const Layout* previous
 )
@@ -69,6 +70,16 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
         if (element->tag == "input")
         {
             text = QString::fromStdString(element->findAttribute("value", ""));
+            
+            // Draw a cursor if this input element is focused.
+            if (element->isFocused) 
+            {
+                QFontMetrics metrics(font);
+                auto cx = x + metrics.horizontalAdvance(text) + 5;
+                auto cy = y + 2;
+                auto command = std::make_unique<DrawLine>(cx, cy, cx, cy + height, "black", 1);
+                commands.push_back(std::move(command));
+            }
         }
         else if (element->tag == "button")
         {
