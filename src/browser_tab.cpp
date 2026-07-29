@@ -4,9 +4,11 @@
 #include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
 #include "html_tree/element.h"
+#include "html_tree/node.h"
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "styles/css_parser.h"
+#include "duktape.h"
 
 #include <fstream>
 #include <iostream>
@@ -212,6 +214,27 @@ std::vector<std::string> getStyleSheetLinks(const Node* tree)
     return links;
 }
 
+std::vector<std::string> getScriptLinks(const Node* tree)
+{
+    std::vector<std::string> links;
+    std::vector<const Node*> nodeList;
+    nodeList = nodeTreeToList(tree, nodeList);
+
+    for (const auto& node : nodeList)
+    {
+        if (auto element = dynamic_cast<const Element*>(node))
+        {
+            auto attributes = element->attributes;
+            if (element->tag == "script" && attributes.contains("src"))
+            {
+                links.push_back(attributes["src"]);
+            }
+        }
+    }
+
+    return links;
+}
+
 /// Loads the HTML page from the given URL.
 void BrowserTab::load(std::string urlString)
 {
@@ -229,6 +252,30 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         auto body = m_url.request(payload);
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
+
+        // Load scripts.
+        auto scripts = getScriptLinks(m_node.get());
+        for (const auto& script : scripts)
+        {
+            auto scriptUrl = url.resolve(script);
+            std::string body;
+            try
+            {
+                body = scriptUrl.request();
+            }
+            catch (...)
+            {
+                continue;
+            }
+            
+            duk_context* dctx = duk_create_heap_default();
+            duk_eval_string(dctx, body.c_str());
+            auto result = duk_get_int(dctx, -1);
+            std::cout << "Script returned: " << result << "\n";
+            duk_destroy_heap(dctx);
+        }
+
+        // Load style sheets.
         auto rules = getDefaultStyleSheet();
         auto links = getStyleSheetLinks(m_node.get());
         for (const auto& link : links)
@@ -240,6 +287,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         }
         auto sortedRules = sort(rules);
         addStyles(*m_node, sortedRules);
+
         render();
     }
     catch (...)
