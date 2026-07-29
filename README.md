@@ -26,6 +26,7 @@ These are the dependencies used in this project.
 1. [OpenSLL](https://www.openssl.org/) - used for SLL network connections
 2. [Qt](https://doc.qt.io/) - used for the graphical user interface
 3. [Catch2](https://github.com/catchorg/Catch2) - used for unit tests
+4. [Duktape](https://duktape.org/) - used for the Javascript engine
 
 ## Unit Tests
 
