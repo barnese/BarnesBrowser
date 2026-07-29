@@ -361,19 +361,18 @@ void BrowserTab::submitForm(Element* element)
     {
         auto name = input->findAttribute("name", "");
         auto value = input->findAttribute("value", "");
-        auto actionUrl = input->findAttribute("action", "");
 
-        if (!name.empty() && !actionUrl.empty()) 
+        if (!body.empty())
         {
-            if (!body.empty())
-            {
-                body += "&";
-            }
-            body += urlEncode(name) + "=" + urlEncode(value);
-            auto url = m_url.resolve(actionUrl);
-            load(url, body);
+            body += "&";
         }
+
+        body += urlEncode(name) + "=" + urlEncode(value);
     }
+        
+    auto actionUrl = element->findAttribute("action", "");
+    auto url = m_url.resolve(actionUrl);
+    load(url, body);
 }
 
 std::optional<URL> BrowserTab::goBack()
