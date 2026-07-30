@@ -8,7 +8,6 @@
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "styles/css_parser.h"
-#include "duktape.h"
 
 #include <fstream>
 #include <iostream>
@@ -252,48 +251,50 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         auto body = m_url.request(payload);
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
-
-        // Load scripts.
-        auto scripts = getScriptLinks(m_node.get());
-        for (const auto& script : scripts)
-        {
-            auto scriptUrl = url.resolve(script);
-            std::string body;
-            try
-            {
-                body = scriptUrl.request();
-            }
-            catch (...)
-            {
-                continue;
-            }
-            
-            duk_context* dctx = duk_create_heap_default();
-            duk_eval_string(dctx, body.c_str());
-            auto result = duk_get_int(dctx, -1);
-            std::cout << "Script returned: " << result << "\n";
-            duk_destroy_heap(dctx);
-        }
-
-        // Load style sheets.
-        auto rules = getDefaultStyleSheet();
-        auto links = getStyleSheetLinks(m_node.get());
-        for (const auto& link : links)
-        {
-            auto linkUrl = m_url.resolve(link);
-            auto linkBody = linkUrl.request();
-            auto linkResults = CSSParser(trim(linkBody)).parse();
-            rules.merge(linkResults);
-        }
-        auto sortedRules = sort(rules);
-        addStyles(*m_node, sortedRules);
-
+        loadScripts();
+        loadStyles();
         render();
     }
     catch (...)
     {
         std::cerr << "Failed to load the browser!\n";
     }
+}
+
+void BrowserTab::loadScripts()
+{
+    m_js = std::make_unique<JSContext>();
+    auto scripts = getScriptLinks(m_node.get());
+    for (const auto& script : scripts)
+    {
+        auto scriptUrl = m_url.resolve(script);
+        std::string body;
+        try
+        {
+            body = scriptUrl.request();
+        }
+        catch (...)
+        {
+            continue;
+        }
+
+        m_js->run(body);
+    }
+}
+
+void BrowserTab::loadStyles()
+{
+    auto rules = getDefaultStyleSheet();
+    auto links = getStyleSheetLinks(m_node.get());
+    for (const auto& link : links)
+    {
+        auto linkUrl = m_url.resolve(link);
+        auto linkBody = linkUrl.request();
+        auto linkResults = CSSParser(trim(linkBody)).parse();
+        rules.merge(linkResults);
+    }
+    auto sortedRules = sort(rules);
+    addStyles(*m_node, sortedRules);
 }
 
 void BrowserTab::render()

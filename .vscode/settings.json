@@ -2,6 +2,7 @@
     "cmake.sourceDirectory": "${workspaceFolder}",
     "editor.inlayHints.enabled": "off",
     "clangd.arguments": [
-        "--compile-commands-dir=${workspaceFolder}/build"
+        "--compile-commands-dir=${workspaceFolder}/build",
+        "--header-insertion=never"
     ]
 }

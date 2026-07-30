@@ -15,13 +15,28 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG v3.11.0
 )
-
 FetchContent_MakeAvailable(Catch2)
 
 find_package(OpenSSL REQUIRED)
+
+set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Core)
 
 add_subdirectory(third_party/duktape)
+
+# Add the old "dukglue" library, we need to circumvent its
+# old CMake version requirements, hence the SOURCE_SUBDIR hack.
+# We only need the header files so it can be added as an interface.
+# Note: SYSTEM forces the compiler to ignore warnings from this library.
+FetchContent_Declare(
+    dukglue_src
+    GIT_REPOSITORY https://github.com/Aloshi/dukglue.git
+    GIT_TAG master
+    SOURCE_SUBDIR cmake-do-not-add
+)
+FetchContent_MakeAvailable(dukglue_src)
+add_library(dukglue INTERFACE)
+target_include_directories(dukglue SYSTEM INTERFACE ${dukglue_src_SOURCE_DIR}/include)
 
 add_executable(main
     src/commands/draw_line.cpp
@@ -41,6 +56,7 @@ add_executable(main
     src/styles/descendant_selector.cpp
     src/styles/style_helpers.cpp
     src/styles/tag_selector.cpp
+    src/scripting/js_context.cpp
     src/browser.cpp
     src/browser_tab.cpp
     src/browser_view.cpp
@@ -69,6 +85,7 @@ target_link_libraries(main PRIVATE
     Qt6::Gui
     Qt6::Core
     duktape
+    dukglue
 )
 
 # Copy the assets folder into the build folder.

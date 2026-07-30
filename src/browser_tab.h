@@ -4,6 +4,7 @@
 #include "html_tree/element.h"
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
+#include "scripting/js_context.h"
 #include "point.h"
 #include "url.h"
 
@@ -33,11 +34,14 @@ signals:
 private:
     void draw();
     void render();
+    void loadScripts();
+    void loadStyles();
     void submitForm(Element* element);
     
     std::unique_ptr<Node> m_node;
     std::vector<std::unique_ptr<Command>> m_displayCommands;
     std::unique_ptr<DocumentLayout> m_document;
+    std::unique_ptr<JSContext> m_js;
     URL m_url;
     std::vector<URL> m_history;
     Element* m_focus;
