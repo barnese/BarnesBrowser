@@ -27,6 +27,7 @@ These are the dependencies used in this project.
 2. [Qt](https://doc.qt.io/) - used for the graphical user interface
 3. [Catch2](https://github.com/catchorg/Catch2) - used for unit tests
 4. [Duktape](https://duktape.org/) - used for the Javascript engine
+5. [Dukglue](https://github.com/Aloshi/dukglue) - a Duktape wrapper for convenience functions
 
 ## Unit Tests
 
