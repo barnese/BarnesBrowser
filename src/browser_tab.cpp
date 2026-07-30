@@ -268,17 +268,15 @@ void BrowserTab::loadScripts()
     for (const auto& script : scripts)
     {
         auto scriptUrl = m_url.resolve(script);
-        std::string body;
         try
         {
-            body = scriptUrl.request();
+            auto body = scriptUrl.request();
+            m_js->run(script, body);
         }
         catch (...)
         {
             continue;
         }
-
-        m_js->run(body);
     }
 }
 

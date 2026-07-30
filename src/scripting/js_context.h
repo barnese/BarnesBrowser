@@ -9,7 +9,7 @@ class JSContext
 public:
     JSContext();
     ~JSContext();
-    std::string run(std::string code);
+    int run(std::string scriptName, std::string code);
 
 private:
     duk_context* m_duk;

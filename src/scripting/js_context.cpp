@@ -48,8 +48,19 @@ JSContext::~JSContext()
     duk_destroy_heap(m_duk);
 }
 
-std::string JSContext::run(std::string code)
+/// @brief Runs the given JavaScript code.
+/// @param scriptName the filename of the script
+/// @param code the JavaScript code to be executed
+/// @return 0 if successful, non-zero otherwise
+int JSContext::run(std::string scriptName, std::string code)
 {
-    duk_peval_string(m_duk, code.c_str());    
-    return "";
+    auto result = duk_peval_string(m_duk, code.c_str());
+    if (result != 0)
+    {
+        printf("[JSContext] '%s' crashed: %s\n", 
+            scriptName.c_str(), 
+            duk_safe_to_string(m_duk, -1));
+    }
+    duk_pop(m_duk);
+    return result;
 }
