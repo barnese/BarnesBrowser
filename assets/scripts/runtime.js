@@ -8,10 +8,10 @@ console = { log: function(x) {
 function Node(handle) { this.handle = handle; }
 
 Node.prototype.getAttribute = function(attr) {
-    return __nativeJSContext.getAttribute(this.handle, attr);
+    return currentJSContext.getAttribute(this.handle, attr);
 }
 
 document = { querySelectorAll: function(s) {
-    var handles = __nativeJSContext.querySelectorAll(s);
+    var handles = currentJSContext.querySelectorAll(s);
     return handles.map(function(h) { return new Node(h) });
 }}

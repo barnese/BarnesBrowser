@@ -42,7 +42,7 @@ JSContext::JSContext(const BrowserTab* tab)
     // For the above "methods" to work, we need an instance of 
     // this class exported to JavaScript, where a wrapper function 
     // can be created in runtime.js to encapsulate access to this object.
-    dukglue_register_global(m_duk, this, "__nativeJSContext");
+    dukglue_register_global(m_duk, this, "currentJSContext");
 
     auto jsRuntime = getJavaScriptRuntime();
     duk_peval_string(m_duk, jsRuntime.c_str());
