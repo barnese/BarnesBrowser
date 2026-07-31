@@ -39,9 +39,7 @@ JSContext::JSContext(const BrowserTab* tab)
     dukglue_register_method(m_duk, &JSContext::querySelectorAll, "querySelectorAll");
     dukglue_register_method(m_duk, &JSContext::getAttribute, "getAttribute");
 
-    // For the above "methods" to work, we need an instance of 
-    // this class exported to JavaScript, where a wrapper function 
-    // can be created in runtime.js to encapsulate access to this object.
+    // Export the instance of this class to allow the above methods to work.
     dukglue_register_global(m_duk, this, "currentJSContext");
 
     auto jsRuntime = getJavaScriptRuntime();
