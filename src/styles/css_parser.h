@@ -22,6 +22,7 @@ public:
     CSSParser(std::string text);
     std::map<std::string, std::string> body();
     CSSRules parse();
+    std::unique_ptr<Selector> selector();
 
 private:
     void whitespace();
@@ -29,7 +30,6 @@ private:
     void literal(char literal);
     std::tuple<std::string, std::string> pair();
     std::optional<char> ignoreUntil(std::vector<char> chars);
-    std::unique_ptr<Selector> selector();
 
     // The text to be parsed.
     std::string m_text;

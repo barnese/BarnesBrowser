@@ -4,13 +4,14 @@
 #include "html_tree/element.h"
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
-#include "scripting/js_context.h"
 #include "point.h"
 #include "url.h"
 
 #include <string>
 #include <optional>
 #include <QGraphicsScene>
+
+class JSContext;
 
 /// Handles rendering the graphics for a browser tab.
 class BrowserTab: public QGraphicsScene
@@ -19,6 +20,7 @@ class BrowserTab: public QGraphicsScene
 
 public:
     BrowserTab(int width, int height);
+    ~BrowserTab();
     void load(std::string url);
     void load(URL url, std::optional<std::string> payload=std::nullopt);
     void click(Point point);
@@ -27,6 +29,8 @@ public:
     void scrollUp();
     void keyPress(std::string text);
     void resize(int width, int height);
+    const Node* getNode() const { return m_node.get(); };
+    std::vector<const Node*> nodeTreeToList() const;
 
 signals:
     void linkClicked(URL url);
@@ -37,7 +41,10 @@ private:
     void loadScripts();
     void loadStyles();
     void submitForm(Element* element);
-    
+    std::vector<std::string> getStyleSheetLinks(const Node* tree);
+    std::vector<std::string> getScriptLinks(const Node* tree);
+    std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const;
+
     std::unique_ptr<Node> m_node;
     std::vector<std::unique_ptr<Command>> m_displayCommands;
     std::unique_ptr<DocumentLayout> m_document;

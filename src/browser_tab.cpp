@@ -7,6 +7,7 @@
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
 #include "layout/layout.h"
+#include "scripting/js_context.h"
 #include "styles/css_parser.h"
 
 #include <fstream>
@@ -30,6 +31,8 @@ BrowserTab::BrowserTab(int width, int height)
 
     m_focus = nullptr;
 }
+
+BrowserTab::~BrowserTab() = default;
 
 /// Draws the display list to the screen.
 /// Draw operates using screen coordinates, which are the
@@ -170,13 +173,21 @@ CSSRules getDefaultStyleSheet()
 }
 
 /// Converts a tree into a list of nodes.
-std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list)
+std::vector<const Node*> BrowserTab::nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const
 {
     list.push_back(tree);
     for (const auto& child : tree->getChildren())
     {
         nodeTreeToList(child.get(), list);
     }
+    return list;
+}
+
+/// Convenience function to hide implementation details.
+std::vector<const Node*> BrowserTab::nodeTreeToList() const 
+{
+    std::vector<const Node*> list;
+    nodeTreeToList(m_node.get(), list);
     return list;
 }
 
@@ -190,7 +201,7 @@ std::vector<Layout*> layoutTreeToList(Layout* tree, std::vector<Layout*> &list)
     return list;
 }
 
-std::vector<std::string> getStyleSheetLinks(const Node* tree)
+std::vector<std::string> BrowserTab::getStyleSheetLinks(const Node* tree)
 {
     std::vector<std::string> links;
     std::vector<const Node*> nodeList;
@@ -213,7 +224,7 @@ std::vector<std::string> getStyleSheetLinks(const Node* tree)
     return links;
 }
 
-std::vector<std::string> getScriptLinks(const Node* tree)
+std::vector<std::string> BrowserTab::getScriptLinks(const Node* tree)
 {
     std::vector<std::string> links;
     std::vector<const Node*> nodeList;
@@ -263,7 +274,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
 
 void BrowserTab::loadScripts()
 {
-    m_js = std::make_unique<JSContext>();
+    m_js = std::make_unique<JSContext>(this);
     auto scripts = getScriptLinks(m_node.get());
     for (const auto& script : scripts)
     {
