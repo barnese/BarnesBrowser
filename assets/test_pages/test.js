@@ -1,12 +1,14 @@
-console.log("Hi from JS! Checking input lengths...");
+console.log("Hi from JS!");
 
-inputs = document.querySelectorAll('input');
-for (var i = 0; i < inputs.length; i++) {
-    var name = inputs[i].getAttribute("name");
-    var value = inputs[i].getAttribute("value");
+function lengthCheck() {
+    var name = this.getAttribute("name");
+    var value = this.getAttribute("value");
     if (value.length > 10) {
         console.log("Input " + name + " has too much text.");
-    } else {
-        console.log("Input " + name + " is fine.");
     }
+}
+
+var inputs = document.querySelectorAll('input');
+for (var i = 0; i < inputs.length; i++) {
+    inputs[i].addEventListener("keydown", lengthCheck);
 }

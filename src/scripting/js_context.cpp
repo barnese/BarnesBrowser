@@ -121,3 +121,27 @@ int JSContext::run(std::string scriptName, std::string code)
     duk_pop(m_duk);
     return result;
 }
+
+/// @brief Injects event data into a global JavaScript object 
+/// to dispatch that event so event listeners can be executed.
+/// @param eventType type of event, such as "click" or "keydown".
+/// @param node the node related to this event, such as a button element.
+void JSContext::dispatchEvent(std::string eventType, const Node* node)
+{
+    auto handle = getHandle(node);
+    
+    duk_push_object(m_duk);
+
+    duk_push_string(m_duk, eventType.c_str());
+    duk_put_prop_string(m_duk, -2, "type");
+
+    duk_push_int(m_duk, handle);
+    duk_put_prop_string(m_duk, -2, "handle");
+
+    duk_put_global_string(m_duk, "jsContext");
+
+    const char* eventDispatchJS = "new Node(jsContext.handle).dispatchEvent(jsContext.type)";
+    duk_eval_string(m_duk, eventDispatchJS);
+
+    duk_pop(m_duk);
+}

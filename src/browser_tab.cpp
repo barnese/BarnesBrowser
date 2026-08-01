@@ -351,6 +351,8 @@ void BrowserTab::click(Point point)
         {
             if (element->tag == "a" && element->attributes.contains("href"))
             {
+                m_js->dispatchEvent("click", elt);
+
                 auto it = element->attributes.find("href");
                 if (it != element->attributes.end())
                 {
@@ -362,6 +364,8 @@ void BrowserTab::click(Point point)
             } 
             else if (element->tag == "input")
             {
+                m_js->dispatchEvent("click", elt);
+
                 // Clicking an input element should clear its value.
                 element->attributes["value"] = "";
                 m_focus = element;
@@ -371,6 +375,8 @@ void BrowserTab::click(Point point)
             }
             else if (element->tag == "button")
             {
+                m_js->dispatchEvent("click", elt);
+
                 // Find the button's form by walking up the HTML tree.
                 // If we find it, submit the form.
                 Node* n = element;
@@ -397,6 +403,8 @@ void BrowserTab::click(Point point)
 /// and submits them in a POST request.
 void BrowserTab::submitForm(Element* element)
 {
+    m_js->dispatchEvent("submit", element);
+
     std::vector<const Element*> inputs;
     std::vector<const Node*> nodeList;
     nodeList = nodeTreeToList(element, nodeList);
@@ -468,6 +476,8 @@ void BrowserTab::scrollUp()
 
 void BrowserTab::keyPress(std::string text)
 {
+    m_js->dispatchEvent("keydown", m_focus);
+
     if (m_focus)
     {
         if (text == "\U0000007f")

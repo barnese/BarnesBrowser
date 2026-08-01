@@ -13,6 +13,7 @@ public:
     JSContext(const BrowserTab* tab);
     ~JSContext();
     int run(std::string scriptName, std::string code);
+    void dispatchEvent(std::string eventType, const Node* node);
     
     // Functions to export to JavaScript.
     std::vector<int> querySelectorAll(std::string selectorText);
