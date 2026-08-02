@@ -8,6 +8,11 @@ ENTRIES = [ 'Pavel was here' ]
 
 def show_comments():
     out = "<!doctype html>"
+    out += "<link rel=\"stylesheet\" href=\"comment.css\" />";
+    out += "<script src=\"/comment.js\"></script>"
+
+    out += "<h1>Guest Book</h1>"
+
     for entry in ENTRIES:
         out += "<p>" + entry + "</p>"
 
@@ -15,6 +20,10 @@ def show_comments():
     out += "  <p><input name=guest></p>"
     out += "  <p><button>Sign the book!</button></p>"
     out += "</form>"
+
+    # Add an empty strong that can be used to display 
+    # client-side validation error messages.
+    out += "<strong></strong>"
     
     return out
 
@@ -40,6 +49,12 @@ def not_found(url, method):
 def do_request(method, url, headers, body):
     if method == "GET" and url == "/":
         return "200 OK", show_comments()
+    elif method == "GET" and url =="/comment.js":
+        with open("comment.js") as f:
+            return "200 OK", f.read()
+    elif method == "GET" and url =="/comment.css":
+        with open("comment.css") as f:
+            return "200 OK", f.read()
     elif method == "POST" and url == "/add":
         params = form_decode(body)
         return "200 OK", add_entry(params)

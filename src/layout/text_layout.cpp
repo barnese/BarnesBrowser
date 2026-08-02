@@ -54,7 +54,8 @@ std::vector<std::unique_ptr<Command>> TextLayout::paint() const
 {
     std::vector<std::unique_ptr<Command>> commands;
 
-    auto color = QString::fromStdString(node->findStyle("color", "black"));
+    auto colorStyle = node->findStyle("color", "black");
+    auto color = QString::fromStdString(colorStyle);
     auto command = std::make_unique<DrawText>(x, y, word, font, color);
     commands.push_back(std::move(command));
 

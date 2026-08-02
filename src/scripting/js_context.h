@@ -10,26 +10,27 @@ class BrowserTab;
 class JSContext
 {
 public:
-    JSContext(const BrowserTab* tab);
+    JSContext(BrowserTab* tab);
     ~JSContext();
     int run(std::string scriptName, std::string code);
-    void dispatchEvent(std::string eventType, const Node* node);
+    void dispatchEvent(std::string eventType, Node* node);
     
     // Functions to export to JavaScript.
     std::vector<int> querySelectorAll(std::string selectorText);
     std::string getAttribute(int handle, std::string attrName);
+    void setInnerHtml(int handle, std::string html);
 
 private:
     /// A handle is a numeric identifier for a node,
     /// which is used as a layer of indirection when 
     /// sending nodes to JavaScript.
-    int getHandle(const Node* node);
-    const Node* getNode(int handle);
+    int getHandle(Node* node);
+    Node* getNode(int handle);
 
     /// Maps to correlate handles to nodes and vice versa.
-    std::map<const Node*, int> m_nodeToHandle;
-    std::map<int, const Node*> m_handleToNode;
+    std::map<Node*, int> m_nodeToHandle;
+    std::map<int, Node*> m_handleToNode;
 
     duk_context* m_duk;
-    const BrowserTab* m_tab;
+    BrowserTab* m_tab;
 };

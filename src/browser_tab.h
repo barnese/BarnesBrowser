@@ -1,6 +1,7 @@
 #pragma once
 
 #include "commands/command.h"
+#include "styles/css_parser.h"
 #include "html_tree/element.h"
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
@@ -31,19 +32,21 @@ public:
     void resize(int width, int height);
     const Node* getNode() const { return m_node.get(); };
     std::vector<const Node*> nodeTreeToList() const;
+    std::vector<Node*> nodeTreeToList();
+    void render();
 
 signals:
     void linkClicked(URL url);
 
 private:
     void draw();
-    void render();
     void loadScripts();
     void loadStyles();
     void submitForm(Element* element);
     std::vector<std::string> getStyleSheetLinks(const Node* tree);
     std::vector<std::string> getScriptLinks(const Node* tree);
     std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const;
+    std::vector<Node*> nodeTreeToList(Node* tree, std::vector<Node*>& list);
 
     std::unique_ptr<Node> m_node;
     std::vector<std::unique_ptr<Command>> m_displayCommands;
@@ -52,6 +55,7 @@ private:
     URL m_url;
     std::vector<URL> m_history;
     Element* m_focus;
+    CSSRules m_rules;
 
     int m_scroll;
     int m_width;

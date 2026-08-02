@@ -33,3 +33,9 @@ document = { querySelectorAll: function(s) {
     var handles = currentJSContext.querySelectorAll(s);
     return handles.map(function(h) { return new Node(h) });
 }}
+
+Object.defineProperty(Node.prototype, 'innerHTML', {
+    set: function(s) {
+        currentJSContext.setInnerHtml(this.handle, s.toString());
+    }
+});

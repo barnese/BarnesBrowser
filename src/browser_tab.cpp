@@ -8,7 +8,6 @@
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "scripting/js_context.h"
-#include "styles/css_parser.h"
 
 #include <fstream>
 #include <iostream>
@@ -183,10 +182,29 @@ std::vector<const Node*> BrowserTab::nodeTreeToList(const Node* tree, std::vecto
     return list;
 }
 
+/// Mutable version of converting a tree into a list.
+std::vector<Node*> BrowserTab::nodeTreeToList(Node* tree, std::vector<Node*>& list)
+{
+    list.push_back(tree);
+    for (auto& child : tree->children)
+    {
+        nodeTreeToList(child.get(), list);
+    }
+    return list;
+}
+
 /// Convenience function to hide implementation details.
 std::vector<const Node*> BrowserTab::nodeTreeToList() const 
 {
     std::vector<const Node*> list;
+    nodeTreeToList(m_node.get(), list);
+    return list;
+}
+
+/// Mutable convenience function to convert a tree to a list.
+std::vector<Node*> BrowserTab::nodeTreeToList()
+{
+    std::vector<Node*> list;
     nodeTreeToList(m_node.get(), list);
     return list;
 }
@@ -293,21 +311,21 @@ void BrowserTab::loadScripts()
 
 void BrowserTab::loadStyles()
 {
-    auto rules = getDefaultStyleSheet();
+    m_rules = getDefaultStyleSheet();
     auto links = getStyleSheetLinks(m_node.get());
     for (const auto& link : links)
     {
         auto linkUrl = m_url.resolve(link);
         auto linkBody = linkUrl.request();
         auto linkResults = CSSParser(trim(linkBody)).parse();
-        rules.merge(linkResults);
+        m_rules.merge(linkResults);
     }
-    auto sortedRules = sort(rules);
-    addStyles(*m_node, sortedRules);
 }
 
 void BrowserTab::render()
 {
+    auto sortedRules = sort(m_rules);
+    addStyles(*m_node, sortedRules);
     m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
     m_document->layout();
     m_displayCommands.clear();
