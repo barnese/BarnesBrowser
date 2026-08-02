@@ -145,7 +145,8 @@ int JSContext::run(std::string scriptName, std::string code)
 /// to dispatch that event so event listeners can be executed.
 /// @param eventType type of event, such as "click" or "keydown".
 /// @param node the node related to this event, such as a button element.
-void JSContext::dispatchEvent(std::string eventType, Node* node)
+/// @returns int indicating whether the event should be cancelled.
+int JSContext::dispatchEvent(std::string eventType, Node* node)
 {
     auto handle = getHandle(node);
     
@@ -159,8 +160,10 @@ void JSContext::dispatchEvent(std::string eventType, Node* node)
 
     duk_put_global_string(m_duk, "jsContext");
 
-    const char* eventDispatchJS = "new Node(jsContext.handle).dispatchEvent(jsContext.type)";
-    duk_eval_string(m_duk, eventDispatchJS);
+    auto doDefault = duk_peval_string(m_duk,
+         "new Node(jsContext.handle).dispatchEvent(new Event(jsContext.type))");
 
     duk_pop(m_duk);
+
+    return doDefault;
 }

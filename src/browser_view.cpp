@@ -36,7 +36,11 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
         break;
 
     default:
-        m_activeTab->keyPress(event->text().toStdString());
+        auto eventText = event->text().toStdString();
+        if (!eventText.empty())
+        {
+            m_activeTab->keyPress(event->text().toStdString());
+        }
         QGraphicsView::keyPressEvent(event);
     }
 }

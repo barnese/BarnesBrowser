@@ -4,8 +4,19 @@ console = { log: function(x) {
     printMessage(x); 
 }}
 
+function Event(type) {
+    this.type = type;
+    this.do_default = true;
+}
+
+Event.prototype.preventDefault = function() {
+    this.do_default = false;
+}
+
 // Defines a Node object that wraps a node handle.
-function Node(handle) { this.handle = handle; }
+function Node(handle) { 
+    this.handle = handle; 
+}
 
 Node.prototype.getAttribute = function(attr) {
     return currentJSContext.getAttribute(this.handle, attr);
@@ -21,12 +32,14 @@ Node.prototype.addEventListener = function(type, listener) {
     list.push(listener);
 }
 
-Node.prototype.dispatchEvent = function(type) {
+Node.prototype.dispatchEvent = function(event) {
+    var type = event.type;
     var handle = this.handle;
     var list = (listeners[handle] && listeners[handle][type]) || [];
     for (var i = 0; i < list.length; i++) {
         list[i].call(this);
     }
+    return event.do_default;
 }
 
 document = { querySelectorAll: function(s) {
