@@ -2,6 +2,7 @@
 
 #include "helpers/string_helpers.h"
 #include "constants.h"
+#include "globals.h"
 
 #include <cassert>
 #include <iostream>
@@ -79,6 +80,15 @@ int lookupDNSAndConnect(std::string host, uint16_t port)
     return sock;
 }
 
+void addCookieToRequest(std::string host, std::ostringstream& out)
+{
+    if (Globals::cookieJar.contains(host))
+    {
+        auto cookie = Globals::cookieJar[host];
+        out << "Cookie: " << cookie << "\r\n";
+    }
+}
+
 /// Formats a HTTP GET request.
 std::string formatGetRequest(std::string path, std::string host)
 {
@@ -87,6 +97,7 @@ std::string formatGetRequest(std::string path, std::string host)
     out << "Host: " << host << "\r\n";
     out << "Connection: close\r\n";
     out << "User-Agent: BBrowser/1.0\r\n";
+    addCookieToRequest(host, out);
     out << "\r\n";
     return out.str();
 }
@@ -99,6 +110,7 @@ std::string formatPostRequest(std::string path, std::string host, std::string pa
     out << "Connection: close\r\n";
     out << "User-Agent: BBrowser/1.0\r\n";
     out << "Content-Length: " << payload.size() << "\r\n";
+    addCookieToRequest(host, out);
     out << "\r\n";
     out << payload;
     return out.str();
@@ -181,11 +193,11 @@ std::string getStatusCode(std::string headerText)
 /// @brief Parses header text from a HTML response.
 /// @param headerText text from the header
 /// @return A map of header keys and values
-std::map<std::string, std::string> parseHeaders(std::string headerText)
+std::map<std::string, std::string, CaseInsensitiveLess> parseHeaders(std::string headerText)
 {
     std::istringstream stream(headerText);
     std::string line;
-    std::map<std::string, std::string> headers;
+    std::map<std::string, std::string, CaseInsensitiveLess> headers;
 
     while (std::getline(stream, line))
     {
@@ -237,6 +249,7 @@ std::string URL::request(std::optional<std::string> payload) const
             ssl.connect(sock, urlComponents.host);
 
         sendRequest(&ssl, sock, request);
+
         std::string response = receiveResponse(&ssl, sock);
 
         if (urlComponents.scheme == "https")
@@ -248,7 +261,13 @@ std::string URL::request(std::optional<std::string> payload) const
         std::string header = response.substr(0, headerEnd);
         std::string body = response.substr(headerEnd + Constants::HTML_HEADER_SEPARATOR.size());
         std::string statusCode = getStatusCode(header);
-        auto headers = parseHeaders(header);
+        auto responseHeaders = parseHeaders(header);
+
+        if (responseHeaders.contains("set-cookie"))
+        {
+            auto cookie = responseHeaders["set-cookie"];
+            Globals::cookieJar[urlComponents.host] = cookie;
+        }
 
         if (!isRedirect(std::stoi(statusCode)))
         {
@@ -257,7 +276,7 @@ std::string URL::request(std::optional<std::string> payload) const
 
         // Create a new request for the given redirect location.
         // TODO: Solidify this to handle relative paths.
-        auto location = headers["Location"];
+        auto location = responseHeaders["Location"];
         urlComponents = getUrlComponents(location);
     }
 
