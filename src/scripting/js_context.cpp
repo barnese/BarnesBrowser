@@ -105,6 +105,8 @@ void JSContext::setInnerHtml(int handle, std::string html)
 
 std::string JSContext::sendXmlHttpRequest(std::string method, std::string url, std::string body)
 {
+    (void)method; // Silence unused parameter warning.
+
     auto fullUrl = m_tab->getLoadedUrl().resolve(url);
 
     if (fullUrl.origin() != m_tab->getLoadedUrl())

@@ -29,6 +29,7 @@ BrowserTab::BrowserTab(int width, int height)
     setBackgroundBrush(Qt::white);
 
     m_focus = nullptr;
+    m_status = LOADING;
 }
 
 BrowserTab::~BrowserTab() = default;
@@ -272,6 +273,8 @@ void BrowserTab::load(std::string urlString)
 
 void BrowserTab::load(URL url, std::optional<std::string> payload)
 {
+    m_status = LOADING;
+
     try
     {
         std::cout << "Fetching URL: " << url.describe() << "\n";
@@ -282,11 +285,13 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         m_node = std::move(resultNodes);
         loadScripts();
         loadStyles();
+        m_status = LOADED;
         render();
     }
     catch (...)
     {
         std::cerr << "Failed to load the browser!\n";
+        m_status = ERROR;
     }
 }
 
@@ -324,6 +329,7 @@ void BrowserTab::loadStyles()
 
 void BrowserTab::render()
 {
+    if (m_status != LOADED) return;
     auto sortedRules = sort(m_rules);
     addStyles(*m_node, sortedRules);
     m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);

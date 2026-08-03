@@ -14,6 +14,13 @@
 
 class JSContext;
 
+enum BrowserTabStatus
+{
+    LOADING,
+    LOADED,
+    ERROR,
+};
+
 /// Handles rendering the graphics for a browser tab.
 class BrowserTab: public QGraphicsScene
 {
@@ -49,6 +56,7 @@ private:
     std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const;
     std::vector<Node*> nodeTreeToList(Node* tree, std::vector<Node*>& list);
 
+    enum BrowserTabStatus m_status;
     std::unique_ptr<Node> m_node;
     std::vector<std::unique_ptr<Command>> m_displayCommands;
     std::unique_ptr<DocumentLayout> m_document;
