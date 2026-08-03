@@ -52,3 +52,19 @@ Object.defineProperty(Node.prototype, 'innerHTML', {
         currentJSContext.setInnerHtml(this.handle, s.toString());
     }
 });
+
+function XMLHttpRequest() {}
+
+XMLHttpRequest.prototype.open = function(method, url, isAsync) {
+    if (isAsync) throw Error("Asynchronous XHR is not supported");
+    this.method = method;
+    this.url = url;
+}
+
+XMLHttpRequest.prototype.send = function(body) {
+    if (body === undefined) {
+        body = "";
+    }
+    this.responseText = currentJSContext.sendXmlHttpRequest(
+        this.method, this.url, body);
+}

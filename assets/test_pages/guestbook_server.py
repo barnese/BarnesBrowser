@@ -61,9 +61,6 @@ def handle_connection(conx):
     conx.close()
 
 def show_comments(session):
-    print(SESSIONS)
-    print("Current session:")
-    print(session)
     out = "<!doctype html>"
     out += "<link rel=\"stylesheet\" href=\"comment.css\" />";
     out += "<script src=\"/comment.js\"></script>"
@@ -91,6 +88,8 @@ def show_comments(session):
 
 def form_decode(body):
     params = {}
+    if body is None or len(body) == 0:
+        return params
     for field in body.split("&"):
         name, value = field.split("=", 1)
         name = urllib.parse.unquote_plus(name)

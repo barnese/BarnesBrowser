@@ -222,9 +222,6 @@ std::map<std::string, std::string, CaseInsensitiveLess> parseHeaders(std::string
     return headers;
 }
 
-/// @brief Performs a request for this URL.
-/// @param payload - optionally allows sending a payload via POST request.
-/// @return Returns the body of the response, if successful.
 std::string URL::request(std::optional<std::string> payload) const
 {
     UrlComponents urlComponents = m_urlComponents;
@@ -283,7 +280,6 @@ std::string URL::request(std::optional<std::string> payload) const
     return "Error: Too many redirects!";
 }
 
-/// Converts a relative URL into a full URL based on the current URL.
 URL URL::resolve(std::string url)
 {
     if (url.contains("://"))
@@ -339,5 +335,16 @@ std::string URL::describe(bool showPort) const
         ss << m_urlComponents.port;
     }
     ss << m_urlComponents.path;
+    return ss.str();
+}
+
+std::string URL::origin() const
+{
+    std::stringstream ss;
+    ss << m_urlComponents.scheme;
+    ss << "://";
+    ss << m_urlComponents.host;
+    ss << ":";
+    ss << m_urlComponents.port;
     return ss.str();
 }

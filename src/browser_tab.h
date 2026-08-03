@@ -34,6 +34,7 @@ public:
     std::vector<const Node*> nodeTreeToList() const;
     std::vector<Node*> nodeTreeToList();
     void render();
+    URL getLoadedUrl() { return m_url; };
 
 signals:
     void linkClicked(URL url);

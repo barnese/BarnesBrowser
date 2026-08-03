@@ -23,9 +23,20 @@ class URL
 {
     public:
         URL(const std::string& url);
+        
+        /// @brief Performs a request for this URL.
+        /// @param payload - optionally allows sending a payload via POST request.
+        /// @returns the body of the response, if successful.
         std::string request(std::optional<std::string> payload=std::nullopt) const;
+        
+        /// Converts a relative URL into a full URL based on the current URL.
         URL resolve(std::string url);
+
         bool operator==(const URL& other) const;
+
+        /// Gets the URL as a string with the path stripped off.
+        std::string origin() const;
+
         std::string describe(bool showPort = true) const;
     
     private:

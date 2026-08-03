@@ -2,6 +2,7 @@
 
 #include "browser_tab.h"
 #include "html_tree/html_parser.h"
+#include "js_context_exception.h"
 #include "styles/css_parser.h"
 
 #include "duktape.h"
@@ -40,6 +41,7 @@ JSContext::JSContext(BrowserTab* tab)
     dukglue_register_method(m_duk, &JSContext::querySelectorAll, "querySelectorAll");
     dukglue_register_method(m_duk, &JSContext::getAttribute, "getAttribute");
     dukglue_register_method(m_duk, &JSContext::setInnerHtml, "setInnerHtml");
+    dukglue_register_method(m_duk, &JSContext::sendXmlHttpRequest, "sendXmlHttpRequest");
 
     // Export the instance of this class to allow the above methods to work.
     dukglue_register_global(m_duk, this, "currentJSContext");
@@ -99,6 +101,18 @@ void JSContext::setInnerHtml(int handle, std::string html)
         child->parent = node;
     }
     m_tab->render();
+}
+
+std::string JSContext::sendXmlHttpRequest(std::string method, std::string url, std::string body)
+{
+    auto fullUrl = m_tab->getLoadedUrl().resolve(url);
+
+    if (fullUrl.origin() != m_tab->getLoadedUrl())
+    {
+        throw JSContextException("Cross-origin XHR not allowed");
+    }
+
+    return fullUrl.request(body);
 }
 
 int JSContext::getHandle(Node* node)
