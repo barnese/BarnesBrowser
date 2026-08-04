@@ -319,15 +319,16 @@ std::string URL::request(std::optional<URL> referrer, std::optional<std::string>
         }
 
         // Create a new request for the given redirect location.
-        // TODO: Solidify this to handle relative paths.
         auto location = responseHeaders["Location"];
-        urlComponents = getUrlComponents(location);
+        auto fullUrl = resolve(location);
+        urlComponents = fullUrl.components();
+        std::cout << "Redirecting to: " << fullUrl.describe(false) << std::endl;
     }
 
     return "Error: Too many redirects!";
 }
 
-URL URL::resolve(std::string url)
+URL URL::resolve(std::string url) const
 {
     if (url.contains("://"))
     {

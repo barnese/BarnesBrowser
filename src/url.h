@@ -31,7 +31,7 @@ class URL
         std::string request(std::optional<URL> referrer, std::optional<std::string> payload=std::nullopt) const;
         
         /// Converts a relative URL into a full URL based on the current URL.
-        URL resolve(std::string url);
+        URL resolve(std::string url) const;
 
         bool operator==(const URL& other) const;
 
@@ -41,6 +41,8 @@ class URL
         std::string describe(bool showPort = true) const;
 
         std::string host() const { return m_urlComponents.host; };
+
+        UrlComponents components() const { return m_urlComponents; };
     
     private:
         void sendRequest(SSLHelper* ssl, int sock, std::string request) const;

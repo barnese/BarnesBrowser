@@ -420,7 +420,6 @@ void BrowserTab::click(Point point)
         }
         elt = elt->parent;
     }
-    render();
 }
 
 /// Finds all the input elements, encodes their values 
