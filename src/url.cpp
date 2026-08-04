@@ -80,29 +80,41 @@ int lookupDNSAndConnect(std::string host, uint16_t port)
     return sock;
 }
 
-void addCookieToRequest(std::string host, std::ostringstream& out)
+void addCookieToRequest(std::string host, std::string method, std::optional<URL> referrer, std::ostringstream& out)
 {
     if (Globals::cookieJar.contains(host))
     {
-        auto cookie = Globals::cookieJar[host];
-        out << "Cookie: " << cookie << "\r\n";
+        bool allowCookie = true;
+        auto [cookie, params] = Globals::cookieJar[host];
+        auto it = params.find("samesite");
+        if (referrer.has_value() && it != params.end() && it->second == "lax")
+        {
+            if (method != "GET")
+            {
+                allowCookie = host == referrer->host();
+            }
+        }
+        if (allowCookie)
+        {
+            out << "Cookie: " << cookie << "\r\n";
+        }
     }
 }
 
 /// Formats a HTTP GET request.
-std::string formatGetRequest(std::string path, std::string host)
+std::string formatGetRequest(std::string path, std::string host, std::optional<URL> referrer)
 {
     std::ostringstream out;
     out << "GET " << path << " HTTP/1.1\r\n";
     out << "Host: " << host << "\r\n";
     out << "Connection: close\r\n";
     out << "User-Agent: BBrowser/1.0\r\n";
-    addCookieToRequest(host, out);
+    addCookieToRequest(host, "GET", referrer, out);
     out << "\r\n";
     return out.str();
 }
 
-std::string formatPostRequest(std::string path, std::string host, std::string payload)
+std::string formatPostRequest(std::string path, std::string host, std::optional<URL> referrer, std::string payload)
 {
     std::ostringstream out;
     out << "POST " << path << " HTTP/1.1\r\n";
@@ -110,7 +122,7 @@ std::string formatPostRequest(std::string path, std::string host, std::string pa
     out << "Connection: close\r\n";
     out << "User-Agent: BBrowser/1.0\r\n";
     out << "Content-Length: " << payload.size() << "\r\n";
-    addCookieToRequest(host, out);
+    addCookieToRequest(host, "POST", referrer, out);
     out << "\r\n";
     out << payload;
     return out.str();
@@ -222,7 +234,40 @@ std::map<std::string, std::string, CaseInsensitiveLess> parseHeaders(std::string
     return headers;
 }
 
-std::string URL::request(std::optional<std::string> payload) const
+void parseAndStoreCookie(std::string host, std::string cookie)
+{
+    std::map<std::string, std::string> params;
+
+    if (cookie.contains(";"))
+    {
+        auto cookieParts = split(cookie, ";");
+        cookie = cookieParts[0];
+        auto rest = split(cookieParts[1], ";", false);
+        for (const auto& param : rest)
+        {
+            std::string key;
+            std::string value;
+
+            if (param.contains("="))
+            {
+                auto parts = split(param, "=");
+                key = parts[0];
+                value = parts[1];
+            }
+            else 
+            {
+                key = param;
+                value = "true";        
+            }
+
+            params[trim(toLowercase(key))] = toLowercase(value);
+        }
+    }
+
+    Globals::cookieJar[host] = {cookie, params};
+}
+
+std::string URL::request(std::optional<URL> referrer, std::optional<std::string> payload) const
 {
     UrlComponents urlComponents = m_urlComponents;
 
@@ -234,11 +279,11 @@ std::string URL::request(std::optional<std::string> payload) const
         std::string request;
         if (payload == std::nullopt)
         {
-            request = formatGetRequest(urlComponents.path, urlComponents.host);
+            request = formatGetRequest(urlComponents.path, urlComponents.host, referrer);
         }
         else
         {
-            request = formatPostRequest(urlComponents.path, urlComponents.host, payload.value());
+            request = formatPostRequest(urlComponents.path, urlComponents.host, referrer, payload.value());
         }
 
         SSLHelper ssl;
@@ -250,7 +295,9 @@ std::string URL::request(std::optional<std::string> payload) const
         std::string response = receiveResponse(&ssl, sock);
 
         if (urlComponents.scheme == "https")
+        {
             ssl.shutdown();
+        }
         close(sock);
 
         // Get the header and body text from the response.
@@ -263,7 +310,7 @@ std::string URL::request(std::optional<std::string> payload) const
         if (responseHeaders.contains("set-cookie"))
         {
             auto cookie = responseHeaders["set-cookie"];
-            Globals::cookieJar[urlComponents.host] = cookie;
+            parseAndStoreCookie(urlComponents.host, cookie);
         }
 
         if (!isRedirect(std::stoi(statusCode)))

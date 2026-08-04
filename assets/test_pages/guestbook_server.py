@@ -17,7 +17,8 @@ SESSIONS = {}
 # Hard-coded user/password pairs.
 LOGINS = {
     "user1": "password1",
-    "user2": "password2"
+    "user2": "password2",
+    "u1": "a",
 }
 
 # Handles the connection by parsing the request,
@@ -27,7 +28,7 @@ def handle_connection(conx):
     reqline = req.readline().decode('utf8')
     method, url, version = reqline.split(" ", 2)
     assert method in ["GET", "POST"]
-
+    print("Received connection:", method, url)
     headers = {}
     while True:
         line = req.readline().decode('utf8')
@@ -53,7 +54,7 @@ def handle_connection(conx):
     response = "HTTP/1.0 {}\r\n".format(status)
     response += "Content-Length: {}\r\n".format(len(body.encode("utf8")))
     if "cookie" not in headers:
-        template = "Set-Cookie: token={}\r\n"
+        template = "Set-Cookie: token={}; SameSite=Lax\r\n"
         response += template.format(token)
     response += "\r\n" + body
 
@@ -65,23 +66,17 @@ def show_comments(session):
     out += "<link rel=\"stylesheet\" href=\"comment.css\" />";
     out += "<script src=\"/comment.js\"></script>"
 
-    out += "<h1>Guest Book</h1>"
-
-    for entry, who in ENTRIES:
-        out += "<p>" + entry + "\n" 
-        out += "<i>by " + who + "</i></p>"
-
     if "user" in session:
         # To help prevent cross-site request forgery, create a nonce
         # that is part of the add form and saved to the user session.
         nonce = str(random.random())[2:]
         session["nonce"] = nonce
 
-        out += "<h1>Hello, " + session["user"] + "</h1>"
+        out += "<h1>Hello, " + session["user"] + "! Welcome to the Guest Book!</h1>"
         out += "<form action=add method=post>"
         out += "  <p><input name=guest></p>"
-        out += "  <p><button>Sign the book!</button></p>"
         out += "  <input name=nonce type=hidden value=" + nonce + ">"
+        out += "  <p><button>Sign the book!</button></p>"
         out += "</form>"
     else:
         out += "<a href=/login>Sign in to write in the guest book</a>"
@@ -89,7 +84,11 @@ def show_comments(session):
     # Add an empty strong that can be used to display 
     # client-side validation error messages.
     out += "<strong></strong>"
-    
+
+    for entry, who in ENTRIES:
+        out += "<p>" + entry + "\n" 
+        out += "<i>by " + who + "</i></p>"
+
     return out
 
 def form_decode(body):
@@ -175,5 +174,4 @@ if __name__ == "__main__":
     # connection.
     while True:
         conx, addr = s.accept()
-        print("Received connection from", addr)
         handle_connection(conx)

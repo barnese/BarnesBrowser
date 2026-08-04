@@ -278,9 +278,9 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     try
     {
         std::cout << "Fetching URL: " << url.describe() << "\n";
-        m_url = url;
         m_history.push_back(url);
-        auto body = m_url.request(payload);
+        auto body = url.request(m_url, payload);
+        m_url = url;
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
         loadScripts();
@@ -304,7 +304,7 @@ void BrowserTab::loadScripts()
         auto scriptUrl = m_url.resolve(script);
         try
         {
-            auto body = scriptUrl.request();
+            auto body = scriptUrl.request(m_url);
             m_js->run(script, body);
         }
         catch (...)
@@ -321,7 +321,7 @@ void BrowserTab::loadStyles()
     for (const auto& link : links)
     {
         auto linkUrl = m_url.resolve(link);
-        auto linkBody = linkUrl.request();
+        auto linkBody = linkUrl.request(m_url);
         auto linkResults = CSSParser(trim(linkBody)).parse();
         m_rules.merge(linkResults);
     }

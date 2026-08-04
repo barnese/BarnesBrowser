@@ -107,14 +107,15 @@ std::string JSContext::sendXmlHttpRequest(std::string method, std::string url, s
 {
     (void)method; // Silence unused parameter warning.
 
-    auto fullUrl = m_tab->getLoadedUrl().resolve(url);
+    auto tabUrl = m_tab->getLoadedUrl();
+    auto fullUrl = tabUrl.resolve(url);
 
-    if (fullUrl.origin() != m_tab->getLoadedUrl())
+    if (fullUrl.origin() != tabUrl)
     {
         throw JSContextException("Cross-origin XHR not allowed");
     }
 
-    return fullUrl.request(body);
+    return fullUrl.request(tabUrl, body);
 }
 
 int JSContext::getHandle(Node* node)
