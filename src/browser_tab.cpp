@@ -341,6 +341,8 @@ void BrowserTab::render()
 
 void BrowserTab::click(Point point)
 {
+    if (m_status != LOADED) return;
+
     auto x = point.x;
     auto y = point.y + m_scroll;
 
