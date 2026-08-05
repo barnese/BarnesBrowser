@@ -279,10 +279,12 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     {
         std::cout << "Fetching URL: " << url.describe() << "\n";
         m_history.push_back(url);
-        auto body = url.request(m_url, payload);
+        auto response = url.request(m_url, payload);
+        std::string body = response.errorMessage.has_value() ? response.errorMessage.value() : response.body;
         m_url = url;
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
+        loadContentSecurityPolicy(response.headers);
         loadScripts();
         loadStyles();
         m_status = LOADED;
@@ -302,14 +304,22 @@ void BrowserTab::loadScripts()
     for (const auto& script : scripts)
     {
         auto scriptUrl = m_url.resolve(script);
+
+        // Make sure this script is allowed by the Content Security Policy.
+        // If there are no allowed origins defined, then allow the script.
+        if (!allowRequest(scriptUrl))
+        {
+            std::cout << "Blocked script due to CSP: " << script << std::endl;
+            continue;
+        }
         try
         {
-            auto body = scriptUrl.request(m_url);
+            auto body = scriptUrl.request(m_url).body;
             m_js->run(script, body);
         }
         catch (...)
         {
-            continue;
+            std::cout << "Failed to load script: " << script << std::endl;
         }
     }
 }
@@ -320,10 +330,56 @@ void BrowserTab::loadStyles()
     auto links = getStyleSheetLinks(m_node.get());
     for (const auto& link : links)
     {
-        auto linkUrl = m_url.resolve(link);
-        auto linkBody = linkUrl.request(m_url);
-        auto linkResults = CSSParser(trim(linkBody)).parse();
-        m_rules.merge(linkResults);
+        try 
+        {
+            auto linkUrl = m_url.resolve(link);
+
+            // Make sure this style is allowed by the Content Security Policy.
+            // If there are no allowed origins defined, this allow the style.
+            if (!allowRequest(linkUrl))
+            {
+                std::cout << "Blocked style due to CSP: " << link << std::endl;
+                continue;
+            }
+
+            auto linkBody = linkUrl.request(m_url).body;
+            auto linkResults = CSSParser(trim(linkBody)).parse();
+            m_rules.merge(linkResults);
+        }
+        catch (...)
+        {
+            std::cout << "Failed to load style: " << link << std::endl;
+        }
+    }
+}
+
+bool BrowserTab::allowRequest(const URL& url)
+{
+    auto origin = url.origin();
+    auto it = find(m_allowedOrigins.begin(), m_allowedOrigins.end(), origin);
+    bool containsUrl = it != m_allowedOrigins.end();
+    return m_allowedOrigins.empty() || containsUrl;
+}
+
+void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers)
+{
+    m_allowedOrigins.clear();
+
+    if (headers.contains("content-security-policy"))
+    {
+        auto policy = split(headers["content-security-policy"], " ", false);
+        if (policy.size() > 0 && policy[0] == "default-src")
+        {
+            for (const auto& origin : policy) 
+            {
+                if (origin == "default-src")
+                {
+                    continue;
+                }
+                auto url = URL(origin).origin();
+                m_allowedOrigins.push_back(url);
+            }
+        }
     }
 }
 

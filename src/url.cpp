@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <iostream>
-#include <map>
 #include <optional>
 #include <sstream>
 #include <sys/socket.h>
@@ -267,8 +266,10 @@ void parseAndStoreCookie(std::string host, std::string cookie)
     Globals::cookieJar[host] = {cookie, params};
 }
 
-std::string URL::request(std::optional<URL> referrer, std::optional<std::string> payload) const
+URLResponse URL::request(std::optional<URL> referrer, std::optional<std::string> payload) const
 {
+    URLResponse response;
+
     UrlComponents urlComponents = m_urlComponents;
 
     // Loop to handle URLs that respond with a redirect responses, 
@@ -292,7 +293,7 @@ std::string URL::request(std::optional<URL> referrer, std::optional<std::string>
 
         sendRequest(&ssl, sock, request);
 
-        std::string response = receiveResponse(&ssl, sock);
+        std::string responseString = receiveResponse(&ssl, sock);
 
         if (urlComponents.scheme == "https")
         {
@@ -301,31 +302,32 @@ std::string URL::request(std::optional<URL> referrer, std::optional<std::string>
         close(sock);
 
         // Get the header and body text from the response.
-        size_t headerEnd = response.find(Constants::HTML_HEADER_SEPARATOR);
-        std::string header = response.substr(0, headerEnd);
-        std::string body = response.substr(headerEnd + Constants::HTML_HEADER_SEPARATOR.size());
-        std::string statusCode = getStatusCode(header);
-        auto responseHeaders = parseHeaders(header);
+        size_t headerEnd = responseString.find(Constants::HTML_HEADER_SEPARATOR);
+        std::string header = responseString.substr(0, headerEnd);
+        response.body = responseString.substr(headerEnd + Constants::HTML_HEADER_SEPARATOR.size());
+        response.statusCode = getStatusCode(header);
+        response.headers = parseHeaders(header);
 
-        if (responseHeaders.contains("set-cookie"))
+        if (response.headers.contains("set-cookie"))
         {
-            auto cookie = responseHeaders["set-cookie"];
+            auto cookie = response.headers["set-cookie"];
             parseAndStoreCookie(urlComponents.host, cookie);
         }
 
-        if (!isRedirect(std::stoi(statusCode)))
+        if (!isRedirect(std::stoi(response.statusCode)))
         {
-            return body;
+            return response;
         }
 
         // Create a new request for the given redirect location.
-        auto location = responseHeaders["Location"];
+        auto location = response.headers["Location"];
         auto fullUrl = resolve(location);
         urlComponents = fullUrl.components();
         std::cout << "Redirecting to: " << fullUrl.describe(false) << std::endl;
     }
 
-    return "Error: Too many redirects!";
+    response.errorMessage = "Too many redirects!";
+    return response;
 }
 
 URL URL::resolve(std::string url) const

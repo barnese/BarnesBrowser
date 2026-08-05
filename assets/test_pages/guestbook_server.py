@@ -1,3 +1,4 @@
+import html
 import random
 import socket
 import urllib.parse
@@ -7,8 +8,8 @@ import urllib.parse
 
 # Stores text entries in the guest book.
 ENTRIES = [ 
-    ("Hello!!", "user1"),
-    ("What's going on in here?", "user2"),
+    ("Hello from the United States!", "user1"),
+    ("¡Hola desde Argentina!", "user2"),
 ]
 
 # Maps user tokens to session data dictionaries. 
@@ -56,6 +57,8 @@ def handle_connection(conx):
     if "cookie" not in headers:
         template = "Set-Cookie: token={}; SameSite=Lax\r\n"
         response += template.format(token)
+    csp = "default-src http://localhost:8000"
+    response += "Content-Security-Policy: {}\r\n".format(csp)
     response += "\r\n" + body
 
     conx.send(response.encode('utf8'))
@@ -86,8 +89,11 @@ def show_comments(session):
     out += "<strong></strong>"
 
     for entry, who in ENTRIES:
-        out += "<p>" + entry + "\n" 
-        out += "<i>by " + who + "</i></p>"
+        out += "<p>" + html.escape(entry) + "\n" 
+        out += "<i>by " + html.escape(who) + "</i></p>"
+
+    # Test Content-Security-Policy by adding a bad script.
+    out += "<script src=https://example.com/evil.js></script>"
 
     return out
 

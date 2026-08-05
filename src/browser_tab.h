@@ -2,6 +2,7 @@
 
 #include "commands/command.h"
 #include "styles/css_parser.h"
+#include "helpers/case_insensitive_less.h"
 #include "html_tree/element.h"
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
@@ -42,6 +43,10 @@ public:
     std::vector<Node*> nodeTreeToList();
     void render();
     URL getLoadedUrl() { return m_url; };
+    
+    /// Checks to see if the url is allowed by the Content Security Policy.
+    /// If no allowed origins are defined, then the URL is allowed.
+    bool allowRequest(const URL& url);
 
 signals:
     void linkClicked(URL url);
@@ -50,6 +55,7 @@ private:
     void draw();
     void loadScripts();
     void loadStyles();
+    void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);
     void submitForm(Element* element);
     std::vector<std::string> getStyleSheetLinks(const Node* tree);
     std::vector<std::string> getScriptLinks(const Node* tree);
@@ -65,6 +71,7 @@ private:
     std::vector<URL> m_history;
     Element* m_focus;
     CSSRules m_rules;
+    std::vector<URL> m_allowedOrigins;
 
     int m_scroll;
     int m_width;

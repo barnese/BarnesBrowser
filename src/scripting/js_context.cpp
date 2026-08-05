@@ -110,12 +110,19 @@ std::string JSContext::sendXmlHttpRequest(std::string method, std::string url, s
     auto tabUrl = m_tab->getLoadedUrl();
     auto fullUrl = tabUrl.resolve(url);
 
+    // Make sure this URL is allowed by the Content Security Policy.
+    // If there are no allowed origins defined, this allow the style.
+    if (!m_tab->allowRequest(fullUrl))
+    {
+        throw JSContextException("Cross-origin XHR blocked by CSP");
+    }
+
     if (fullUrl.origin() != tabUrl)
     {
         throw JSContextException("Cross-origin XHR not allowed");
     }
 
-    return fullUrl.request(tabUrl, body);
+    return fullUrl.request(tabUrl, body).body;
 }
 
 int JSContext::getHandle(Node* node)
