@@ -187,6 +187,10 @@ SortedCSSRules sort(const CSSRules& rules)
         }
         else if (auto s = dynamic_cast<DescendantSelector*>(rule.first.get()))
         {
+            if (s->descendant == nullptr && s->ancestor == nullptr) {
+                continue;
+            }
+
             sortedRules.push_back({
                 std::make_unique<DescendantSelector>(
                     std::move(s->ancestor), 
