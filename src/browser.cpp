@@ -39,6 +39,7 @@ void Browser::newTab(std::optional<URL> url)
     m_tabs.push_back(std::move(tab));
     m_activeTab = m_tabs.back().get();
     connect(m_activeTab, &BrowserTab::linkClicked, this, &Browser::linkClicked);
+    connect(m_activeTab, &BrowserTab::needsDisplayUpdate, this, &Browser::refreshTab);
     m_view->setTab(m_activeTab);
     m_view->centerOn(0, 0);
     m_view->setFocus();
@@ -49,6 +50,11 @@ void Browser::linkClicked(URL url)
 {
     QString urlString = QString::fromStdString(url.describe(false));
     m_chrome->setAddress(urlString);
+}
+
+void Browser::refreshTab(const QImage& surface)
+{
+    m_view->refreshTab(surface);
 }
 
 void Browser::createNewTab()

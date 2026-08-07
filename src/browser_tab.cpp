@@ -21,39 +21,55 @@
 BrowserTab::BrowserTab(int width, int height)
     : m_url(""),
       m_width(width),
-      m_height(height)
+      m_height(height),
+      m_rootSurface(QSize(width, height), QImage::Format_RGBA8888) 
 {
     m_scroll = 0;
-
-    // Set the background to white.
-    setBackgroundBrush(Qt::white);
-
     m_focus = nullptr;
     m_status = LOADING;
 }
 
 BrowserTab::~BrowserTab() = default;
 
-/// Draws the display list to the screen.
-/// Draw operates using screen coordinates, which are the
-/// visible coordinates on the screen based on the current
-/// scroll value.
 void BrowserTab::draw()
 {
     // Erase the entire scene so we can redraw its contents.
-    clear();
+    // In other words, fill the background to white.
+    m_rootSurface.fill(Qt::white);
 
     for (const auto& command : m_displayCommands)
     {
         // Prevent drawing off-screen content.
-        if (command->top > m_scroll + m_height ||
-            command->bottom < m_scroll)
+        if (command->rect.top() > m_scroll + m_height ||
+            command->rect.bottom() < m_scroll)
         {
             continue;
         }
 
-        //std::cout << command->describe() << "\n";
-        command->execute(this, m_scroll);
+        command->execute(&m_rootSurface, m_scroll);
+    }
+
+    // The surface has changed, so we need to signal that the
+    // display needs to be refreshed with the updated surface.
+    needsDisplayUpdate(m_rootSurface);
+}
+
+QColor BrowserTab::parseColor(const std::string& color) const 
+{
+    if (color.starts_with("#") && color.size() == 7)
+    {
+        int r = std::stoi(color.substr(1, 3));
+        int g = std::stoi(color.substr(3, 5));
+        int b = std::stoi(color.substr(5, 7));
+        return QColor(qRgb(r, g, b));
+    }
+    else if (Constants::NAMED_COLORS.contains(color))
+    {
+        return parseColor(Constants::NAMED_COLORS.at(color));
+    }
+    else 
+    {
+        return Qt::black;
     }
 }
 
@@ -81,7 +97,7 @@ void BrowserTab::resize(int width, int height)
 {
     m_width = width;
     m_height = height;
-    setSceneRect(QRect(0, 0, width, height));
+    m_rootSurface = QImage(QSize(width, height), QImage::Format_RGBA8888);
     render();
 }
 

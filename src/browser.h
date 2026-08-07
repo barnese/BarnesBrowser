@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <optional>
+#include <QImage>
 #include <QWidget>
 #include <vector>
 
@@ -23,6 +24,7 @@ public:
     void changeAddress(QString newAddress);
     void goBack();
     void linkClicked(URL url);
+    void refreshTab(const QImage& surface);
 
 private:
     BrowserView* m_view;

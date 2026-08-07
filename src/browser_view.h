@@ -2,6 +2,8 @@
 
 #include "browser_tab.h"
 
+#include <QGraphicsPixmapItem>
+#include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QKeyEvent>
 #include <QWheelEvent>
@@ -12,6 +14,7 @@ class BrowserView : public QGraphicsView
     public:
         explicit BrowserView(QWidget* parent = nullptr);
         void setTab(BrowserTab* tab);
+        void refreshTab(const QImage& surface);
 
     private:
         void resizeEvent(QResizeEvent* event) override;
@@ -20,4 +23,6 @@ class BrowserView : public QGraphicsView
         void wheelEvent(QWheelEvent* event) override;
 
         BrowserTab* m_activeTab; 
+        QGraphicsScene m_scene;
+        QGraphicsPixmapItem* m_pixmapItem;
 };

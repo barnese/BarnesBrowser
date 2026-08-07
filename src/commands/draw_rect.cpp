@@ -1,34 +1,37 @@
 #include "draw_rect.h"
 
+#include <QPainter>
+#include <sstream>
+
 DrawRect::DrawRect(int x1, int y1, int x2, int y2, QString color)
     : m_color(color)
 {
-    left = x1;
-    top = y1;
-    right = x2;
-    bottom = y2;
+    rect = {x1, y1, x2, y2};
 }
 
-void DrawRect::execute(QGraphicsScene* scene, int scroll)
+void DrawRect::execute(QImage* surface, int scroll)
 {
-    auto pen = QPen();
+    QRect scrolledRect = {
+        rect.left(),
+        rect.top() - scroll,
+        rect.width(),
+        rect.height()
+    };
+
+    QPainter painter(surface);
     auto brush = QBrush(QColor(m_color));
-    int padding = 2;
-    int x = left;
-    int y = top - scroll + padding;
-    int width = right;
-    int height = bottom - top + padding;
-    scene->addRect(x, y, width, height, pen, brush);
+    painter.setBrush(brush);
+    painter.drawRect(scrolledRect);
 }
 
 std::string DrawRect::describe() const
 {
     std::stringstream s; 
     s << "DrawRect { ";
-    s << "left: " << left << ", ";
-    s << "top: " << top << ", ";
-    s << "right: " << right << ", ";
-    s << "bottom: " << bottom << ", ";
+    s << "left: " << rect.left() << ", ";
+    s << "top: " << rect.top() << ", ";
+    s << "right: " << rect.right() << ", ";
+    s << "bottom: " << rect.bottom() << ", ";
     s << "color: " << m_color.toStdString();
     s << " }";
     return s.str();

@@ -11,7 +11,9 @@
 
 #include <string>
 #include <optional>
-#include <QGraphicsScene>
+#include <QColor>
+#include <QImage>
+#include <QObject>
 
 class JSContext;
 
@@ -23,27 +25,36 @@ enum BrowserTabStatus
 };
 
 /// Handles rendering the graphics for a browser tab.
-class BrowserTab: public QGraphicsScene
+class BrowserTab : public QObject
 {
     Q_OBJECT
 
 public:
     BrowserTab(int width, int height);
     ~BrowserTab();
+
+    // Loading and Navigation
     void load(std::string url);
     void load(URL url, std::optional<std::string> payload=std::nullopt);
-    void click(Point point);
+    void render();
     std::optional<URL> goBack();
+    
+    // Event handlers
+    void click(Point point);
     void scrollDown();
     void scrollUp();
     void keyPress(std::string text);
     void resize(int width, int height);
+
+    // Public Getters
+    URL getLoadedUrl() { return m_url; };
     const Node* getNode() const { return m_node.get(); };
+    QImage* getSurface() { return &m_rootSurface; };
+
+    // Public Helpers
     std::vector<const Node*> nodeTreeToList() const;
     std::vector<Node*> nodeTreeToList();
-    void render();
-    URL getLoadedUrl() { return m_url; };
-    
+
     /// Checks to see if the url is allowed by the Content Security Policy.
     /// If no allowed origins are defined, then the URL is allowed.
     bool allowRequest(const URL& url);
@@ -51,11 +62,22 @@ public:
 signals:
     void linkClicked(URL url);
 
+    /// Signal sent when the surface has changed and the
+    /// display needs to be updated, namely after a draw.
+    void needsDisplayUpdate(const QImage& surface);
+
 private:
+    /// Draws the display list to the screen,
+    /// using screen coordinates, which are the visible
+    /// coordinates based on the current scroll value.
     void draw();
+
+    QColor parseColor(const std::string& color) const;
+
     void loadScripts();
     void loadStyles();
     void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);
+
     void submitForm(Element* element);
     std::vector<std::string> getStyleSheetLinks(const Node* tree);
     std::vector<std::string> getScriptLinks(const Node* tree);
@@ -76,4 +98,5 @@ private:
     int m_scroll;
     int m_width;
     int m_height;
+    QImage m_rootSurface;
 };

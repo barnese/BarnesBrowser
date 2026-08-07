@@ -1,15 +1,28 @@
 #include "browser_view.h"
 
+#include <QPixmap>
+
 BrowserView::BrowserView(QWidget* parent)
-    : QGraphicsView(parent)
+    : QGraphicsView(parent),
+      m_scene{this},
+      m_pixmapItem(m_scene.addPixmap({}))
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setScene(&m_scene);
 }
 
 void BrowserView::setTab(BrowserTab* tab)
 {
     m_activeTab = tab;
-    setScene(m_activeTab);
+}
+
+void BrowserView::refreshTab(const QImage& surface)
+{
+    // Translate the given QImage surface into a QPixmap,
+    // which creates a display-optimized version of the surface.
+    // PixmapItem then displays the Pixmap onto the scene.
+    m_pixmapItem->setPixmap(QPixmap::fromImage(surface));
+    m_scene.setSceneRect(m_pixmapItem->boundingRect());
 }
 
 void BrowserView::resizeEvent(QResizeEvent* event)

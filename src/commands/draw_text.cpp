@@ -1,7 +1,8 @@
 #include "draw_text.h"
 
 #include <QFontMetrics>
-#include <QGraphicsTextItem>
+#include <QPainter>
+#include <sstream>
 
 DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
     : m_text(text),
@@ -9,26 +10,36 @@ DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
       m_color(color)
 {
     QFontMetrics metrics(m_font);
-    left = x1;
-    bottom = y1 + metrics.lineSpacing();
-    top = y1;
+
+    rect = { x1, y1, 
+        x1 + metrics.horizontalAdvance(text), 
+        y1 - metrics.ascent() + metrics.descent()
+    };
 }
 
-void DrawText::execute(QGraphicsScene* scene, int scroll)
+void DrawText::execute(QImage* surface, int scroll)
 {
-    auto text = scene->addText(m_text, m_font);
-    text->setPos(left, top - scroll);
-    text->setDefaultTextColor(QColor(m_color));
+    QRect scrolledRect = {
+        rect.left(),
+        rect.top() - scroll,
+        rect.right(),
+        rect.bottom() - scroll
+    };
+    
+    QPainter painter(surface);
+    painter.setPen(m_color);
+    painter.setFont(m_font);
+    painter.drawText(scrolledRect, m_text);
 }
 
 std::string DrawText::describe() const
 {
     std::stringstream s; 
     s << "DrawText { ";
-    s << "left: " << left << ", ";
-    s << "top: " << top << ", ";
-    s << "right: " << right << ", ";
-    s << "bottom: " << bottom << ", ";
+    s << "left: " << rect.left() << ", ";
+    s << "top: " << rect.top() << ", ";
+    s << "right: " << rect.right() << ", ";
+    s << "bottom: " << rect.bottom() << ", ";
     s << "text: \"" << m_text.toStdString() << "\", ";
     s << "font: " << m_font.family().toStdString() << ", ";
     s << "color: " << m_color.toStdString();
