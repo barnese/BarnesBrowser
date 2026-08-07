@@ -17,6 +17,34 @@ TEST_CASE("split() only splits the first string by the delimiter", TAG)
     REQUIRE(expected == actual);
 }
 
+TEST_CASE("splitLast() splits a string at the last delimiter", TAG)
+{
+    std::vector<std::string> expected { "a", "b" };
+    auto actual = splitLast("a/b", "/");
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("splitLast() splits a string at the last delimiter with multiple delimiters", TAG)
+{
+    std::vector<std::string> expected { "a/b", "c" };
+    auto actual = splitLast("a/b/c", "/");
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("splitLast() splits a string at the last delimiter with multiple delimiters at start and end", TAG)
+{
+    std::vector<std::string> expected { "/a/b/c", "" };
+    auto actual = splitLast("/a/b/c/", "/");
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("splitLast() doesn't split a string with no delimiter", TAG)
+{
+    std::vector<std::string> expected { "asdf" };
+    auto actual = splitLast("asdf", "/");
+    REQUIRE(expected == actual);
+}
+
 TEST_CASE("trimRight() removes whitespace to the right of a string", TAG)
 {
     REQUIRE(trimRight("hi ") == "hi");

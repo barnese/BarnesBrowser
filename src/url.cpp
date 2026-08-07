@@ -339,7 +339,7 @@ URL URL::resolve(std::string url) const
 
     if (!url.starts_with("/"))
     {
-        auto dir = split(m_urlComponents.path, "/")[0];
+        auto dir = splitLast(m_urlComponents.path, "/")[0];
         while (url.starts_with("../"))
         {
             url = split(url, "/")[1];

@@ -7,7 +7,7 @@ DrawLine::DrawLine(int x1, int y1, int x2, int y2, QString color, int thickness)
     : m_color(color),
       m_thickness(thickness)
 {
-    rect = {x1, y1, x2, y2};
+    rect = {x1, y1, x2 - x1, y2 - y1};
 }
 
 void DrawLine::execute(QImage* surface, int scroll)

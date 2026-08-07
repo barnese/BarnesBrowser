@@ -1,15 +1,17 @@
-#include "draw_rect.h"
+#include "draw_rounded_rect.h"
 
 #include <QPainter>
+#include <QPen>
 #include <sstream>
 
-DrawRect::DrawRect(int x1, int y1, int x2, int y2, QString color)
-    : m_color(color)
+DrawRoundedRect::DrawRoundedRect(int x1, int y1, int x2, int y2, QString color, double radius)
+    : m_color(color),
+      m_radius(radius)
 {
     rect = {x1, y1, x2, y2};
 }
 
-void DrawRect::execute(QImage* surface, int scroll)
+void DrawRoundedRect::execute(QImage* surface, int scroll)
 {
     QRect scrolledRect = {
         rect.left(),
@@ -21,18 +23,21 @@ void DrawRect::execute(QImage* surface, int scroll)
     QPainter painter(surface);
     auto brush = QBrush(QColor(m_color));
     painter.setBrush(brush);
-    painter.drawRect(scrolledRect);
+    auto pen = QPen(QColor(Qt::transparent));
+    painter.setPen(pen);
+    painter.drawRoundedRect(scrolledRect, m_radius, m_radius);
 }
 
-std::string DrawRect::describe() const
+std::string DrawRoundedRect::describe() const
 {
     std::stringstream s; 
-    s << "DrawRect { ";
+    s << "DrawRoundedRect { ";
     s << "left: " << rect.left() << ", ";
     s << "top: " << rect.top() << ", ";
     s << "right: " << rect.right() << ", ";
     s << "bottom: " << rect.bottom() << ", ";
-    s << "color: " << m_color.toStdString();
+    s << "color: " << m_color.toStdString() << ", ";
+    s << "radius: " << m_radius;
     s << " }";
     return s.str();
 }

@@ -1,6 +1,6 @@
 #include "block_layout.h"
 
-#include "commands/draw_rect.h"
+#include "commands/draw_rounded_rect.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
@@ -242,14 +242,14 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 
     if (auto element = dynamic_cast<const Element*>(node)) 
     {
-        if ((element->tag == "pre" || element->tag == "div"))
+        if (std::ranges::contains(Constants::BLOCK_ELEMENTS, element->tag))
         {
-            if (auto search = element->styles.find("background-color"); search != element->styles.end())
-            {
-                QString color(search->second.c_str());
-                auto command = std::make_unique<DrawRect>(x, y, width, height, color);
-                commands.push_back(std::move(command));
-            }
+            auto backgroundColor = element->findStyle("background-color", "transparent");
+            QString color(backgroundColor.c_str());
+            auto borderRadius = element->findStyle("border-radius", "0px");
+            auto radius = pixelsToFloat(borderRadius);
+            auto command = std::make_unique<DrawRoundedRect>(x, y, width, height, color, radius);
+            commands.push_back(std::move(command));
         }
     }
 

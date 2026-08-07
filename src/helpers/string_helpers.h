@@ -4,6 +4,7 @@
 #include <vector>
 
 std::vector<std::string> split(std::string text, std::string delimiter, bool firstOnly = true);
+std::vector<std::string> splitLast(const std::string& text, const std::string& delimiter);
 std::string trim(std::string text);
 std::string trimLeft(std::string text);
 std::string trimRight(std::string text);

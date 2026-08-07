@@ -31,6 +31,20 @@ std::vector<std::string> split(std::string text, std::string delimiter, bool fir
     return result;
 }
 
+std::vector<std::string> splitLast(const std::string& text, const std::string& delimiter)
+{
+    size_t pos = text.rfind(delimiter);
+ 
+    if (pos != std::string::npos)
+    {
+        std::string first = text.substr(0, pos);
+        std::string last = text.substr(pos + 1);
+        return { first, last };
+    }
+
+    return { text };
+}
+
 std::string trim(std::string text) 
 {
     return trimRight(trimLeft(text));

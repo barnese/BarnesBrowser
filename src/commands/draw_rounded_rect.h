@@ -4,14 +4,15 @@
 
 #include <QString>
 
-/// Defines a command for drawing a rectangle.
-class DrawRect : public Command
+/// Defines a command for drawing a rounded rectangle.
+class DrawRoundedRect : public Command
 {
 public:
-    DrawRect(int x1, int y1, int x2, int y2, QString color);
+    DrawRoundedRect(int x1, int y1, int x2, int y2, QString color, double radius);
     void execute(QImage* surface, int scroll) override;
     std::string describe() const override;
 
 private:
     QString m_color;
+    double m_radius;
 };

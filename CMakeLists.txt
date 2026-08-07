@@ -40,7 +40,7 @@ target_include_directories(dukglue SYSTEM INTERFACE ${dukglue_src_SOURCE_DIR}/in
 
 add_executable(main
     src/commands/draw_line.cpp
-    src/commands/draw_rect.cpp
+    src/commands/draw_rounded_rect.cpp
     src/commands/draw_text.cpp
     src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp

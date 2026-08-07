@@ -1,7 +1,7 @@
 #include "input_layout.h"
 
 #include "commands/draw_line.h"
-#include "commands/draw_rect.h"
+#include "commands/draw_rounded_rect.h"
 #include "commands/draw_text.h"
 #include "constants.h"
 #include "styles/style_helpers.h"
@@ -58,9 +58,11 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
     std::vector<std::unique_ptr<Command>> commands;
 
     auto bgColor = QString::fromStdString(node->findStyle("background-color", "transparent"));
+    auto borderRadius = pixelsToFloat(node->findStyle("border-radius", "0px"));
     if (bgColor != "transparent")
     {
-        auto command = std::make_unique<DrawRect>(x, y, x + width, y + height, bgColor);
+        auto command = std::make_unique<DrawRoundedRect>(x, y, width, height, bgColor, borderRadius);
+        std::cout << command->describe() << std::endl;
         commands.push_back(std::move(command));
     }
 
@@ -75,9 +77,10 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
             if (element->isFocused) 
             {
                 QFontMetrics metrics(font);
-                auto cx = x + metrics.horizontalAdvance(text) + 5;
-                auto cy = y + 2;
+                auto cx = x + metrics.horizontalAdvance(text) + 1;
+                auto cy = y;
                 auto command = std::make_unique<DrawLine>(cx, cy, cx, cy + height, "black", 1);
+                std::cout << command->describe() << std::endl;
                 commands.push_back(std::move(command));
             }
         }
