@@ -49,7 +49,7 @@ public:
     // Public Getters
     URL getLoadedUrl() { return m_url; };
     const Node* getNode() const { return m_node.get(); };
-    QImage* getSurface() { return &m_rootSurface; };
+    QImage* getSurface() { return &m_visibleSurface; };
 
     // Public Helpers
     std::vector<const Node*> nodeTreeToList() const;
@@ -67,10 +67,13 @@ signals:
     void needsDisplayUpdate(const QImage& surface);
 
 private:
-    /// Draws the display list to the screen,
-    /// using screen coordinates, which are the visible
-    /// coordinates based on the current scroll value.
+    /// Copies the viewport of the document based on the
+    /// current scroll value and saves it to the visible 
+    /// surface. Then sends a display update signal.
     void draw();
+
+    /// Rasters the entire tab's content onto the document surface.
+    void raster();
 
     QColor parseColor(const std::string& color) const;
 
@@ -98,5 +101,10 @@ private:
     int m_scroll;
     int m_width;
     int m_height;
-    QImage m_rootSurface;
+    
+    /// Rasterized backing store for the entire document. (AKA "tab surface")
+    QImage m_documentSurface;
+
+    /// Viewport-sized raster buffer for the visible region. (AKA "root surface")
+    QImage m_visibleSurface; 
 };

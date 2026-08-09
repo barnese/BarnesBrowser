@@ -11,21 +11,14 @@ DrawRoundedRect::DrawRoundedRect(int x1, int y1, int x2, int y2, QString color, 
     rect = {x1, y1, x2, y2};
 }
 
-void DrawRoundedRect::execute(QImage* surface, int scroll)
+void DrawRoundedRect::execute(QImage* surface)
 {
-    QRect scrolledRect = {
-        rect.left(),
-        rect.top() - scroll,
-        rect.width(),
-        rect.height()
-    };
-
     QPainter painter(surface);
     auto brush = QBrush(QColor(m_color));
     painter.setBrush(brush);
     auto pen = QPen(QColor(Qt::transparent));
     painter.setPen(pen);
-    painter.drawRoundedRect(scrolledRect, m_radius, m_radius);
+    painter.drawRoundedRect(rect, m_radius, m_radius);
 }
 
 std::string DrawRoundedRect::describe() const

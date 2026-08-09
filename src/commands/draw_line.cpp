@@ -10,13 +10,13 @@ DrawLine::DrawLine(int x1, int y1, int x2, int y2, QString color, int thickness)
     rect = {x1, y1, x2 - x1, y2 - y1};
 }
 
-void DrawLine::execute(QImage* surface, int scroll)
+void DrawLine::execute(QImage* surface)
 {
     QLine line(
         rect.left(),
-        rect.top() - scroll,
+        rect.top(),
         rect.right(),
-        rect.bottom() - scroll
+        rect.bottom()
     );
     
     QPainter painter(surface);

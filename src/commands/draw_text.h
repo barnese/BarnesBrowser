@@ -10,7 +10,7 @@ class DrawText : public Command
 {
 public:
     DrawText(int x1, int y1, QString text, QFont font, QString color);
-    void execute(QImage* surface, int scroll) override;
+    void execute(QImage* surface) override;
     std::string describe() const override;
 
 private:

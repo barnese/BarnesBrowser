@@ -17,19 +17,12 @@ DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
     };
 }
 
-void DrawText::execute(QImage* surface, int scroll)
+void DrawText::execute(QImage* surface)
 {
-    QRect scrolledRect = {
-        rect.left(),
-        rect.top() - scroll,
-        rect.right(),
-        rect.bottom() - scroll
-    };
-    
     QPainter painter(surface);
     painter.setPen(m_color);
     painter.setFont(m_font);
-    painter.drawText(scrolledRect, m_text);
+    painter.drawText(rect, m_text);
 }
 
 std::string DrawText::describe() const

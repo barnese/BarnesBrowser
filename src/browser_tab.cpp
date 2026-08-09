@@ -22,7 +22,8 @@ BrowserTab::BrowserTab(int width, int height)
     : m_url(""),
       m_width(width),
       m_height(height),
-      m_rootSurface(QSize(width, height), QImage::Format_RGBA8888) 
+      m_documentSurface(),
+      m_visibleSurface(QSize(width, height), QImage::Format_RGBA8888)
 {
     m_scroll = 0;
     m_focus = nullptr;
@@ -31,27 +32,31 @@ BrowserTab::BrowserTab(int width, int height)
 
 BrowserTab::~BrowserTab() = default;
 
-void BrowserTab::draw()
+void BrowserTab::raster()
 {
-    // Erase the entire scene so we can redraw its contents.
-    // In other words, fill the background to white.
-    m_rootSurface.fill(Qt::white);
+    auto tabHeight = m_document->height + 2 * Constants::VSTEP;
+
+    if (m_documentSurface.isNull() || m_documentSurface.height() != tabHeight)
+    {
+        m_documentSurface = QImage(QSize(m_width, tabHeight), QImage::Format_RGBA8888);
+    }
+
+    m_documentSurface.fill(Qt::white);
 
     for (const auto& command : m_displayCommands)
     {
-        // Prevent drawing off-screen content.
-        if (command->rect.top() > m_scroll + m_height ||
-            command->rect.bottom() < m_scroll)
-        {
-            continue;
-        }
-
-        command->execute(&m_rootSurface, m_scroll);
+        command->execute(&m_documentSurface);
     }
+}
 
-    // The surface has changed, so we need to signal that the
+void BrowserTab::draw()
+{
+    auto visibleRect = QRect(0, m_scroll, m_width, m_height);
+    m_visibleSurface = m_documentSurface.copy(visibleRect);
+
+    // The visible surface has changed, so signal that the
     // display needs to be refreshed with the updated surface.
-    needsDisplayUpdate(m_rootSurface);
+    needsDisplayUpdate(m_visibleSurface);
 }
 
 QColor BrowserTab::parseColor(const std::string& color) const 
@@ -97,7 +102,7 @@ void BrowserTab::resize(int width, int height)
 {
     m_width = width;
     m_height = height;
-    m_rootSurface = QImage(QSize(width, height), QImage::Format_RGBA8888);
+    m_visibleSurface = QImage(QSize(width, height), QImage::Format_RGBA8888);
     render();
 }
 
@@ -408,6 +413,7 @@ void BrowserTab::render()
     m_document->layout();
     m_displayCommands.clear();
     paintTree(m_document.get(), m_displayCommands);
+    raster();
     draw();
 }
 
