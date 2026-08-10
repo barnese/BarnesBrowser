@@ -13,7 +13,7 @@ DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
 
     rect = { x1, y1, 
         x1 + metrics.horizontalAdvance(text), 
-        y1 - metrics.ascent() + metrics.descent()
+        metrics.ascent() + metrics.descent()
     };
 }
 

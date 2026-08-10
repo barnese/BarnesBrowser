@@ -22,11 +22,12 @@ TextLayout::TextLayout(
 
 void TextLayout::layout()
 {
+    auto family = QString::fromStdString(node->findStyle("font-family", "Helvetica"));
     auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
     auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));
     auto size = static_cast<int>(pixelsToFloat(node->findStyle("font-size", "14px")));
     
-    font = getFont(size, weight, style);
+    font = getFont(family, size, weight, style);
     
     QFontMetrics metrics(font);
     width = metrics.horizontalAdvance(word);
@@ -62,12 +63,12 @@ std::vector<std::unique_ptr<Command>> TextLayout::paint() const
     return commands;
 }
 
-QFont TextLayout::getFont(int size, int weight, int style) 
+QFont TextLayout::getFont(QString family, int size, int weight, int style) 
 {
-    std::tuple<int, int, int> key{size, weight, style};
+    std::tuple<QString, int, int, int> key{family, size, weight, style};
     if (!m_fonts.contains(key))
     {
-        QFont font("Helvetica", size, weight, style);
+        QFont font(family, size, weight, style);
         m_fonts[key] = font;
     }
     return m_fonts[key];

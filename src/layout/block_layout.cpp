@@ -55,6 +55,15 @@ void BlockLayout::layoutBlock()
     previous = nullptr;
     for (const auto& child : node->getChildren())
     {
+        // Skip laying out the head tag.
+        if (auto element = dynamic_cast<const Element*>(child.get())) 
+        {
+            if (element->tag == "head") 
+            {
+                continue;
+            }
+        }
+
         auto next = std::make_unique<BlockLayout>(child.get(), this, previous);
         previous = next.get();
         children.push_back(std::move(next));
@@ -156,6 +165,9 @@ void BlockLayout::processInput(Node* node)
     auto input = std::make_unique<InputLayout>(node, line, previousWord);
     line->children.push_back(std::move(input));
 
+    const auto familyString = node->findStyle("font-family", "Helvetica");
+    const auto family = QString::fromStdString(familyString);
+
     const auto weightString = node->findStyle("font-weight", "normal");
     const auto weight = cssFontWeightToQt(weightString);
 
@@ -165,7 +177,7 @@ void BlockLayout::processInput(Node* node)
     const auto sizeString = node->findStyle("font-size", "14px");
     const auto size = static_cast<int>(pixelsToFloat(sizeString));
 
-    const QFont font = getFont(size, weight, style);
+    const QFont font = getFont(family, size, weight, style);
     const QFontMetrics metrics(font);
     const auto spaceWidth = metrics.horizontalAdvance(" ");
 
@@ -179,6 +191,9 @@ void BlockLayout::processWord(Node* node, QString& word)
     
     replaceHTMLCharacterEntities(word);
 
+    const auto familyString = node->findStyle("font-family", "Helvetica");
+    const auto family = QString::fromStdString(familyString);
+    
     auto weightString = node->findStyle("font-weight", "normal");
     auto weight = cssFontWeightToQt(weightString);
 
@@ -191,7 +206,7 @@ void BlockLayout::processWord(Node* node, QString& word)
     auto colorString = node->findStyle("color", "black");
     QString color = QString::fromStdString(colorString);
 
-    QFont font = getFont(size, weight, style);
+    QFont font = getFont(family, size, weight, style);
     QFontMetrics metrics(font);
     auto wordWidth = metrics.horizontalAdvance(word);
 
@@ -256,12 +271,12 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
     return commands;
 }
 
-QFont BlockLayout::getFont(int size, int weight, int style) 
+QFont BlockLayout::getFont(QString family, int size, int weight, int style) 
 {
-    std::tuple<int, int, int> key{size, weight, style};
+    std::tuple<QString, int, int, int> key{family, size, weight, style};
     if (!m_fonts.contains(key))
     {
-        QFont font("Helvetica", size, weight, style);
+        QFont font(family, size, weight, style);
         m_fonts[key] = font;
     }
     return m_fonts[key];

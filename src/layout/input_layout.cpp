@@ -28,10 +28,11 @@ void InputLayout::layout()
 {
     width = Constants::INPUT_WIDTH_PX;
 
+    auto family = QString::fromStdString(node->findStyle("font-family", "Helvetica"));
     auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
     auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));
     auto size = static_cast<int>(pixelsToFloat(node->findStyle("font-size", "14px")));
-    font = getFont(size, weight, style);
+    font = getFont(family, size, weight, style);
     QFontMetrics metrics(font);
 
     if (previous)
@@ -62,7 +63,6 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
     if (bgColor != "transparent")
     {
         auto command = std::make_unique<DrawRoundedRect>(x, y, width, height, bgColor, borderRadius);
-        std::cout << command->describe() << std::endl;
         commands.push_back(std::move(command));
     }
 
@@ -112,12 +112,12 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
     return commands;
 }
 
-QFont InputLayout::getFont(int size, int weight, int style) 
+QFont InputLayout::getFont(QString family, int size, int weight, int style) 
 {
-    std::tuple<int, int, int> key{size, weight, style};
+    std::tuple<QString, int, int, int> key{family, size, weight, style};
     if (!m_fonts.contains(key))
     {
-        QFont font("Helvetica", size, weight, style);
+        QFont font(family, size, weight, style);
         m_fonts[key] = font;
     }
     return m_fonts[key];

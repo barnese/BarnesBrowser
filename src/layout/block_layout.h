@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <tuple>
+#include <QString>
 #include <QGraphicsScene>
 
 enum BlockLayoutMode {
@@ -35,10 +36,10 @@ private:
     void processInput(Node* node);
     void processWord(Node* node, QString& word);
     void newLine();
-    QFont getFont(int size, int weight, int style);
+    QFont getFont(QString family, int size, int weight, int style);
 
     int m_cursorX;
 
-    // Font cache indexed by size, weight, style.
-    std::map<std::tuple<int, int, int>, QFont> m_fonts;
+    // Font cache indexed by family, size, weight, style.
+    std::map<std::tuple<QString, int, int, int>, QFont> m_fonts;
 };

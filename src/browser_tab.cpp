@@ -365,7 +365,7 @@ void BrowserTab::loadStyles()
 
             auto linkBody = linkUrl.request(m_url).body;
             auto linkResults = CSSParser(trim(linkBody)).parse();
-            m_rules.merge(linkResults);
+            m_rules.merge(linkResults); // TODO: figure out why this merge isn't working. Possibly need to change type??
         }
         catch (...)
         {
@@ -404,10 +404,27 @@ void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, Ca
     }
 }
 
+// For debugging
+void printStyles(const SortedCSSRules& rules)
+{
+    std::cout << "Styles --------------------------" << std::endl;
+
+    for (const auto& rule : rules)
+    {
+        std::cout << rule.first->getName() << ": " << std::endl;
+
+        for (const auto& item : rule.second)
+        {
+            std::cout << "    " << item.first << ": " << item.second << std::endl;
+        }
+    }
+}
+
 void BrowserTab::render()
 {
     if (m_status != LOADED) return;
     auto sortedRules = sort(m_rules);
+    printStyles(sortedRules);
     addStyles(*m_node, sortedRules);
     m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
     m_document->layout();

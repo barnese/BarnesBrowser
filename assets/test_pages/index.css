@@ -1,5 +1,27 @@
-html { font-size: 24px; line-height: 1.2; padding: 1em; }
-pre { line-height: 1.5; background-color: gray; }
-.code-sample { font-size: 60%; font-family: monospace; }
-footer p { font-size: 18px; color: gray }
+html { 
+    font-size: 24px; 
+    line-height: 1.2; 
+    padding: 1em; 
+}
 
+pre { 
+    line-height: 1.5;
+    background-color: gray; 
+}
+
+.code-sample { 
+    font-size: 60%; 
+    font-family: monospace; 
+}
+
+footer p { 
+    font-size: 18px; 
+    color: gray 
+}
+
+h1 {
+    font-family: Arial;
+    font-size: 36px;
+    font-weight: bold;
+    color: purple;
+}

@@ -23,10 +23,10 @@ public:
     bool shouldPaint() const override;
 
 private:
-    QFont getFont(int size, int weight, int style);
+    QFont getFont(QString family, int size, int weight, int style);
 
     QString word;
 
-    // Font cache indexed by size, weight, style.
-    std::map<std::tuple<int, int, int>, QFont> m_fonts;
+    // Font cache indexed by family, size, weight, style.
+    std::map<std::tuple<QString, int, int, int>, QFont> m_fonts;
 };
