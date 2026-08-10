@@ -127,14 +127,14 @@ void addStyles(Node &node, const SortedCSSRules& rules)
     {
         // Add style sheet styles to the element nodes based on the 
         // given explicit CSS rules.
-        for (const auto& [selector, body] : rules)
+        for (const auto& [name, rule] : rules)
         {
-            if (!selector->matches(&node))
+            if (!rule.node->matches(&node))
             {
                 continue;
             }
 
-            for (const auto& [property, value] : body)
+            for (const auto& [property, value] : rule.styles)
             {
                 element->styles[property] = value;
             }
@@ -144,7 +144,8 @@ void addStyles(Node &node, const SortedCSSRules& rules)
         // here because the style attribute overrides style sheet values.
         if (element->attributes.contains("style"))
         {
-            auto parser = CSSParser(element->attributes["style"]);
+            auto style = element->attributes["style"];
+            auto parser = CSSParser(style);
             auto pairs = parser.body();
             for (const auto& [property, value] : pairs)
             {
@@ -365,7 +366,7 @@ void BrowserTab::loadStyles()
 
             auto linkBody = linkUrl.request(m_url).body;
             auto linkResults = CSSParser(trim(linkBody)).parse();
-            m_rules.merge(linkResults); // TODO: figure out why this merge isn't working. Possibly need to change type??
+            m_rules.merge(linkResults);
         }
         catch (...)
         {
@@ -404,18 +405,18 @@ void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, Ca
     }
 }
 
-// For debugging
+// For debugging - prints the sorted CSS styles to the console.
 void printStyles(const SortedCSSRules& rules)
 {
-    std::cout << "Styles --------------------------" << std::endl;
+    std::cout << "Sorted CSS Styles:" << std::endl;
 
     for (const auto& rule : rules)
     {
-        std::cout << rule.first->getName() << ": " << std::endl;
+        std::cout << rule.first << ": " << std::endl;
 
-        for (const auto& item : rule.second)
+        for (const auto& style : rule.second.styles)
         {
-            std::cout << "    " << item.first << ": " << item.second << std::endl;
+            std::cout << "    " << style.first << ": " << style.second << std::endl;
         }
     }
 }
@@ -424,7 +425,6 @@ void BrowserTab::render()
 {
     if (m_status != LOADED) return;
     auto sortedRules = sort(m_rules);
-    printStyles(sortedRules);
     addStyles(*m_node, sortedRules);
     m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
     m_document->layout();

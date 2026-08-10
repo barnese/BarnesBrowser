@@ -7,8 +7,7 @@
 #include <iomanip>
 #include <cctype>
 
-// Helper function that splits a texting by a delimiter.
-std::vector<std::string> split(std::string text, std::string delimiter, bool firstOnly)
+std::vector<std::string> split(const std::string& text, const std::string& delimiter, bool firstOnly)
 {
     std::vector<std::string> result;
 
@@ -43,6 +42,51 @@ std::vector<std::string> splitLast(const std::string& text, const std::string& d
     }
 
     return { text };
+}
+
+std::vector<std::string> splitBySpaceQuoted(const std::string& text)
+{
+    std::vector<std::string> result;
+    std::string buffer;
+    bool inSingleQuotes = false;
+    bool inDoubleQuotes = false;
+
+    for (char c : text)
+    {
+        if (c == '\'')
+        {
+            inSingleQuotes = !inSingleQuotes;
+        }
+
+        if (c == '"')
+        {
+            inDoubleQuotes = !inDoubleQuotes;
+        }
+
+        if (c == ' ')
+        {
+            if (!inSingleQuotes && !inDoubleQuotes)
+            {
+                result.push_back(buffer);
+                buffer = "";
+            }
+            else 
+            {
+                buffer += c;
+            }
+        }
+        else 
+        {
+            buffer += c;
+        }
+    }
+
+    if (!inSingleQuotes && !inDoubleQuotes && !buffer.empty())
+    {
+        result.push_back(buffer);
+    }
+
+    return result;
 }
 
 std::string trim(std::string text) 

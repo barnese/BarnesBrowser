@@ -9,8 +9,14 @@
 #include <tuple>
 #include <vector>
 
-using CSSRules = std::map<std::unique_ptr<Selector>, std::map<std::string, std::string>>;
-using SortedCSSRules = std::vector<std::pair<std::unique_ptr<Selector>, std::map<std::string, std::string>>>;
+struct NodeStyles
+{
+    std::unique_ptr<Selector> node;
+    std::map<std::string, std::string> styles;
+};
+
+using CSSRules = std::map<std::string, NodeStyles>;
+using SortedCSSRules = std::vector<std::pair<std::string, NodeStyles>>;
 
 SortedCSSRules sort(const CSSRules& rules);
 

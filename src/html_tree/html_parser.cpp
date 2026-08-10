@@ -187,7 +187,7 @@ void HTMLParser::addImplicitTags(const std::optional<std::string>& tag)
 
 TagAttributes HTMLParser::getTagAttributes(const std::string& text)
 {
-    auto parts = split(text, " ", false);
+    auto parts = splitBySpaceQuoted(text);
     auto tag = toLowercase(parts[0]);
     std::map<std::string, std::string> attributes;
 

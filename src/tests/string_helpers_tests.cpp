@@ -45,6 +45,41 @@ TEST_CASE("splitLast() doesn't split a string with no delimiter", TAG)
     REQUIRE(expected == actual);
 }
 
+TEST_CASE("splitBySpaceQuoted() empty string", TAG)
+{
+    std::vector<std::string> expected { };
+    auto actual = splitBySpaceQuoted("");
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("splitBySpaceQuoted() string without quotes", TAG)
+{
+    std::vector<std::string> expected { "head" };
+    auto actual = splitBySpaceQuoted("head");
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("splitBySpaceQuoted() multi-part string without quotes", TAG)
+{
+    std::vector<std::string> expected { "!DOCTYPE", "html" };
+    auto actual = splitBySpaceQuoted("!DOCTYPE html");
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("splitBySpaceQuoted() string with quotes with spaces", TAG)
+{
+    std::vector<std::string> expected { "div", "style=\"color: blue; font-size: 12px;\"" };
+    auto actual = splitBySpaceQuoted("div style=\"color: blue; font-size: 12px;\"");
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("splitBySpaceQuoted() string with quotes without spaces", TAG)
+{
+    std::vector<std::string> expected { "html", "lang=\"en-US\"", "xml:lang=\"en-US\"" };
+    auto actual = splitBySpaceQuoted("html lang=\"en-US\" xml:lang=\"en-US\"");
+    REQUIRE(expected == actual);
+}
+
 TEST_CASE("trimRight() removes whitespace to the right of a string", TAG)
 {
     REQUIRE(trimRight("hi ") == "hi");

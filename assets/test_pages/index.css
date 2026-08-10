@@ -4,6 +4,13 @@ html {
     padding: 1em; 
 }
 
+h1 {
+    font-family: Arial;
+    font-size: 36px;
+    font-weight: bold;
+    color: purple;
+}
+
 pre { 
     line-height: 1.5;
     background-color: gray; 
@@ -17,11 +24,4 @@ pre {
 footer p { 
     font-size: 18px; 
     color: gray 
-}
-
-h1 {
-    font-family: Arial;
-    font-size: 36px;
-    font-weight: bold;
-    color: purple;
 }

@@ -7,6 +7,7 @@
 #include "styles/tag_selector.h"
 
 #include <algorithm>
+#include <iostream>
 
 CSSParser::CSSParser(std::string text)
     : m_text(text),
@@ -85,6 +86,7 @@ std::map<std::string, std::string> CSSParser::body()
         }
         catch (const CSSParserException& e)
         {
+            std::cout << "Body failure: " << e.what() << std::endl;
             // We failed to parse a property-value pair, so skip either 
             // to the next semicolon or to the end of the string.
             auto why = ignoreUntil({';', '}'});
@@ -149,10 +151,13 @@ CSSRules CSSParser::parse()
             whitespace();
             auto body = this->body();
             literal('}');
-            rules[std::move(selector)] = body;
+            auto name = selector->getName();
+            rules[name] = NodeStyles(std::move(selector), body);
         } 
         catch (const CSSParserException& e) 
         {
+            std::cout << "Parse failure: " << e.what() << std::endl;
+
             // We failed to parse the selector, so skip the whole rule.
             auto why = ignoreUntil({'}'});
             if (why == '}')
@@ -178,25 +183,35 @@ SortedCSSRules sort(const CSSRules& rules)
     SortedCSSRules sortedRules;
     for (const auto& rule : rules)
     {
-        if (auto tagSelector = dynamic_cast<TagSelector*>(rule.first.get()))
+        auto name = rule.first;
+        auto node = rule.second.node.get();
+        auto styles = rule.second.styles;
+
+        if (auto tagSelector = dynamic_cast<TagSelector*>(node))
         {
             sortedRules.push_back({
-                std::make_unique<TagSelector>(tagSelector->getName()), 
-                rule.second
+                name,
+                NodeStyles(
+                    std::make_unique<TagSelector>(tagSelector->getName()), 
+                    styles
+                )
             });
         }
-        else if (auto s = dynamic_cast<DescendantSelector*>(rule.first.get()))
+        else if (auto s = dynamic_cast<DescendantSelector*>(node))
         {
             if (s->descendant == nullptr && s->ancestor == nullptr) {
                 continue;
             }
 
             sortedRules.push_back({
-                std::make_unique<DescendantSelector>(
-                    std::move(s->ancestor), 
-                    std::move(s->descendant)
-                ), 
-                rule.second
+                name,
+                NodeStyles(
+                    std::make_unique<DescendantSelector>(
+                        std::move(s->ancestor), 
+                        std::move(s->descendant)
+                    ), 
+                    styles
+                )
             });
         }
     }
@@ -204,7 +219,7 @@ SortedCSSRules sort(const CSSRules& rules)
     std::stable_sort(sortedRules.begin(), sortedRules.end(), 
         [](const auto& lhs, const auto& rhs) 
         {
-            return lhs.first->getPriority() > rhs.first->getPriority();
+            return lhs.second.node->getPriority() > rhs.second.node->getPriority();
         }
     );
    

@@ -10,9 +10,9 @@ ComparableRules makeComparable(const CSSRules& rules)
 {
     ComparableRules comparable;
 
-    for (const auto& [element, attributes] : rules)
-    {
-        comparable.emplace(element->getName(), attributes);
+    for (const auto& [name, rule] : rules)
+    {        
+        comparable.emplace(rule.node->getName(), rule.styles);
     }
 
     return comparable;

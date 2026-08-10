@@ -260,6 +260,12 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
         if (std::ranges::contains(Constants::BLOCK_ELEMENTS, element->tag))
         {
             auto backgroundColor = element->findStyle("background-color", "transparent");
+            // TODO: How should we handle background styles with multiple attributes?
+            // For now, I'm treating it as an alias to background-color.
+            if (backgroundColor == "transparent")
+            {
+                backgroundColor = element->findStyle("background", "transparent");
+            }
             QString color(backgroundColor.c_str());
             auto borderRadius = element->findStyle("border-radius", "0px");
             auto radius = pixelsToFloat(borderRadius);
