@@ -11,7 +11,6 @@
 
 #include <string>
 #include <optional>
-#include <QColor>
 #include <QImage>
 #include <QObject>
 
@@ -74,8 +73,6 @@ private:
 
     /// Rasters the entire tab's content onto the document surface.
     void raster();
-
-    QColor parseColor(const std::string& color) const;
 
     void loadScripts();
     void loadStyles();

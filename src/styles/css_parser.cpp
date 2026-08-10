@@ -7,7 +7,6 @@
 #include "styles/tag_selector.h"
 
 #include <algorithm>
-#include <iostream>
 
 CSSParser::CSSParser(std::string text)
     : m_text(text),
@@ -86,7 +85,8 @@ std::map<std::string, std::string> CSSParser::body()
         }
         catch (const CSSParserException& e)
         {
-            std::cout << "Body failure: " << e.what() << std::endl;
+            //std::cout << "Body failure: " << e.what() << std::endl;
+
             // We failed to parse a property-value pair, so skip either 
             // to the next semicolon or to the end of the string.
             auto why = ignoreUntil({';', '}'});
@@ -156,7 +156,7 @@ CSSRules CSSParser::parse()
         } 
         catch (const CSSParserException& e) 
         {
-            std::cout << "Parse failure: " << e.what() << std::endl;
+            //std::cout << "Parse failure: " << e.what() << std::endl;
 
             // We failed to parse the selector, so skip the whole rule.
             auto why = ignoreUntil({'}'});
@@ -224,4 +224,16 @@ SortedCSSRules sort(const CSSRules& rules)
     );
    
     return sortedRules;
+}
+
+QColor parseColor(const QString& color)
+{
+    // Qt orders alpha at the beginning of the string instead
+    // of at the end like in CSS, so we need to swap the order.
+    if (color.startsWith("#") && color.size() == 9)
+    {
+        return QColor("#" + color.right(2) + color.mid(1, 6));
+    }
+
+    return QColor(color);
 }

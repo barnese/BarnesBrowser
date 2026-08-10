@@ -1,5 +1,7 @@
 #include "draw_rounded_rect.h"
 
+#include "styles/css_parser.h"
+
 #include <QPainter>
 #include <QPen>
 #include <sstream>
@@ -14,9 +16,11 @@ DrawRoundedRect::DrawRoundedRect(int x1, int y1, int x2, int y2, QString color, 
 void DrawRoundedRect::execute(QImage* surface)
 {
     QPainter painter(surface);
-    auto brush = QBrush(QColor(m_color));
+
+    auto color = parseColor(m_color);
+    auto brush = QBrush(color);
     painter.setBrush(brush);
-    auto pen = QPen(QColor(Qt::transparent));
+    auto pen = QPen(Qt::transparent);
     painter.setPen(pen);
     painter.drawRoundedRect(rect, m_radius, m_radius);
 }

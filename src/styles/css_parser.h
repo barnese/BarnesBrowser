@@ -8,6 +8,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <QColor>
+#include <QString>
 
 struct NodeStyles
 {
@@ -19,6 +21,7 @@ using CSSRules = std::map<std::string, NodeStyles>;
 using SortedCSSRules = std::vector<std::pair<std::string, NodeStyles>>;
 
 SortedCSSRules sort(const CSSRules& rules);
+QColor parseColor(const QString& color);
 
 /// Defines a parser for parsing CSS. This class uses parsing
 /// functions to parse the property-value format of stylesheets.

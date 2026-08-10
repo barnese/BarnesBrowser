@@ -1,5 +1,7 @@
 #include "draw_line.h"
 
+#include "styles/css_parser.h"
+
 #include <QPainter>
 #include <sstream>
 
@@ -20,7 +22,8 @@ void DrawLine::execute(QImage* surface)
     );
     
     QPainter painter(surface);
-    auto pen = QPen(QColor(m_color), m_thickness);
+    auto color = parseColor(m_color);
+    auto pen = QPen(color, m_thickness);
     painter.setPen(pen);
     painter.drawLine(line);
 }

@@ -1,19 +1,10 @@
 #include "draw_text.h"
 
+#include "styles/css_parser.h"
+
 #include <QFontMetrics>
 #include <QPainter>
 #include <sstream>
-
-/// Converts a CSS-style color: #RRGGBBAA to Qt-style: #AARRGGBB.
-QColor colorFromCssHex(const QString& color)
-{
-    if (color.size() == 9 && color.startsWith('#')) 
-    {
-        return QColor("#" + color.right(2) + color.mid(1, 6));
-    }
-
-    return QColor(color);
-}
 
 DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
     : m_text(text),
@@ -31,7 +22,7 @@ DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
 void DrawText::execute(QImage* surface)
 {
     QPainter painter(surface);
-    auto color = colorFromCssHex(m_color);
+    auto color = parseColor(m_color);
     painter.setPen(color);
     painter.setFont(m_font);
     painter.drawText(rect, m_text);

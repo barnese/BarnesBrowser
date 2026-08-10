@@ -1,5 +1,3 @@
-console.log("Hi from JS!");
-
 function lengthCheck() {
     var name = this.getAttribute("name");
     var value = this.getAttribute("value");

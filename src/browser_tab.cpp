@@ -59,25 +59,6 @@ void BrowserTab::draw()
     needsDisplayUpdate(m_visibleSurface);
 }
 
-QColor BrowserTab::parseColor(const std::string& color) const 
-{
-    if (color.starts_with("#") && color.size() == 7)
-    {
-        int r = std::stoi(color.substr(1, 3));
-        int g = std::stoi(color.substr(3, 5));
-        int b = std::stoi(color.substr(5, 7));
-        return QColor(qRgb(r, g, b));
-    }
-    else if (Constants::NAMED_COLORS.contains(color))
-    {
-        return parseColor(Constants::NAMED_COLORS.at(color));
-    }
-    else 
-    {
-        return Qt::black;
-    }
-}
-
 /// Recursively paints all layout objects, combining the 
 /// results into the provided display commands reference.
 void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &commands)
