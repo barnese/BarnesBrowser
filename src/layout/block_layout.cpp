@@ -1,6 +1,7 @@
 #include "block_layout.h"
 
 #include "commands/draw_rounded_rect.h"
+#include "commands/opacity.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
@@ -12,6 +13,7 @@
 #include "text_layout.h"
 
 #include <QFontMetrics>
+#include <QRect>
 #include <memory>
 
 BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previous)
@@ -275,6 +277,12 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
     }
 
     return commands;
+}
+
+std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
+{
+    QRect rect(x, y, width, height);
+    return paintVisualEffects(node, std::move(commands), rect);
 }
 
 QFont BlockLayout::getFont(QString family, int size, int weight, int style) 

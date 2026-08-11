@@ -59,25 +59,6 @@ void BrowserTab::draw()
     needsDisplayUpdate(m_visibleSurface);
 }
 
-/// Recursively paints all layout objects, combining the 
-/// results into the provided display commands reference.
-void paintTree(const Layout* layout, std::vector<std::unique_ptr<Command>> &commands)
-{
-    if (layout->shouldPaint())
-    {
-        auto paintList = layout->paint();
-        commands.insert(
-            commands.end(), 
-            std::make_move_iterator(paintList.begin()), 
-            std::make_move_iterator(paintList.end())
-        );
-    }
-    for (const auto& child : layout->children)
-    {
-        paintTree(child.get(), commands);
-    }
-}
-
 /// Resizes the scene and reconstructs the layout.
 void BrowserTab::resize(int width, int height)
 {
@@ -402,6 +383,34 @@ void printStyles(const SortedCSSRules& rules)
     }
 }
 
+/// Recursively paints all layout objects, combining the 
+/// results into the provided display commands reference.
+void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList)
+{
+    std::vector<std::unique_ptr<Command>> commands;
+
+    if (layout.shouldPaint())
+    {
+        commands = layout.paint();
+    }
+
+    for (const auto& child : layout.children)
+    {
+        paintTree(*child, commands);
+    }
+
+    if (layout.shouldPaint())
+    {
+        commands = layout.paintEffects(std::move(commands));
+    }
+
+    displayList.insert(
+        displayList.end(),
+        std::make_move_iterator(commands.begin()),
+        std::make_move_iterator(commands.end())
+    );
+}
+
 void BrowserTab::render()
 {
     if (m_status != LOADED) return;
@@ -410,7 +419,7 @@ void BrowserTab::render()
     m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
     m_document->layout();
     m_displayCommands.clear();
-    paintTree(m_document.get(), m_displayCommands);
+    paintTree(*m_document, m_displayCommands);
     raster();
     draw();
 }

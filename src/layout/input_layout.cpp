@@ -3,6 +3,7 @@
 #include "commands/draw_line.h"
 #include "commands/draw_rounded_rect.h"
 #include "commands/draw_text.h"
+#include "commands/opacity.h"
 #include "constants.h"
 #include "styles/style_helpers.h"
 #include "helpers/string_helpers.h"
@@ -121,4 +122,10 @@ QFont InputLayout::getFont(QString family, int size, int weight, int style)
         m_fonts[key] = font;
     }
     return m_fonts[key];
+}
+
+std::vector<std::unique_ptr<Command>> InputLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
+{
+    QRect rect(x, y, width, height);
+    return paintVisualEffects(node, std::move(commands), rect);
 }

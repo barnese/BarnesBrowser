@@ -66,3 +66,8 @@ std::vector<std::unique_ptr<Command>> LineLayout::paint() const
     // There is nothing to paint for a line.
     return {};
 }
+
+std::vector<std::unique_ptr<Command>> LineLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
+{
+    return commands;
+}

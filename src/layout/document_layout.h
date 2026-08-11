@@ -13,6 +13,7 @@ public:
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;
+    std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const override;
 
 private:
     int m_parentWidth;

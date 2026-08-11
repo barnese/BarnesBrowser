@@ -36,3 +36,8 @@ std::vector<std::unique_ptr<Command>> DocumentLayout::paint() const
 {
     return {};
 }
+
+std::vector<std::unique_ptr<Command>> DocumentLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
+{
+    return commands;
+}

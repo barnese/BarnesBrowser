@@ -73,3 +73,8 @@ QFont TextLayout::getFont(QString family, int size, int weight, int style)
     }
     return m_fonts[key];
 }
+
+std::vector<std::unique_ptr<Command>> TextLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
+{
+    return commands;
+}
