@@ -46,12 +46,3 @@ std::string Opacity::describe() const
     s << " }";
     return s.str();
 }
-
-std::vector<std::unique_ptr<Command>> paintVisualEffects(Node* node, std::vector<std::unique_ptr<Command>> commands, QRect)
-{
-    std::vector<std::unique_ptr<Command>> effects;
-    auto opacity = std::stod(node->findStyle("opacity", "1.0"));
-    auto opacityCommand = std::make_unique<Opacity>(opacity, std::move(commands));
-    effects.push_back(std::move(opacityCommand));
-    return effects;
-}

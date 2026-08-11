@@ -39,6 +39,7 @@ add_library(dukglue INTERFACE)
 target_include_directories(dukglue SYSTEM INTERFACE ${dukglue_src_SOURCE_DIR}/include)
 
 add_executable(main
+    src/commands/blend.cpp
     src/commands/draw_line.cpp
     src/commands/draw_rounded_rect.cpp
     src/commands/draw_text.cpp
@@ -51,6 +52,7 @@ add_executable(main
     src/layout/block_layout.cpp
     src/layout/document_layout.cpp
     src/layout/input_layout.cpp
+    src/layout/layout_effects_helpers.cpp
     src/layout/line_layout.cpp
     src/layout/text_layout.cpp
     src/styles/css_parser.cpp

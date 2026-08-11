@@ -1,7 +1,6 @@
 #include "block_layout.h"
 
 #include "commands/draw_rounded_rect.h"
-#include "commands/opacity.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
@@ -9,6 +8,7 @@
 #include "layout.h"
 #include "layout/input_layout.h"
 #include "layout/line_layout.h"
+#include "layout/layout_effects_helpers.h"
 #include "styles/style_helpers.h"
 #include "text_layout.h"
 

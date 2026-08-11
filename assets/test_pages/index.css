@@ -11,6 +11,13 @@ h1 {
     color: purple;
 }
 
+h2 {
+    font-family: Arial;
+    font-size: 32px;
+    font-weight: bold;
+    color: #600060;
+}
+
 pre { 
     line-height: 1.5;
     background-color: gray; 

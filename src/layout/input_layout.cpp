@@ -3,12 +3,12 @@
 #include "commands/draw_line.h"
 #include "commands/draw_rounded_rect.h"
 #include "commands/draw_text.h"
-#include "commands/opacity.h"
 #include "constants.h"
 #include "styles/style_helpers.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
+#include "layout/layout_effects_helpers.h"
 
 #include <QFontMetrics>
 #include <memory>
