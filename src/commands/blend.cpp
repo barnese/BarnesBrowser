@@ -26,6 +26,10 @@ QPainter::CompositionMode parseBlendMode(const std::string& blendMode)
     {
         return QPainter::CompositionMode_Difference;
     }
+    else if (blendMode == "destination-in")
+    {
+        return QPainter::CompositionMode_DestinationIn;
+    }
     else 
     {
         return QPainter::CompositionMode_SourceOver;
