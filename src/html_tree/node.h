@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -27,6 +28,16 @@ public:
     {
         auto it = styles.find(styleName);
         return (it != styles.end()) ? it->second : defaultValue;
+    }
+
+    std::optional<std::string> findStyle(const std::string& styleName) const
+    {
+        auto it = styles.find(styleName);
+        if (it == styles.end())
+        {
+            return std::nullopt;
+        }
+        return it->second;
     }
 
     Node* parent = nullptr;

@@ -43,7 +43,6 @@ add_executable(main
     src/commands/draw_line.cpp
     src/commands/draw_rounded_rect.cpp
     src/commands/draw_text.cpp
-    src/commands/opacity.cpp
     src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp
     src/html_tree/element.cpp

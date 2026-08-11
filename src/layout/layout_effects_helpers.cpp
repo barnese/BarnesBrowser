@@ -2,7 +2,6 @@
 
 #include "commands/blend.h"
 #include "commands/draw_rounded_rect.h"
-#include "commands/opacity.h"
 #include "helpers/string_helpers.h"
 
 std::vector<std::unique_ptr<Command>> paintVisualEffects(
@@ -11,28 +10,29 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
     QRect rect)
 {
     auto opacity = std::stod(node->findStyle("opacity", "1.0"));
-    auto blendMode = node->findStyle("mix-blend-mode", "source-over");
-    auto overflow = node->findStyle("overflow", "");
-    auto borderRadius = pixelsToFloat(node->findStyle("border-radius", "0px"));
+    auto blendMode = node->findStyle("mix-blend-mode");
+    auto overflow = node->findStyle("overflow");
 
     // Apply overflow clipping by creating a new layer, draw the clip 
     // mask into it, then blend it in using "destination-in compositing".
     if (overflow == "clip")
     {
+        if (!blendMode.has_value())
+        {
+            blendMode = "source-over";
+        }
+        
+        auto borderRadius = pixelsToFloat(node->findStyle("border-radius", "0px"));
+
         commands.push_back(
-            std::make_unique<Blend>("destination-in", commandList(
+            std::make_unique<Blend>("destination-in", opacity, commandList(
                 std::make_unique<DrawRoundedRect>(rect, "white", borderRadius) 
             ))
         );
     }
 
-    // First, apply the opacity effect by wrapping the provided 
-    // layout commands with this new opacity command. Then,
-    // apply the blend effect to support the mix-bend-mode style,
-    // using the commandList helper to improve readability.
+    // Apply the blend and opacity effects to each of the given commands. 
     return commandList(
-        std::make_unique<Blend>(blendMode, commandList(
-            std::make_unique<Opacity>(opacity, std::move(commands))
-        ))
+        std::make_unique<Blend>(blendMode, opacity, std::move(commands))
     );
 }
