@@ -14,6 +14,8 @@ BrowserView::BrowserView(QWidget* parent)
 void BrowserView::setTab(BrowserTab* tab)
 {
     m_activeTab = tab;
+    m_activeTab->render();
+    refreshTab(*m_activeTab->getSurface());
 }
 
 void BrowserView::refreshTab(const QImage& surface)

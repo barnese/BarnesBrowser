@@ -28,6 +28,7 @@ BrowserTab::BrowserTab(int width, int height)
     m_scroll = 0;
     m_focus = nullptr;
     m_status = LOADING;
+    m_visibleSurface.fill(Qt::white);
 }
 
 BrowserTab::~BrowserTab() = default;
