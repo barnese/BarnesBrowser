@@ -44,6 +44,7 @@ void Browser::newTab(std::optional<URL> url)
     m_view->centerOn(0, 0);
     m_view->setFocus();
     m_chrome->addTab(tabName, address, m_tabs.size() - 1);
+    m_activeTab->didChangeState(true);
 }
 
 void Browser::linkClicked(URL url)
@@ -69,8 +70,15 @@ void Browser::changeTab(size_t index)
         return;
     }
 
+    // Mark the current tab as inactive.
+    m_activeTab->didChangeState(false);
+
     const auto& tab = m_tabs.at(index);
     m_view->setTab(tab.get());
+    m_activeTab = tab.get();
+    
+    // Mark the new tab as active.
+    m_activeTab->didChangeState(true);
 }
 
 void Browser::goBack()

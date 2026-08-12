@@ -29,9 +29,27 @@ BrowserTab::BrowserTab(int width, int height)
     m_focus = nullptr;
     m_status = LOADING;
     m_visibleSurface.fill(Qt::white);
+
+    // Start the task processing timer, which fires every 100ms.
+    connect(&m_timer, &QTimer::timeout, this, &BrowserTab::processNextTask);
+    m_timer.start(100); 
 }
 
 BrowserTab::~BrowserTab() = default;
+
+void BrowserTab::processNextTask()
+{
+    // Only process tasks if this browser tab is active.
+    if (m_isActive)
+    {
+        m_taskRunner.run();
+    }
+}
+
+void BrowserTab::didChangeState(bool isActive)
+{
+    m_isActive = isActive;
+}
 
 void BrowserTab::raster()
 {
@@ -300,7 +318,16 @@ void BrowserTab::loadScripts()
         try
         {
             auto body = scriptUrl.request(m_url).body;
-            m_js->run(script, body);
+
+            // Rather than run the script right away, schedule it to be processed later.
+            auto task = std::make_unique<Task<JSContext*, std::string, std::string>>(
+                "JSContext::run(\"" + script + "\")", 
+                &JSContext::run, 
+                m_js.get(), 
+                script, 
+                body
+            );
+            m_taskRunner.scheduleTask(std::move(task));
         }
         catch (...)
         {

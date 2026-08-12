@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
 
     Browser browser;
     browser.resize(815, 600);
-    //browser.newTab(URL("https://browser.engineering/forms.html"));
     browser.newTab(URL("http://localhost:8000"));
     browser.show();
     

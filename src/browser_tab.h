@@ -6,6 +6,7 @@
 #include "html_tree/element.h"
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
+#include "tasks/task_runner.h"
 #include "point.h"
 #include "url.h"
 
@@ -13,6 +14,7 @@
 #include <optional>
 #include <QImage>
 #include <QObject>
+#include <QTimer>
 
 class JSContext;
 
@@ -37,6 +39,7 @@ public:
     void load(URL url, std::optional<std::string> payload=std::nullopt);
     void render();
     std::optional<URL> goBack();
+    void didChangeState(bool isActive);
     
     // Event handlers
     void click(Point point);
@@ -64,6 +67,9 @@ signals:
     /// Signal sent when the surface has changed and the
     /// display needs to be updated, namely after a draw.
     void needsDisplayUpdate(const QImage& surface);
+
+private slots:
+    void processNextTask();
 
 private:
     /// Copies the viewport of the document based on the
@@ -104,4 +110,9 @@ private:
 
     /// Viewport-sized raster buffer for the visible region. (AKA "root surface")
     QImage m_visibleSurface; 
+
+    TaskRunner m_taskRunner;
+    QTimer m_timer;
+
+    bool m_isActive;
 };

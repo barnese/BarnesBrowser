@@ -59,6 +59,7 @@ add_executable(main
     src/styles/style_helpers.cpp
     src/styles/tag_selector.cpp
     src/scripting/js_context.cpp
+    src/tasks/task_runner.cpp
     src/browser.cpp
     src/browser_tab.cpp
     src/browser_view.cpp
