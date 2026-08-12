@@ -57,10 +57,10 @@ void BlockLayout::layoutBlock()
     previous = nullptr;
     for (const auto& child : node->getChildren())
     {
-        // Skip laying out the head tag.
+        // Skip laying out the head and style tags.
         if (auto element = dynamic_cast<const Element*>(child.get())) 
         {
-            if (element->tag == "head") 
+            if (element->tag == "head" || element->tag == "style") 
             {
                 continue;
             }
