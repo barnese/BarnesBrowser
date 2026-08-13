@@ -1,5 +1,8 @@
 // A runtime for wrapping C++ functions to be called in JavaScript.
 
+EVENT_LISTENERS = {};
+SET_TIMEOUT_REQUESTS = {};
+
 console = { log: function(x) { 
     printMessage(x); 
 }}
@@ -22,11 +25,9 @@ Node.prototype.getAttribute = function(attr) {
     return currentJSContext.getAttribute(this.handle, attr);
 }
 
-listeners = {};
-
 Node.prototype.addEventListener = function(type, listener) {
-    if (!listeners[this.handle]) listeners[this.handle] = {};
-    var dict = listeners[this.handle];
+    if (!EVENT_LISTENERS[this.handle]) EVENT_LISTENERS[this.handle] = {};
+    var dict = EVENT_LISTENERS[this.handle];
     if (!dict[type]) dict[type] = [];
     var list = dict[type];
     list.push(listener);
@@ -35,7 +36,7 @@ Node.prototype.addEventListener = function(type, listener) {
 Node.prototype.dispatchEvent = function(event) {
     var type = event.type;
     var handle = this.handle;
-    var list = (listeners[handle] && listeners[handle][type]) || [];
+    var list = (EVENT_LISTENERS[handle] && EVENT_LISTENERS[handle][type]) || [];
     for (var i = 0; i < list.length; i++) {
         list[i].call(this);
     }
@@ -67,4 +68,15 @@ XMLHttpRequest.prototype.send = function(body) {
     }
     this.responseText = currentJSContext.sendXmlHttpRequest(
         this.method, this.url, body);
+}
+
+function setTimeout(callback, timeDelta) {
+    var handle = Object.keys(SET_TIMEOUT_REQUESTS).length;
+    SET_TIMEOUT_REQUESTS[handle] = callback;
+    currentJSContext.setTimeout(handle, timeDelta);
+}
+
+function __runSetTimeout(handle) {
+    var callback = SET_TIMEOUT_REQUESTS[handle];
+    callback();
 }

@@ -1,3 +1,8 @@
+function callback() {
+    console.log("Hello from tests.js!");
+}
+setTimeout(callback, 1000);
+
 function lengthCheck() {
     var name = this.getAttribute("name");
     var value = this.getAttribute("value");

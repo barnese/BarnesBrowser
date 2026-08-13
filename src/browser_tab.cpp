@@ -276,10 +276,9 @@ void BrowserTab::load(std::string urlString)
 
 void BrowserTab::load(URL url, std::optional<std::string> payload)
 {
-    m_status = LOADING;
-
     try
     {
+        m_status = LOADING;
         std::cout << "Fetching URL: " << url.describe() << "\n";
         m_history.push_back(url);
         auto response = url.request(m_url, payload);
@@ -302,6 +301,13 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
 
 void BrowserTab::loadScripts()
 {
+    // If we are loading a new page and we already have an existing
+    // JSContext, we need to set a discarded flag so that any pending
+    // timeouts are discarded.
+    if (m_js) 
+    {
+        m_js->discarded = true;
+    }
     m_js = std::make_unique<JSContext>(this);
     auto scripts = getScriptLinks(m_node.get());
     for (const auto& script : scripts)
@@ -371,6 +377,11 @@ bool BrowserTab::allowRequest(const URL& url)
     auto it = find(m_allowedOrigins.begin(), m_allowedOrigins.end(), origin);
     bool containsUrl = it != m_allowedOrigins.end();
     return m_allowedOrigins.empty() || containsUrl;
+}
+
+void BrowserTab::scheduleTask(std::unique_ptr<ITask> task)
+{
+    m_taskRunner.scheduleTask(std::move(task));
 }
 
 void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers)

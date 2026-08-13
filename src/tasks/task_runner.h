@@ -2,6 +2,9 @@
 
 #include "task.h"
 
+#include <queue>
+#include <mutex>
+
 /// Defines a task runner, which stores a first-in, first-out queue.
 class TaskRunner
 {
@@ -11,5 +14,6 @@ public:
     void run();
 
 private:
-    std::vector<std::unique_ptr<ITask>> m_tasks;
+    std::queue<std::unique_ptr<ITask>> m_tasks;
+    std::mutex m_mutex;
 };

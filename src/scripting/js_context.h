@@ -4,10 +4,13 @@
 #include "html_tree/node.h"
 
 #include <string>
+#include <QObject>
 
 class BrowserTab;
 
-class JSContext
+/// Provides a context to run JavaScript code.
+/// Note: this object is a QObject to get timer functionality.
+class JSContext : public QObject
 {
 public:
     JSContext(BrowserTab* tab);
@@ -20,6 +23,11 @@ public:
     std::string getAttribute(int handle, std::string attrName);
     void setInnerHtml(int handle, std::string html);
     std::string sendXmlHttpRequest(std::string method, std::string url, std::string body);
+    void dispatchSetTimeout(int handle);
+    void setTimeout(int handle, long time);
+
+    // Flag to discard setTimeout callbacks from running.
+    bool discarded;
 
 private:
     /// A handle is a numeric identifier for a node, which is used

@@ -9,6 +9,7 @@
 #include <dukglue/dukglue.h>
 #include <fstream>
 #include <iostream>
+#include <QTimer>
 
 void printMessage(const std::string& message)
 {
@@ -33,6 +34,8 @@ std::string getJavaScriptRuntime()
 JSContext::JSContext(BrowserTab* tab)
     : m_tab(tab)
 {
+    discarded = false;
+
     m_duk = duk_create_heap_default();
 
     /// Exports C++ functions to Duktape's global JavaScript scope.
@@ -42,6 +45,7 @@ JSContext::JSContext(BrowserTab* tab)
     dukglue_register_method(m_duk, &JSContext::getAttribute, "getAttribute");
     dukglue_register_method(m_duk, &JSContext::setInnerHtml, "setInnerHtml");
     dukglue_register_method(m_duk, &JSContext::sendXmlHttpRequest, "sendXmlHttpRequest");
+    dukglue_register_method(m_duk, &JSContext::setTimeout, "setTimeout");
 
     // Export the instance of this class to allow the above methods to work.
     dukglue_register_global(m_duk, this, "currentJSContext");
@@ -123,6 +127,30 @@ std::string JSContext::sendXmlHttpRequest(std::string method, std::string url, s
     }
 
     return fullUrl.request(tabUrl, body).body;
+}
+
+void JSContext::dispatchSetTimeout(int handle)
+{
+    if (discarded) return;
+    duk_push_object(m_duk);
+    duk_push_int(m_duk, handle);
+    duk_put_prop_string(m_duk, -2, "handle");
+    duk_put_global_string(m_duk, "jsContext");
+    duk_peval_string(m_duk, "__runSetTimeout(jsContext.handle)");
+    duk_pop(m_duk);
+}
+
+void JSContext::setTimeout(int handle, long time)
+{
+    QTimer::singleShot(time, this, [this, handle]() {
+        auto task = std::make_unique<Task<JSContext*, int>>(
+            "JSContext::dispatchSetTimeout", 
+            &JSContext::dispatchSetTimeout, 
+            this,
+            handle
+        );
+        m_tab->scheduleTask(std::move(task));
+    });
 }
 
 int JSContext::getHandle(Node* node)

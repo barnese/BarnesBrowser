@@ -61,6 +61,8 @@ public:
     /// If no allowed origins are defined, then the URL is allowed.
     bool allowRequest(const URL& url);
 
+    void scheduleTask(std::unique_ptr<ITask> task);
+
 signals:
     void linkClicked(URL url);
 
