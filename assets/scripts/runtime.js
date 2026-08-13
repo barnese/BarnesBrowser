@@ -2,6 +2,7 @@
 
 EVENT_LISTENERS = {};
 SET_TIMEOUT_REQUESTS = {};
+XHR_REQUESTS = {};
 
 console = { log: function(x) { 
     printMessage(x); 
@@ -54,10 +55,13 @@ Object.defineProperty(Node.prototype, 'innerHTML', {
     }
 });
 
-function XMLHttpRequest() {}
+function XMLHttpRequest() {
+    this.handle = Object.keys(XHR_REQUESTS).length;
+    XHR_REQUESTS[this.handle] = this;
+}
 
 XMLHttpRequest.prototype.open = function(method, url, isAsync) {
-    if (isAsync) throw Error("Asynchronous XHR is not supported");
+    this.isAsync = isAsync;
     this.method = method;
     this.url = url;
 }
@@ -66,8 +70,19 @@ XMLHttpRequest.prototype.send = function(body) {
     if (body === undefined) {
         body = "";
     }
+    console.log("[runtime.js] Sending XMLHttpRequest...");
     this.responseText = currentJSContext.sendXmlHttpRequest(
-        this.method, this.url, body);
+        this.handle, this.method, this.url, body, this.isAsync
+    );
+}
+
+function __runXhrOnload(handle, body) {
+    console.log("[runtime.js] __runXhrOnload called.");
+    var obj = XHR_REQUESTS[handle];
+    var evt = new Event('load');
+    obj.responseText = body;
+    if (obj.onload)
+        obj.onload(evt);
 }
 
 function setTimeout(callback, timeDelta) {

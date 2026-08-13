@@ -81,7 +81,6 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
                 auto cx = x + metrics.horizontalAdvance(text) + 1;
                 auto cy = y;
                 auto command = std::make_unique<DrawLine>(cx, cy, cx, cy + height, "black", 1);
-                std::cout << command->describe() << std::endl;
                 commands.push_back(std::move(command));
             }
         }

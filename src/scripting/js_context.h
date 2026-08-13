@@ -2,6 +2,7 @@
 
 #include "duk_config.h"
 #include "html_tree/node.h"
+#include "url.h"
 
 #include <string>
 #include <QObject>
@@ -22,7 +23,9 @@ public:
     std::vector<int> querySelectorAll(std::string selectorText);
     std::string getAttribute(int handle, std::string attrName);
     void setInnerHtml(int handle, std::string html);
-    std::string sendXmlHttpRequest(std::string method, std::string url, std::string body);
+    std::string sendXmlHttpRequest(int handle, std::string method, std::string url, std::string body, bool isAsync);
+    std::string runLoad(int handle, URL tabUrl, URL fullUrl, std::string body);
+    void dispatchXhrOnload(int handle, std::string response);
     void dispatchSetTimeout(int handle);
     void setTimeout(int handle, long time);
 

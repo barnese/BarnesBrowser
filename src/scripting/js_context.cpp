@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <QTimer>
+#include <QThreadPool>
 
 void printMessage(const std::string& message)
 {
@@ -107,7 +108,48 @@ void JSContext::setInnerHtml(int handle, std::string html)
     m_tab->render();
 }
 
-std::string JSContext::sendXmlHttpRequest(std::string method, std::string url, std::string body)
+std::string JSContext::runLoad(int handle, URL tabUrl, URL fullUrl, std::string body)
+{
+    // Make the URL request.
+    std::optional<std::string> payload;
+    if (!body.empty())
+    {
+        payload = body;
+    }
+    auto response = fullUrl.request(tabUrl, payload).body;
+
+    // Schedule a task to send the response back to JavaScript.
+    auto task = std::make_unique<Task<JSContext*, int, std::string>>(
+        "JSContext::dispatchXhrOnload", 
+        &JSContext::dispatchXhrOnload, 
+        this,
+        handle,
+        response
+    );
+    m_tab->scheduleTask(std::move(task));
+
+    return response;
+}
+
+void JSContext::dispatchXhrOnload(int handle, std::string response)
+{
+    if (discarded) return;
+    duk_push_object(m_duk);
+    
+    duk_push_int(m_duk, handle);
+    duk_put_prop_string(m_duk, -2, "handle");
+    
+    duk_push_string(m_duk, response.c_str());
+    duk_put_prop_string(m_duk, -2, "body");
+    
+    duk_put_global_string(m_duk, "js");
+    
+    duk_peval_string(m_duk, "__runXhrOnload(js.handle, js.body)");
+
+    duk_pop(m_duk);
+}
+
+std::string JSContext::sendXmlHttpRequest(int handle, std::string method, std::string url, std::string body, bool isAsync)
 {
     (void)method; // Silence unused parameter warning.
 
@@ -126,7 +168,18 @@ std::string JSContext::sendXmlHttpRequest(std::string method, std::string url, s
         throw JSContextException("Cross-origin XHR not allowed");
     }
 
-    return fullUrl.request(tabUrl, body).body;
+    if (!isAsync)
+    {
+        return runLoad(handle, tabUrl, fullUrl, body);
+    }
+    else 
+    {
+        QThreadPool::globalInstance()->start([this, handle, tabUrl, fullUrl, body] {
+            runLoad(handle, tabUrl, fullUrl, body);
+        });
+
+        return "";
+    }
 }
 
 void JSContext::dispatchSetTimeout(int handle)
