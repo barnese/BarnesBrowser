@@ -14,7 +14,7 @@ BrowserView::BrowserView(QWidget* parent)
 void BrowserView::setTab(BrowserTab* tab)
 {
     m_activeTab = tab;
-    m_activeTab->render();
+    m_activeTab->setNeedsRender();
     refreshTab(*m_activeTab->getSurface());
 }
 

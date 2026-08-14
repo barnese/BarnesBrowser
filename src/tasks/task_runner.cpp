@@ -32,6 +32,10 @@ void TaskRunner::run()
 
     // The task is run after unlocking the thread because it has already
     // been released from the queue and can't be accessed by another thread.
-    std::cout << "TaskRunner running: " << task->getName() << std::endl;
+    auto taskName = task->getName();
+    if (!taskName.empty())
+    {
+        std::cout << "TaskRunner running: " << task->getName() << std::endl;
+    }
     task->run();
 }

@@ -11,6 +11,9 @@ namespace Constants
     const std::string HTML_HEADER_SEPARATOR = "\r\n\r\n";
     const int SCROLL_STEP = 100;
     const int INPUT_WIDTH_PX = 200;
+    
+    /// Target refresh rate, 33 frames per millisecond.
+    const int REFRESH_RATE_MS = 33;
 
     const std::vector<std::string> BLOCK_ELEMENTS = 
     {

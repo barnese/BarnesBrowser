@@ -105,7 +105,7 @@ void JSContext::setInnerHtml(int handle, std::string html)
     {
         child->parent = node;
     }
-    m_tab->render();
+    m_tab->setNeedsRender();
 }
 
 std::string JSContext::runLoad(int handle, URL tabUrl, URL fullUrl, std::string body)

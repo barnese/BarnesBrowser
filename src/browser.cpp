@@ -1,5 +1,7 @@
 #include "browser.h"
+
 #include "browser_tab.h"
+#include "constants.h"
 
 #include <QBoxLayout>
 
@@ -16,6 +18,16 @@ Browser::Browser(QWidget* parent) : QWidget(parent)
     connect(m_chrome, &Chrome::tabChanged, this, &Browser::changeTab);
     connect(m_chrome, &Chrome::addressChanged, this, &Browser::changeAddress);
     connect(m_chrome, &Chrome::navigateBackRequested, this, &Browser::goBack);
+    
+    // Sets up a timer to handle animation frames per the refresh rate.
+    connect(&m_animationTimer, &QTimer::timeout, this, &Browser::processAnimationFrame);
+    m_animationTimer.start(Constants::REFRESH_RATE_MS);
+}
+
+void Browser::processAnimationFrame()
+{
+    auto task = std::make_unique<Task<BrowserTab*>>("", &BrowserTab::render, m_activeTab);
+    m_activeTab->scheduleTask(std::move(task));
 }
 
 void Browser::newTab(std::optional<URL> url)

@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <QImage>
+#include <QTimer>
 #include <QWidget>
 #include <vector>
 
@@ -25,10 +26,12 @@ public:
     void goBack();
     void linkClicked(URL url);
     void refreshTab(const QImage& surface);
+    void processAnimationFrame();
 
 private:
     BrowserView* m_view;
     Chrome* m_chrome;
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
     BrowserTab* m_activeTab;
+    QTimer m_animationTimer;
 };

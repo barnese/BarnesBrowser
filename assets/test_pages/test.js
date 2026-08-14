@@ -1,19 +1,19 @@
-// Test setTimeout by scheduling a log message after a delay.
+// Uncomment this to test setTimeout.
 //function callback() {
 //    console.log("Hello from tests.js!");
 //}
 //setTimeout(callback, 10);
 
-// Test XMLHttpRequest
-xhr = new XMLHttpRequest();
-xhr.open("GET", "http://localhost:8000/fonts.html", true);
-xhr.onload = function() {
-    console.log("[test.js] received response: " + xhr.responseText.slice(0, 20) + "...");
-};
-xhr.onerror = function() {
-    console.log("[test.js] request failed");
-};
-xhr.send();
+// Uncomment this to test XMLHttpRequest.
+//xhr = new XMLHttpRequest();
+//xhr.open("GET", "http://localhost:8000/fonts.html", true);
+//xhr.onload = function() {
+//    console.log("[test.js] received response: " + xhr.responseText.slice(0, 20) + "...");
+//};
+//xhr.onerror = function() {
+//    console.log("[test.js] request failed");
+//};
+//xhr.send();
 
 function lengthCheck() {
     var name = this.getAttribute("name");

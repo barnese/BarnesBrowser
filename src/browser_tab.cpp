@@ -29,6 +29,7 @@ BrowserTab::BrowserTab(int width, int height)
     m_focus = nullptr;
     m_status = LOADING;
     m_visibleSurface.fill(Qt::white);
+    m_needsRender = false;
 
     // Start the task processing timer, which fires every 100ms.
     connect(&m_timer, &QTimer::timeout, this, &BrowserTab::processNextTask);
@@ -84,7 +85,7 @@ void BrowserTab::resize(int width, int height)
     m_width = width;
     m_height = height;
     m_visibleSurface = QImage(QSize(width, height), QImage::Format_RGBA8888);
-    render();
+    setNeedsRender();
 }
 
 /// Adds styles to the given node and its children. 
@@ -290,7 +291,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         loadScripts();
         loadStyles();
         m_status = LOADED;
-        render();
+        setNeedsRender();
     }
     catch (...)
     {
@@ -453,6 +454,7 @@ void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& disp
 void BrowserTab::render()
 {
     if (m_status != LOADED) return;
+    if (!m_needsRender) return;
     auto sortedRules = sort(m_rules);
     addStyles(*m_node, sortedRules);
     m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
@@ -461,11 +463,14 @@ void BrowserTab::render()
     paintTree(*m_document, m_displayCommands);
     raster();
     draw();
+    m_needsRender = false;
 }
 
 void BrowserTab::click(Point point)
 {
     if (m_status != LOADED) return;
+    // The layout tree needs to be up to date, so do a re-render.
+    render();
 
     auto x = point.x;
     auto y = point.y + m_scroll;
@@ -520,7 +525,7 @@ void BrowserTab::click(Point point)
                 element->attributes["value"] = "";
                 m_focus = element;
                 element->isFocused = true;
-                render();
+                setNeedsRender();
                 break;
             }
             else if (element->tag == "button")
@@ -638,6 +643,6 @@ void BrowserTab::keyPress(std::string text)
         {
             m_focus->attributes["value"] += text;
         }
-        render();
+        setNeedsRender();
     }
 }

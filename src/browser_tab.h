@@ -37,9 +37,10 @@ public:
     // Loading and Navigation
     void load(std::string url);
     void load(URL url, std::optional<std::string> payload=std::nullopt);
-    void render();
     std::optional<URL> goBack();
     void didChangeState(bool isActive);
+    // Normally, you don't call render directly. Use setNeedsRender() instead.
+    void render();
     
     // Event handlers
     void click(Point point);
@@ -48,10 +49,11 @@ public:
     void keyPress(std::string text);
     void resize(int width, int height);
 
-    // Public Getters
+    // Public Getters/Setters
     URL getLoadedUrl() { return m_url; };
     const Node* getNode() const { return m_node.get(); };
     QImage* getSurface() { return &m_visibleSurface; };
+    void setNeedsRender() { m_needsRender = true; };
 
     // Public Helpers
     std::vector<const Node*> nodeTreeToList() const;
@@ -117,4 +119,7 @@ private:
     QTimer m_timer;
 
     bool m_isActive;
+    
+    /// When true, some data in the tab has changed and needs to be re-rendered.
+    bool m_needsRender;
 };
