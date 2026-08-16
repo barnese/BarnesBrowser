@@ -17,6 +17,7 @@
 #include <QTimer>
 
 class JSContext;
+class Browser;
 
 enum BrowserTabStatus
 {
@@ -67,6 +68,9 @@ public:
 
     void scheduleTask(std::unique_ptr<ITask> task);
 
+    /// A pointer back to the main browser object.
+    Browser* browser;
+
 signals:
     void linkClicked(URL url);
     void needsAnimationFrame(BrowserTab* tab);
@@ -87,6 +91,7 @@ private:
     /// Rasters the entire tab's content onto the document surface.
     void raster();
 
+    void rasterAndDraw();
     void addStyles(Node &node, const SortedCSSRules& rules);
     void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
     void loadScripts();

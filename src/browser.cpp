@@ -25,6 +25,11 @@ Browser::Browser(QWidget* parent) : QWidget(parent)
     m_needsAnimationFrame = true;
 }
 
+Browser::~Browser()
+{
+    measure.finish();
+}
+
 void Browser::scheduleAnimationFrame()
 {
     if (m_needsAnimationFrame)
@@ -48,6 +53,7 @@ void Browser::newTab(std::optional<URL> url)
     int width = size().width();
     int height = size().height();
     auto tab = std::make_unique<BrowserTab>(width, height);
+    tab->browser = this;
     QString tabName;
     QString address;
     if (url.has_value())

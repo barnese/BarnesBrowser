@@ -8,6 +8,7 @@
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "scripting/js_context.h"
+#include "browser.h"
 
 #include <fstream>
 #include <iostream>
@@ -74,6 +75,7 @@ void BrowserTab::render()
 {
     if (m_status != LOADED) return;
     if (!m_needsRender) return;
+    browser->measure.start("render");
     m_js->dispatchRunRAFHandlers();
     auto sortedRules = sort(m_rules);
     addStyles(*m_node, sortedRules);
@@ -81,9 +83,9 @@ void BrowserTab::render()
     m_document->layout();
     m_displayCommands.clear();
     paintTree(*m_document, m_displayCommands);
-    raster();
-    draw();
+    rasterAndDraw();
     m_needsRender = false;
+    browser->measure.stop("render");
 }
 
 void BrowserTab::raster()
@@ -111,6 +113,14 @@ void BrowserTab::draw()
     // The visible surface has changed, so signal that the
     // display needs to be refreshed with the updated surface.
     needsDisplayUpdate(m_visibleSurface);
+}
+
+void BrowserTab::rasterAndDraw()
+{
+    browser->measure.start("rasterAndDraw");
+    raster();
+    draw();
+    browser->measure.stop("rasterAndDraw");
 }
 
 /// Resizes the scene and reconstructs the layout.

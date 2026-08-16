@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 
     Browser browser;
     browser.resize(815, 600);
-    browser.newTab(URL("http://localhost:8000"));
+    browser.newTab(URL("http://localhost:8000/count"));
     browser.show();
     
     return app.exec();

@@ -3,6 +3,7 @@
 #include "browser_view.h"
 #include "browser_tab.h"
 #include "chrome/chrome.h"
+#include "helpers/measure_time.h"
 #include "url.h"
 
 #include <memory>
@@ -19,6 +20,7 @@ class Browser : public QWidget
 
 public:
     Browser(QWidget *parent = nullptr);
+    ~Browser();
     void newTab(std::optional<URL> url = std::nullopt);
     void createNewTab();
     void changeTab(size_t index);
@@ -28,6 +30,7 @@ public:
     void refreshTab(const QImage& surface);
     void scheduleAnimationFrame();
     void setNeedsAnimationFrame(BrowserTab* tab);
+    MeasureTime measure;
 
 private:
     BrowserView* m_view;

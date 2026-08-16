@@ -4,6 +4,7 @@
 #include "html_tree/html_parser.h"
 #include "js_context_exception.h"
 #include "styles/css_parser.h"
+#include "browser.h"
 
 #include "duktape.h"
 #include <dukglue/dukglue.h>
@@ -53,7 +54,10 @@ JSContext::JSContext(BrowserTab* tab)
     dukglue_register_global(m_duk, this, "currentJSContext");
 
     auto jsRuntime = getJavaScriptRuntime();
+
+    m_tab->browser->measure.start("script-runtime");
     duk_peval_string(m_duk, jsRuntime.c_str());
+    m_tab->browser->measure.stop("script-runtime");
 }
 
 JSContext::~JSContext()
@@ -135,6 +139,7 @@ std::string JSContext::runLoad(int handle, URL tabUrl, URL fullUrl, std::string 
 void JSContext::dispatchXhrOnload(int handle, std::string response)
 {
     if (discarded) return;
+    m_tab->browser->measure.start("script-xhr");
     duk_push_object(m_duk);
     
     duk_push_int(m_duk, handle);
@@ -148,6 +153,7 @@ void JSContext::dispatchXhrOnload(int handle, std::string response)
     duk_peval_string(m_duk, "__runXhrOnload(js.handle, js.body)");
 
     duk_pop(m_duk);
+    m_tab->browser->measure.stop("script-xhr");
 }
 
 std::string JSContext::sendXmlHttpRequest(int handle, std::string method, std::string url, std::string body, bool isAsync)
@@ -186,12 +192,14 @@ std::string JSContext::sendXmlHttpRequest(int handle, std::string method, std::s
 void JSContext::dispatchSetTimeout(int handle)
 {
     if (discarded) return;
+    m_tab->browser->measure.start("script-settimeout");
     duk_push_object(m_duk);
     duk_push_int(m_duk, handle);
     duk_put_prop_string(m_duk, -2, "handle");
     duk_put_global_string(m_duk, "jsContext");
     duk_peval_string(m_duk, "__runSetTimeout(jsContext.handle)");
     duk_pop(m_duk);
+    m_tab->browser->measure.stop("script-settimeout");
 }
 
 void JSContext::setTimeout(int handle, long time)
@@ -236,6 +244,7 @@ Node* JSContext::getNode(int handle)
 /// @return 0 if successful, non-zero otherwise
 int JSContext::run(std::string scriptName, std::string code)
 {
+    m_tab->browser->measure.start("script-load");
     auto result = duk_peval_string(m_duk, code.c_str());
     if (result != 0)
     {
@@ -244,6 +253,7 @@ int JSContext::run(std::string scriptName, std::string code)
             duk_safe_to_string(m_duk, -1));
     }
     duk_pop(m_duk);
+    m_tab->browser->measure.stop("script-load");
     return result;
 }
 
