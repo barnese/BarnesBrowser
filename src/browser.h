@@ -26,7 +26,8 @@ public:
     void goBack();
     void linkClicked(URL url);
     void refreshTab(const QImage& surface);
-    void processAnimationFrame();
+    void scheduleAnimationFrame();
+    void setNeedsAnimationFrame(BrowserTab* tab);
 
 private:
     BrowserView* m_view;
@@ -34,4 +35,5 @@ private:
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
     BrowserTab* m_activeTab;
     QTimer m_animationTimer;
+    bool m_needsAnimationFrame;
 };

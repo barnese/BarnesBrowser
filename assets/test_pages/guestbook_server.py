@@ -60,13 +60,12 @@ def handle_connection(conx):
     csp = "default-src http://localhost:8000"
     response += "Content-Security-Policy: {}\r\n".format(csp)
     response += "\r\n" + body
-
     conx.send(response.encode('utf8'))
     conx.close()
 
 def show_comments(session):
     out = "<!doctype html>"
-    out += "<link rel=\"stylesheet\" href=\"comment.css\" />";
+    out += "<link rel=\"stylesheet\" href=\"comment.css\" />"
     out += "<script src=\"/comment.js\"></script>"
 
     if "user" in session:
@@ -144,6 +143,13 @@ def not_found(url, method):
     out += "<h1>{} {} not found!</h1>".format(method, url)
     return out
 
+def show_count():
+    out = "<!doctype html>"
+    out += "<div>Let's count up to 99</div>"
+    out += "<div>Output</div>"
+    out += "<script src='/eventloop.js'></script>"
+    return out
+
 def do_request(session, method, url, headers, body):
     if method == "GET" and url == "/":
         return "200 OK", show_comments(session)
@@ -153,8 +159,13 @@ def do_request(session, method, url, headers, body):
     elif method == "GET" and url =="/comment.css":
         with open("comment.css") as f:
             return "200 OK", f.read()
+    elif method == "GET" and url == "/eventloop.js":
+        with open("eventloop.js") as f:
+            return "200 OK", f.read()
     elif method == "GET" and url == "/login":
         return "200 OK", login_form(session)
+    elif method == "GET" and url == "/count":
+        return "200 OK", show_count()
     elif method == "POST" and url == "/add":
         params = form_decode(body)
         add_entry(session, params)

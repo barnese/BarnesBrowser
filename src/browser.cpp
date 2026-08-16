@@ -20,14 +20,27 @@ Browser::Browser(QWidget* parent) : QWidget(parent)
     connect(m_chrome, &Chrome::navigateBackRequested, this, &Browser::goBack);
     
     // Sets up a timer to handle animation frames per the refresh rate.
-    connect(&m_animationTimer, &QTimer::timeout, this, &Browser::processAnimationFrame);
+    connect(&m_animationTimer, &QTimer::timeout, this, &Browser::scheduleAnimationFrame);
     m_animationTimer.start(Constants::REFRESH_RATE_MS);
+    m_needsAnimationFrame = true;
 }
 
-void Browser::processAnimationFrame()
+void Browser::scheduleAnimationFrame()
 {
-    auto task = std::make_unique<Task<BrowserTab*>>("", &BrowserTab::render, m_activeTab);
-    m_activeTab->scheduleTask(std::move(task));
+    if (m_needsAnimationFrame)
+    {
+        m_needsAnimationFrame = false;
+        auto task = std::make_unique<Task<BrowserTab*>>("", &BrowserTab::runAnimationFrame, m_activeTab);
+        m_activeTab->scheduleTask(std::move(task));
+    }
+}
+
+void Browser::setNeedsAnimationFrame(BrowserTab* tab)
+{
+    if (tab == m_activeTab)
+    {
+        m_needsAnimationFrame = true;
+    }
 }
 
 void Browser::newTab(std::optional<URL> url)
@@ -52,6 +65,7 @@ void Browser::newTab(std::optional<URL> url)
     m_activeTab = m_tabs.back().get();
     connect(m_activeTab, &BrowserTab::linkClicked, this, &Browser::linkClicked);
     connect(m_activeTab, &BrowserTab::needsDisplayUpdate, this, &Browser::refreshTab);
+    connect(m_activeTab, &BrowserTab::needsAnimationFrame, this, &Browser::setNeedsAnimationFrame);
     m_view->setTab(m_activeTab);
     m_view->centerOn(0, 0);
     m_view->setFocus();

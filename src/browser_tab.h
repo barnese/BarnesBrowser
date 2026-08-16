@@ -53,7 +53,9 @@ public:
     URL getLoadedUrl() { return m_url; };
     const Node* getNode() const { return m_node.get(); };
     QImage* getSurface() { return &m_visibleSurface; };
-    void setNeedsRender() { m_needsRender = true; };
+    void setNeedsRender();
+    void setNeedsAnimationFrame();
+    void runAnimationFrame();
 
     // Public Helpers
     std::vector<const Node*> nodeTreeToList() const;
@@ -67,6 +69,7 @@ public:
 
 signals:
     void linkClicked(URL url);
+    void needsAnimationFrame(BrowserTab* tab);
 
     /// Signal sent when the surface has changed and the
     /// display needs to be updated, namely after a draw.
@@ -84,6 +87,8 @@ private:
     /// Rasters the entire tab's content onto the document surface.
     void raster();
 
+    void addStyles(Node &node, const SortedCSSRules& rules);
+    void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
     void loadScripts();
     void loadStyles();
     void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);

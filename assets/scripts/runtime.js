@@ -1,8 +1,10 @@
-// A runtime for wrapping C++ functions to be called in JavaScript.
+// A runtime for implementing the JavaScript API 
+// to work with our browser.
 
 EVENT_LISTENERS = {};
 SET_TIMEOUT_REQUESTS = {};
 XHR_REQUESTS = {};
+RAF_LISTENERS = [];
 
 console = { log: function(x) { 
     printMessage(x); 
@@ -94,4 +96,17 @@ function setTimeout(callback, timeDelta) {
 function __runSetTimeout(handle) {
     var callback = SET_TIMEOUT_REQUESTS[handle];
     callback();
+}
+
+function requestAnimationFrame(fn) {
+    RAF_LISTENERS.push(fn);
+    currentJSContext.requestAnimationFrame();
+}
+
+function __runRAFHandlers() {
+    var handlers_copy = RAF_LISTENERS;
+    RAF_LISTENERS = [];
+    for (var i = 0; i < handlers_copy.length; i++) {
+        handlers_copy[i]();
+    }
 }

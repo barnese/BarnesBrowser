@@ -1,10 +1,12 @@
-// Uncomment this to test setTimeout.
+
+// TEST 1: Uncomment this to test setTimeout.
 //function callback() {
 //    console.log("Hello from tests.js!");
 //}
 //setTimeout(callback, 10);
 
-// Uncomment this to test XMLHttpRequest.
+
+// TEST 2: Uncomment this to test XMLHttpRequest.
 //xhr = new XMLHttpRequest();
 //xhr.open("GET", "http://localhost:8000/fonts.html", true);
 //xhr.onload = function() {

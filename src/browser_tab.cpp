@@ -52,6 +52,40 @@ void BrowserTab::didChangeState(bool isActive)
     m_isActive = isActive;
 }
 
+void BrowserTab::setNeedsRender()
+{
+    m_needsRender = true;
+    setNeedsAnimationFrame();
+}
+
+void BrowserTab::setNeedsAnimationFrame()
+{
+    // Signal to the browser that we need an animation frame.
+    needsAnimationFrame(this);
+}
+
+void BrowserTab::runAnimationFrame()
+{
+    m_needsRender = true;
+    render();
+}
+
+void BrowserTab::render()
+{
+    if (m_status != LOADED) return;
+    if (!m_needsRender) return;
+    m_js->dispatchRunRAFHandlers();
+    auto sortedRules = sort(m_rules);
+    addStyles(*m_node, sortedRules);
+    m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
+    m_document->layout();
+    m_displayCommands.clear();
+    paintTree(*m_document, m_displayCommands);
+    raster();
+    draw();
+    m_needsRender = false;
+}
+
 void BrowserTab::raster()
 {
     auto tabHeight = m_document->height + 2 * Constants::VSTEP;
@@ -89,7 +123,7 @@ void BrowserTab::resize(int width, int height)
 }
 
 /// Adds styles to the given node and its children. 
-void addStyles(Node &node, const SortedCSSRules& rules)
+void BrowserTab::addStyles(Node &node, const SortedCSSRules& rules)
 {
     // Apply default styling for inherited properties first
     // since these can be overridden by explicit rules below.
@@ -425,7 +459,7 @@ void printStyles(const SortedCSSRules& rules)
 
 /// Recursively paints all layout objects, combining the 
 /// results into the provided display commands reference.
-void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList)
+void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList)
 {
     std::vector<std::unique_ptr<Command>> commands;
 
@@ -449,21 +483,6 @@ void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& disp
         std::make_move_iterator(commands.begin()),
         std::make_move_iterator(commands.end())
     );
-}
-
-void BrowserTab::render()
-{
-    if (m_status != LOADED) return;
-    if (!m_needsRender) return;
-    auto sortedRules = sort(m_rules);
-    addStyles(*m_node, sortedRules);
-    m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
-    m_document->layout();
-    m_displayCommands.clear();
-    paintTree(*m_document, m_displayCommands);
-    raster();
-    draw();
-    m_needsRender = false;
 }
 
 void BrowserTab::click(Point point)

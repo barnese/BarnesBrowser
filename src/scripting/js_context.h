@@ -28,6 +28,8 @@ public:
     void dispatchXhrOnload(int handle, std::string response);
     void dispatchSetTimeout(int handle);
     void setTimeout(int handle, long time);
+    void requestAnimationFrame();
+    void dispatchRunRAFHandlers();
 
     // Flag to discard setTimeout callbacks from running.
     bool discarded;

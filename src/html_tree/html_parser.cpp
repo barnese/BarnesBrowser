@@ -16,15 +16,10 @@ std::unique_ptr<Node> HTMLParser::parse()
 {
     std::string buffer = "";
     bool inTag = false;
-    bool inSingleQuote = false;
 
     for (char c : m_body)
     {
-        if (c == '\'')
-        {
-            inSingleQuote = !inSingleQuote;
-        }
-        else if (!inSingleQuote && c == '<')
+        if (c == '<')
         {
             inTag = true;
             if (!buffer.empty())
@@ -33,7 +28,7 @@ std::unique_ptr<Node> HTMLParser::parse()
             }
             buffer = "";
         }
-        else if (!inSingleQuote && c == '>')
+        else if (c == '>')
         {
             inTag = false;
             addTag(buffer);

@@ -47,6 +47,7 @@ JSContext::JSContext(BrowserTab* tab)
     dukglue_register_method(m_duk, &JSContext::setInnerHtml, "setInnerHtml");
     dukglue_register_method(m_duk, &JSContext::sendXmlHttpRequest, "sendXmlHttpRequest");
     dukglue_register_method(m_duk, &JSContext::setTimeout, "setTimeout");
+    dukglue_register_method(m_duk, &JSContext::requestAnimationFrame, "requestAnimationFrame");
 
     // Export the instance of this class to allow the above methods to work.
     dukglue_register_global(m_duk, this, "currentJSContext");
@@ -271,4 +272,16 @@ int JSContext::dispatchEvent(std::string eventType, Node* node)
     duk_pop(m_duk);
 
     return doDefault;
+}
+
+void JSContext::requestAnimationFrame()
+{
+    m_tab->setNeedsAnimationFrame();
+}
+
+void JSContext::dispatchRunRAFHandlers()
+{
+    duk_push_object(m_duk);
+    duk_peval_string(m_duk, "__runRAFHandlers()");
+    duk_pop(m_duk);
 }
