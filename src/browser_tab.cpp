@@ -26,43 +26,23 @@ BrowserTab::BrowserTab(int width, int height)
       m_documentSurface(),
       m_visibleSurface(QSize(width, height), QImage::Format_RGBA8888)
 {
+    std::cout 
+        << "[BrowserTab] Starting. Thread ID = " 
+        << std::this_thread::get_id() << std::endl;
+
     m_scroll = 0;
     m_focus = nullptr;
     m_status = LOADING;
     m_visibleSurface.fill(Qt::white);
     m_needsRender = false;
-
-    // Start the task processing timer, which fires every 100ms.
-    connect(&m_timer, &QTimer::timeout, this, &BrowserTab::processNextTask);
-    m_timer.start(100); 
 }
 
 BrowserTab::~BrowserTab() = default;
 
-void BrowserTab::processNextTask()
-{
-    // Only process tasks if this browser tab is active.
-    if (m_isActive)
-    {
-        m_taskRunner.run();
-    }
-}
-
-void BrowserTab::didChangeState(bool isActive)
-{
-    m_isActive = isActive;
-}
-
 void BrowserTab::setNeedsRender()
 {
     m_needsRender = true;
-    setNeedsAnimationFrame();
-}
-
-void BrowserTab::setNeedsAnimationFrame()
-{
-    // Signal to the browser that we need an animation frame.
-    needsAnimationFrame(this);
+    browser->setNeedsAnimationFrame(this);
 }
 
 void BrowserTab::runAnimationFrame()
@@ -109,10 +89,7 @@ void BrowserTab::draw()
 {
     auto visibleRect = QRect(0, m_scroll, m_width, m_height);
     m_visibleSurface = m_documentSurface.copy(visibleRect);
-
-    // The visible surface has changed, so signal that the
-    // display needs to be refreshed with the updated surface.
-    needsDisplayUpdate(m_visibleSurface);
+    browser->updateSurface(m_visibleSurface);
 }
 
 void BrowserTab::rasterAndDraw()
@@ -312,19 +289,12 @@ std::vector<std::string> BrowserTab::getScriptLinks(const Node* tree)
     return links;
 }
 
-/// Loads the HTML page from the given URL.
-void BrowserTab::load(std::string urlString)
-{
-    URL url(urlString);
-    load(url);
-}
-
 void BrowserTab::load(URL url, std::optional<std::string> payload)
 {
     try
     {
         m_status = LOADING;
-        std::cout << "Fetching URL: " << url.describe() << "\n";
+        std::cout << "[BrowserTab] Fetching URL: " << url.describe() << std::endl;
         m_history.push_back(url);
         auto response = url.request(m_url, payload);
         std::string body = response.errorMessage.has_value() ? response.errorMessage.value() : response.body;
@@ -339,7 +309,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     }
     catch (...)
     {
-        std::cerr << "Failed to load the browser!\n";
+        std::cerr << "[BrowserTab] Failed to load the browser!\n";
         m_status = ERROR;
     }
 }
@@ -378,7 +348,7 @@ void BrowserTab::loadScripts()
                 script, 
                 body
             );
-            m_taskRunner.scheduleTask(std::move(task));
+            taskRunner.scheduleTask(std::move(task));
         }
         catch (...)
         {
@@ -422,11 +392,6 @@ bool BrowserTab::allowRequest(const URL& url)
     auto it = find(m_allowedOrigins.begin(), m_allowedOrigins.end(), origin);
     bool containsUrl = it != m_allowedOrigins.end();
     return m_allowedOrigins.empty() || containsUrl;
-}
-
-void BrowserTab::scheduleTask(std::unique_ptr<ITask> task)
-{
-    m_taskRunner.scheduleTask(std::move(task));
 }
 
 void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers)
@@ -542,7 +507,7 @@ void BrowserTab::click(Point point)
                 {
                     auto url = m_url.resolve(it->second);
                     load(url);
-                    linkClicked(url);
+                    browser->linkClicked(url);
                     break;
                 }
             } 

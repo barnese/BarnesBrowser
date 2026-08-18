@@ -1,7 +1,6 @@
 #include "chrome.h"
 
 #include <QVBoxLayout>
-#include <iostream>
 
 Chrome::Chrome(QWidget* parent) : QWidget(parent) 
 {

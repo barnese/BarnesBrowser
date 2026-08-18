@@ -13,7 +13,9 @@
 #include <QWidget>
 #include <vector>
 
-/// Main browser UI.
+/// Main browser which contains the chrome, tab view,
+/// and the main animation refresh rate loop, including
+/// time measurements for performance tracking.
 class Browser : public QWidget
 {
     Q_OBJECT
@@ -27,12 +29,21 @@ public:
     void changeAddress(QString newAddress);
     void goBack();
     void linkClicked(URL url);
-    void refreshTab(const QImage& surface);
-    void scheduleAnimationFrame();
+    void updateSurface(const QImage& surface);
+    void animationFrameRefresh();
     void setNeedsAnimationFrame(BrowserTab* tab);
+    void scheduleLoad(URL url);
+
     MeasureTime measure;
 
 private:
+    void setActiveTab(BrowserTab* tab);
+    void handleClick(Point point);
+    void handleKeyPress(std::string text);
+    void handleResize(int width, int height);
+    void handleScrollDown();
+    void handleScrollUp();
+
     BrowserView* m_view;
     Chrome* m_chrome;
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;

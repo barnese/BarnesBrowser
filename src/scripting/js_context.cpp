@@ -10,7 +10,6 @@
 #include <dukglue/dukglue.h>
 #include <fstream>
 #include <iostream>
-#include <QTimer>
 #include <QThreadPool>
 
 void printMessage(const std::string& message)
@@ -131,7 +130,7 @@ std::string JSContext::runLoad(int handle, URL tabUrl, URL fullUrl, std::string 
         handle,
         response
     );
-    m_tab->scheduleTask(std::move(task));
+    m_tab->taskRunner.scheduleTask(std::move(task));
 
     return response;
 }
@@ -211,7 +210,7 @@ void JSContext::setTimeout(int handle, long time)
             this,
             handle
         );
-        m_tab->scheduleTask(std::move(task));
+        m_tab->taskRunner.scheduleTask(std::move(task));
     });
 }
 
@@ -286,7 +285,7 @@ int JSContext::dispatchEvent(std::string eventType, Node* node)
 
 void JSContext::requestAnimationFrame()
 {
-    m_tab->setNeedsAnimationFrame();
+    m_tab->browser->setNeedsAnimationFrame(m_tab);
 }
 
 void JSContext::dispatchRunRAFHandlers()

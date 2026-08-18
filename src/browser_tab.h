@@ -14,7 +14,6 @@
 #include <optional>
 #include <QImage>
 #include <QObject>
-#include <QTimer>
 
 class JSContext;
 class Browser;
@@ -36,10 +35,8 @@ public:
     ~BrowserTab();
 
     // Loading and Navigation
-    void load(std::string url);
     void load(URL url, std::optional<std::string> payload=std::nullopt);
     std::optional<URL> goBack();
-    void didChangeState(bool isActive);
     // Normally, you don't call render directly. Use setNeedsRender() instead.
     void render();
     
@@ -55,7 +52,6 @@ public:
     const Node* getNode() const { return m_node.get(); };
     QImage* getSurface() { return &m_visibleSurface; };
     void setNeedsRender();
-    void setNeedsAnimationFrame();
     void runAnimationFrame();
 
     // Public Helpers
@@ -66,38 +62,24 @@ public:
     /// If no allowed origins are defined, then the URL is allowed.
     bool allowRequest(const URL& url);
 
-    void scheduleTask(std::unique_ptr<ITask> task);
-
     /// A pointer back to the main browser object.
     Browser* browser;
-
-signals:
-    void linkClicked(URL url);
-    void needsAnimationFrame(BrowserTab* tab);
-
-    /// Signal sent when the surface has changed and the
-    /// display needs to be updated, namely after a draw.
-    void needsDisplayUpdate(const QImage& surface);
-
-private slots:
-    void processNextTask();
+    TaskRunner taskRunner;
 
 private:
-    /// Copies the viewport of the document based on the
+    /// Draw copies the viewport of the document based on the
     /// current scroll value and saves it to the visible 
-    /// surface. Then sends a display update signal.
+    /// surface. Then tells the browser to update the display.
+    /// Raster rasters the tabs content onto the document surface.
     void draw();
-
-    /// Rasters the entire tab's content onto the document surface.
     void raster();
-
     void rasterAndDraw();
+
     void addStyles(Node &node, const SortedCSSRules& rules);
     void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
     void loadScripts();
     void loadStyles();
     void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);
-
     void submitForm(Element* element);
     std::vector<std::string> getStyleSheetLinks(const Node* tree);
     std::vector<std::string> getScriptLinks(const Node* tree);
@@ -125,11 +107,6 @@ private:
     /// Viewport-sized raster buffer for the visible region. (AKA "root surface")
     QImage m_visibleSurface; 
 
-    TaskRunner m_taskRunner;
-    QTimer m_timer;
-
-    bool m_isActive;
-    
     /// When true, some data in the tab has changed and needs to be re-rendered.
     bool m_needsRender;
 };

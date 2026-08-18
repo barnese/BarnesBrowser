@@ -11,14 +11,7 @@ BrowserView::BrowserView(QWidget* parent)
     setScene(&m_scene);
 }
 
-void BrowserView::setTab(BrowserTab* tab)
-{
-    m_activeTab = tab;
-    m_activeTab->setNeedsRender();
-    refreshTab(*m_activeTab->getSurface());
-}
-
-void BrowserView::refreshTab(const QImage& surface)
+void BrowserView::updateSurface(const QImage& surface)
 {
     // Translate the given QImage surface into a QPixmap,
     // which creates a display-optimized version of the surface.
@@ -30,12 +23,9 @@ void BrowserView::refreshTab(const QImage& surface)
 void BrowserView::resizeEvent(QResizeEvent* event)
 {
     QGraphicsView::resizeEvent(event);
-    if (m_activeTab)
-    {
-        int width = viewport()->size().width();
-        int height = viewport()->size().height();
-        m_activeTab->resize(width, height);
-    }
+    int width = viewport()->size().width();
+    int height = viewport()->size().height();
+    resize(width, height);
 }
 
 void BrowserView::keyPressEvent(QKeyEvent* event)
@@ -43,18 +33,18 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
     switch (event->key())
     {
     case Qt::Key_Down:
-        m_activeTab->scrollDown();
+        scrollDown();
         break;        
 
     case Qt::Key_Up:
-        m_activeTab->scrollUp();        
+        scrollUp();        
         break;
 
     default:
         auto eventText = event->text().toStdString();
         if (!eventText.empty())
         {
-            m_activeTab->keyPress(event->text().toStdString());
+            keyPress(eventText);
         }
         QGraphicsView::keyPressEvent(event);
     }
@@ -65,7 +55,7 @@ void BrowserView::mousePressEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton)
     {
         auto point = Point(event->pos().x(), event->pos().y());
-        m_activeTab->click(point);
+        click(point);
     }
     else 
     {
@@ -79,11 +69,11 @@ void BrowserView::wheelEvent(QWheelEvent* event)
 
     if (deltaY > 0)
     {
-        m_activeTab->scrollUp();
+        scrollUp();
     }
     else if (deltaY < 0)
     {
-        m_activeTab->scrollDown();
+        scrollDown();
     }
     else
     {
