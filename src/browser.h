@@ -31,7 +31,6 @@ public:
     void changeAddress(QString newAddress);
     void goBack();
     void linkClicked(URL url);
-    void updateSurface(const QImage& surface);
     void scheduleAnimationFrame();
     void setNeedsAnimationFrame(BrowserTab* tab);
     void setNeedsRasterAndDraw();

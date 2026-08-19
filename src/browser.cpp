@@ -143,6 +143,11 @@ void Browser::rasterTab()
         return;
     }
 
+    if (m_activeTabHeight < m_view->size().height())
+    {
+        m_activeTabHeight = m_view->size().height();
+    }
+
     if (m_tabSurface.isNull() || m_tabSurface.height() != m_activeTabHeight)
     {
         m_tabSurface = QImage(QSize(m_view->size().width(), m_activeTabHeight), QImage::Format_RGBA8888);
@@ -211,11 +216,6 @@ void Browser::linkClicked(URL url)
     std::lock_guard lock(m_mutex);
     QString urlString = QString::fromStdString(url.describe(false));
     m_chrome->setAddress(urlString);
-}
-
-void Browser::updateSurface(const QImage& surface)
-{
-    m_view->updateSurface(surface);
 }
 
 void Browser::createNewTab()
