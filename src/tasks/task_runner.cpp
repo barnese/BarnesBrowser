@@ -1,9 +1,8 @@
 #include "task_runner.h"
 
-#include <iostream>
-
 TaskRunner::TaskRunner()
-    : m_thread([this](std::stop_token stopToken) {
+    : m_logger(Logger("TaskRunner")),
+      m_thread([this](std::stop_token stopToken) {
             run(stopToken);
         })
 {
@@ -27,9 +26,7 @@ void TaskRunner::scheduleTask(std::unique_ptr<ITask> task)
 
 void TaskRunner::run(std::stop_token stopToken)
 {
-    std::cout 
-        << "[TaskRunner] Starting. Thread ID = " 
-        << std::this_thread::get_id() << std::endl;
+    m_logger.info("starting");
 
     while (true)
     {
@@ -57,7 +54,7 @@ void TaskRunner::run(std::stop_token stopToken)
         // been released from the queue and can't be accessed by another thread.
         if (!task->getName().empty())        
         {
-            std::cout << "[TaskRunner] Running: " << task->getName() << std::endl;
+            m_logger.info("running " + task->getName());
         }
         task->run();
     }

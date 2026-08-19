@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.h"
 #include "task.h"
 
 #include <condition_variable>
@@ -24,6 +25,7 @@ private:
     std::queue<std::unique_ptr<ITask>> m_tasks;
     std::mutex m_mutex;
     std::condition_variable_any m_condition;
+    Logger m_logger;
 
     // Declare the thread last so it is destroyed and 
     // joined before the other members are destroyed.

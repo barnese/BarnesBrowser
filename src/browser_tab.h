@@ -8,6 +8,7 @@
 #include "layout/document_layout.h"
 #include "tasks/task_runner.h"
 #include "point.h"
+#include "logger.h"
 #include "url.h"
 
 #include <string>
@@ -17,13 +18,6 @@
 
 class JSContext;
 class Browser;
-
-enum BrowserTabStatus
-{
-    LOADING,
-    LOADED,
-    ERROR,
-};
 
 /// Handles rendering the graphics for a browser tab.
 class BrowserTab : public QObject
@@ -37,22 +31,19 @@ public:
     // Loading and Navigation
     void load(URL url, std::optional<std::string> payload=std::nullopt);
     std::optional<URL> goBack();
-    // Normally, you don't call render directly. Use setNeedsRender() instead.
     void render();
+    void setNeedsRender();
+    void runAnimationFrame(const int scroll);
     
     // Event handlers
     void click(Point point);
-    void scrollDown();
-    void scrollUp();
     void keyPress(std::string text);
     void resize(int width, int height);
 
     // Public Getters/Setters
     URL getLoadedUrl() { return m_url; };
     const Node* getNode() const { return m_node.get(); };
-    QImage* getSurface() { return &m_visibleSurface; };
-    void setNeedsRender();
-    void runAnimationFrame();
+    bool isLoaded() { return m_loaded; };
 
     // Public Helpers
     std::vector<const Node*> nodeTreeToList() const;
@@ -67,13 +58,8 @@ public:
     TaskRunner taskRunner;
 
 private:
-    /// Draw copies the viewport of the document based on the
-    /// current scroll value and saves it to the visible 
-    /// surface. Then tells the browser to update the display.
-    /// Raster rasters the tabs content onto the document surface.
-    void draw();
-    void raster();
-    void rasterAndDraw();
+    /// Prevents scroll from going past top or bottom of the page.
+    int clampScroll(const int scroll);
 
     void addStyles(Node &node, const SortedCSSRules& rules);
     void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
@@ -81,14 +67,15 @@ private:
     void loadStyles();
     void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);
     void submitForm(Element* element);
+
+    CSSRules getDefaultStyleSheet();
     std::vector<std::string> getStyleSheetLinks(const Node* tree);
     std::vector<std::string> getScriptLinks(const Node* tree);
     std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const;
     std::vector<Node*> nodeTreeToList(Node* tree, std::vector<Node*>& list);
 
-    enum BrowserTabStatus m_status;
     std::unique_ptr<Node> m_node;
-    std::vector<std::unique_ptr<Command>> m_displayCommands;
+    std::optional<std::vector<std::unique_ptr<Command>>> m_displayList;    
     std::unique_ptr<DocumentLayout> m_document;
     std::unique_ptr<JSContext> m_js;
     URL m_url;
@@ -97,16 +84,17 @@ private:
     CSSRules m_rules;
     std::vector<URL> m_allowedOrigins;
 
+    bool m_loaded;
     int m_scroll;
+    bool m_scrollChangedInTab;
     int m_width;
     int m_height;
     
     /// Rasterized backing store for the entire document. (AKA "tab surface")
     QImage m_documentSurface;
 
-    /// Viewport-sized raster buffer for the visible region. (AKA "root surface")
-    QImage m_visibleSurface; 
-
     /// When true, some data in the tab has changed and needs to be re-rendered.
     bool m_needsRender;
+
+    Logger m_logger;
 };

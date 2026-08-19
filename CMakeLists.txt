@@ -39,6 +39,7 @@ add_library(dukglue INTERFACE)
 target_include_directories(dukglue SYSTEM INTERFACE ${dukglue_src_SOURCE_DIR}/include)
 
 add_executable(main
+    src/chrome/chrome.cpp
     src/commands/blend.cpp
     src/commands/draw_line.cpp
     src/commands/draw_rounded_rect.cpp
@@ -64,7 +65,6 @@ add_executable(main
     src/browser.cpp
     src/browser_tab.cpp
     src/browser_view.cpp
-    src/chrome/chrome.cpp
     src/main.cpp
     src/url.cpp
 )

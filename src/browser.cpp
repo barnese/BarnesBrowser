@@ -1,14 +1,13 @@
 #include "browser.h"
 
-#include "browser_tab.h"
 #include "constants.h"
 
 #include <QBoxLayout>
-#include <iostream>
 
-Browser::Browser(QWidget* parent) : QWidget(parent)
+Browser::Browser(QWidget* parent) 
+    : QWidget(parent), m_logger(Logger("Browser"))
 {
-    std::cout << "[Browser] Starting. Thread ID = " << std::this_thread::get_id() << std::endl;
+    m_logger.info("starting");
 
     auto* layout = new QVBoxLayout(this);
     m_chrome = new Chrome(this);
@@ -28,10 +27,15 @@ Browser::Browser(QWidget* parent) : QWidget(parent)
     connect(m_view, &BrowserView::scrollDown, this, &Browser::handleScrollDown);
     connect(m_view, &BrowserView::scrollUp, this, &Browser::handleScrollUp);
 
-    // Sets up a timer to handle animation frames per the refresh rate.
-    connect(&m_animationTimer, &QTimer::timeout, this, &Browser::animationFrameRefresh);
-    m_animationTimer.start(Constants::REFRESH_RATE_MS);
-    m_needsAnimationFrame = true;
+    connect(&m_timer, &QTimer::timeout, this, &Browser::mainTimerFired);
+    m_timer.start(10);
+
+    m_animationTimer = nullptr;
+    m_needsAnimationFrame = false;
+    m_needsRasterAndDraw = false;
+    m_activeTabHeight = 0;
+    m_activeTabScroll = 0;
+    m_activeTabDisplayList.clear();
 }
 
 Browser::~Browser()
@@ -43,46 +47,120 @@ Browser::~Browser()
     }
 }
 
-void Browser::animationFrameRefresh()
+void Browser::mainTimerFired()
 {
-    if (m_needsAnimationFrame)
+    // Continuously check if we need to raster/draw 
+    // or schedule an animation frame.
+    rasterAndDraw();
+    scheduleAnimationFrame();
+}
+
+void Browser::render()
+{
+    if (m_activeTab->isLoaded())
     {
-        m_needsAnimationFrame = false;
-        m_activeTab->runAnimationFrame();
+        m_activeTab->runAnimationFrame(m_activeTabScroll);
+    }
+}
+
+void Browser::commit(BrowserTab* tab, CommitData& commitData)
+{
+    std::lock_guard lock(m_mutex);
+    if (tab == m_activeTab)
+    {
+        m_activeTabUrl = commitData.url;
+        if (commitData.scroll.has_value())
+            m_activeTabScroll = commitData.scroll.value();
+        m_activeTabHeight = commitData.height;
+        if (commitData.displayList.has_value())
+        {
+            m_activeTabDisplayList = std::move(commitData.displayList.value());
+        }
+        setNeedsRasterAndDraw();
     }
 }
 
 void Browser::setNeedsAnimationFrame(BrowserTab* tab)
 {
+    std::lock_guard lock(m_mutex);
     if (tab == m_activeTab)
     {
         m_needsAnimationFrame = true;
     }
 }
 
-void Browser::newTab(std::optional<URL> url)
+void Browser::setNeedsRasterAndDraw()
 {
-    auto tab = std::make_unique<BrowserTab>(size().width(), size().height());
-    tab->browser = this;
-    m_tabs.push_back(std::move(tab));
-    m_activeTab = m_tabs.back().get();
+    m_needsRasterAndDraw = true;
+}
 
-    QString tabName;
-    QString address;
-    if (url.has_value())
+void Browser::rasterAndDraw()
+{
+    std::lock_guard lock(m_mutex);
+    if (!m_needsRasterAndDraw) return;
+    m_logger.info("rastering and drawing");
+    measure.start("rasterAndDraw");
+    rasterTab();
+    draw();
+    measure.stop("rasterAndDraw");
+    m_needsRasterAndDraw = false;
+}
+
+void Browser::scheduleAnimationFrame()
+{
+    std::lock_guard lock(m_mutex);
+
+    if (m_needsAnimationFrame && !m_animationTimer)
     {
-        scheduleLoad(*url);
-        address = QString::fromStdString((*url).describe(false));
-        tabName = address;
+        m_animationTimer = new QTimer(this);
+        m_animationTimer->setSingleShot(true);
+        connect(m_animationTimer, &QTimer::timeout, this, [this] {
+            int scroll;
+            BrowserTab* activeTab;
+            {
+                std::lock_guard lock(m_mutex);
+                scroll = m_activeTabScroll;
+                activeTab = m_activeTab;
+                m_animationTimer = nullptr;
+                m_needsAnimationFrame = false;
+            }
+            auto task = std::make_unique<Task<BrowserTab*, int>>(
+                "BrowserTab::runAnimationFrame",
+                &BrowserTab::runAnimationFrame,
+                m_activeTab,
+                scroll
+            );
+            activeTab->taskRunner.scheduleTask(std::move(task));
+        });
+        m_animationTimer->start(Constants::REFRESH_RATE_MS);   
     }
-    else 
+}
+
+void Browser::rasterTab()
+{
+    if (m_activeTabHeight == 0)
     {
-        address = "";
-        tabName = "New Tab";
+        return;
     }
-    m_view->centerOn(0, 0);
-    m_view->setFocus();
-    m_chrome->addTab(tabName, address, m_tabs.size() - 1);
+
+    if (m_tabSurface.isNull() || m_tabSurface.height() != m_activeTabHeight)
+    {
+        m_tabSurface = QImage(QSize(m_view->size().width(), m_activeTabHeight), QImage::Format_RGBA8888);
+    }
+
+    m_tabSurface.fill(Qt::white);
+
+    for (const auto& command : m_activeTabDisplayList)
+    {
+        command->execute(&m_tabSurface);
+    }
+}
+
+void Browser::draw()
+{
+    auto tabRect = QRect(0, m_activeTabScroll, m_view->size().width(), m_activeTabHeight);
+    auto visibleSurface = m_tabSurface.copy(tabRect);
+    m_view->updateSurface(visibleSurface);
 }
 
 void Browser::scheduleLoad(URL url)
@@ -98,8 +176,39 @@ void Browser::scheduleLoad(URL url)
     m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
+void Browser::newTab(std::optional<URL> url)
+{
+    std::lock_guard lock(m_mutex);
+    newTabInternal(url);
+}
+
+void Browser::newTabInternal(std::optional<URL> url)
+{
+    auto tab = std::make_unique<BrowserTab>(size().width(), size().height());
+    tab->browser = this;
+    m_tabs.push_back(std::move(tab));
+    setActiveTab(m_tabs.back().get());
+    QString address;
+    QString tabName;
+    if (url.has_value())
+    {
+        scheduleLoad(url.value());
+        address = QString::fromStdString(url.value().describe(false));
+        tabName = address;
+    }
+    else 
+    {
+        address = "";
+        tabName = "New Tab";
+    }
+    m_view->centerOn(0, 0);
+    m_view->setFocus();
+    m_chrome->addTab(tabName, address, m_tabs.size() - 1);
+}
+
 void Browser::linkClicked(URL url)
 {
+    std::lock_guard lock(m_mutex);
     QString urlString = QString::fromStdString(url.describe(false));
     m_chrome->setAddress(urlString);
 }
@@ -121,28 +230,32 @@ void Browser::changeTab(size_t index)
         return;
     }
 
+    m_logger.info("changing tab to " + std::to_string(index));
     setActiveTab(m_tabs.at(index).get());
 }
 
 void Browser::setActiveTab(BrowserTab* tab)
 {
-    m_view->updateSurface(*tab->getSurface());
     m_activeTab = tab;
+    m_activeTabScroll = 0;
+    m_activeTabUrl = std::nullopt;
+    m_needsAnimationFrame = true;
+    m_animationTimer = nullptr;
 }
 
 void Browser::goBack()
 {
-    // TODO: schedule a task for this
-    auto url = m_activeTab->goBack();
-    if (url.has_value())
-    {
-        QString urlString = QString::fromStdString(url.value().describe(false));
-        m_chrome->setAddress(urlString);
-    }
+    auto task = std::make_unique<Task<BrowserTab*>>(
+        "BrowserTab::goBack",
+        &BrowserTab::goBack,
+        m_activeTab
+    );
+    m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
 void Browser::changeAddress(QString newAddress)
 {
+    std::lock_guard lock(m_mutex);
     if (m_tabs.empty())
     {
         newTab(URL(newAddress.toStdString()));
@@ -159,14 +272,26 @@ void Browser::changeAddress(QString newAddress)
 
 void Browser::handleClick(Point point)
 {
-    // TODO: schedule a task for this
-    m_activeTab->click(point);
+    std::lock_guard lock(m_mutex);
+    auto task = std::make_unique<Task<BrowserTab*, Point>>(
+        "BrowserTab::click(" + point.describe() + ")",
+        &BrowserTab::click,
+        m_activeTab,
+        point
+    );
+    m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
 void Browser::handleKeyPress(std::string text)
 {
-    // TODO: schedule a task for this
-    m_activeTab->keyPress(text);
+    std::lock_guard lock(m_mutex);
+    auto task = std::make_unique<Task<BrowserTab*, std::string>>(
+        "BrowserTab::keyPress(" + text + ")",
+        &BrowserTab::keyPress,
+        m_activeTab,
+        text
+    );
+    m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
 void Browser::handleResize(int width, int height)
@@ -181,14 +306,26 @@ void Browser::handleResize(int width, int height)
     m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
+int Browser::clampScroll(const int scroll)
+{
+    int maxScroll = m_activeTabHeight - m_view->size().height();
+    return std::max(0, std::min(scroll, maxScroll));
+}
+
 void Browser::handleScrollDown()
 {
-    // TODO: schedule a task for this
-    m_activeTab->scrollDown();
+    std::lock_guard lock(m_mutex);
+    if (!m_activeTabHeight) return;
+    m_activeTabScroll = clampScroll(m_activeTabScroll + Constants::SCROLL_STEP);
+    setNeedsRasterAndDraw();
+    m_needsAnimationFrame = true;
 }
 
 void Browser::handleScrollUp()
 {
-    // TODO: schedule a task for this
-    m_activeTab->scrollDown();
+    std::lock_guard lock(m_mutex);
+    if (!m_activeTabHeight) return;
+    m_activeTabScroll = clampScroll(m_activeTabScroll - Constants::SCROLL_STEP);
+    setNeedsRasterAndDraw();
+    m_needsAnimationFrame = true;
 }

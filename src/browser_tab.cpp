@@ -1,5 +1,7 @@
 #include "browser_tab.h"
 
+#include "browser.h"
+#include "commit_data.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
@@ -8,10 +10,9 @@
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "scripting/js_context.h"
-#include "browser.h"
 
+#include <algorithm>
 #include <fstream>
-#include <iostream>
 #include <QFont>
 #include <QGraphicsTextItem>
 #include <iterator>
@@ -24,20 +25,41 @@ BrowserTab::BrowserTab(int width, int height)
       m_width(width),
       m_height(height),
       m_documentSurface(),
-      m_visibleSurface(QSize(width, height), QImage::Format_RGBA8888)
+      m_logger(Logger("BrowserTab"))
 {
-    std::cout 
-        << "[BrowserTab] Starting. Thread ID = " 
-        << std::this_thread::get_id() << std::endl;
-
+    m_logger.info("starting");
     m_scroll = 0;
+    m_scrollChangedInTab = false;
     m_focus = nullptr;
-    m_status = LOADING;
-    m_visibleSurface.fill(Qt::white);
+    m_loaded = false;
     m_needsRender = false;
 }
 
 BrowserTab::~BrowserTab() = default;
+
+void BrowserTab::load(URL url, std::optional<std::string> payload)
+{
+    try
+    {
+        m_loaded = false;
+        m_logger.info("loading: " + url.describe());
+        m_history.push_back(url);
+        auto response = url.request(m_url, payload);
+        std::string body = response.errorMessage.has_value() ? response.errorMessage.value() : response.body;
+        m_url = url;
+        auto resultNodes = HTMLParser(body).parse();
+        m_node = std::move(resultNodes);
+        loadContentSecurityPolicy(response.headers);
+        loadScripts();
+        loadStyles();
+        setNeedsRender();
+        m_loaded = true;
+    }
+    catch (...)
+    {
+        m_logger.error("failed to load the browser!");
+    }
+}
 
 void BrowserTab::setNeedsRender()
 {
@@ -45,67 +67,73 @@ void BrowserTab::setNeedsRender()
     browser->setNeedsAnimationFrame(this);
 }
 
-void BrowserTab::runAnimationFrame()
+int BrowserTab::clampScroll(const int scroll)
 {
-    m_needsRender = true;
+    int height = ceil(m_document->height + 2 * Constants::VSTEP);
+    int maxScroll = height - m_height;
+    return std::max(0, std::min(scroll, maxScroll));
+}
+
+void BrowserTab::runAnimationFrame(const int scroll)
+{
+    if (!m_scrollChangedInTab)
+    {
+        m_scroll = scroll;
+    }
+
+    if (m_js)
+    {
+        browser->measure.start("script-runRAFHandlers");
+        m_js->dispatchRunRAFHandlers();
+        browser->measure.stop("script-runRAFHandlers");
+    }
+    
     render();
+    
+    std::optional<int> newScroll = std::nullopt;
+    if (m_scrollChangedInTab)
+    {
+        newScroll = m_scroll;
+    }
+    int documentHeight = 0;
+    if (m_document)
+    {
+        documentHeight = (int)ceil(m_document->height + 2 * Constants::VSTEP);
+    }
+    CommitData commitData(m_url, m_scroll, documentHeight, std::move(m_displayList));
+    m_displayList = std::nullopt;
+    browser->commit(this, commitData);
+    m_scrollChangedInTab = false;
 }
 
 void BrowserTab::render()
 {
-    if (m_status != LOADED) return;
-    if (!m_needsRender) return;
+    if (!m_needsRender || !m_loaded) return;
+    m_logger.info("rendering");
     browser->measure.start("render");
-    m_js->dispatchRunRAFHandlers();
     auto sortedRules = sort(m_rules);
     addStyles(*m_node, sortedRules);
     m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
     m_document->layout();
-    m_displayCommands.clear();
-    paintTree(*m_document, m_displayCommands);
-    rasterAndDraw();
+    std::vector<std::unique_ptr<Command>> displayList;
+    paintTree(*m_document, displayList);
+    m_displayList = std::move(displayList);
     m_needsRender = false;
+
+    int clampedScroll = clampScroll(m_scroll);
+    if (clampedScroll != m_scroll)
+    {
+        m_scrollChangedInTab = true;
+    }
+    m_scroll = clampedScroll;
+
     browser->measure.stop("render");
 }
 
-void BrowserTab::raster()
-{
-    auto tabHeight = m_document->height + 2 * Constants::VSTEP;
-
-    if (m_documentSurface.isNull() || m_documentSurface.height() != tabHeight)
-    {
-        m_documentSurface = QImage(QSize(m_width, tabHeight), QImage::Format_RGBA8888);
-    }
-
-    m_documentSurface.fill(Qt::white);
-
-    for (const auto& command : m_displayCommands)
-    {
-        command->execute(&m_documentSurface);
-    }
-}
-
-void BrowserTab::draw()
-{
-    auto visibleRect = QRect(0, m_scroll, m_width, m_height);
-    m_visibleSurface = m_documentSurface.copy(visibleRect);
-    browser->updateSurface(m_visibleSurface);
-}
-
-void BrowserTab::rasterAndDraw()
-{
-    browser->measure.start("rasterAndDraw");
-    raster();
-    draw();
-    browser->measure.stop("rasterAndDraw");
-}
-
-/// Resizes the scene and reconstructs the layout.
 void BrowserTab::resize(int width, int height)
 {
     m_width = width;
     m_height = height;
-    m_visibleSurface = QImage(QSize(width, height), QImage::Format_RGBA8888);
     setNeedsRender();
 }
 
@@ -182,21 +210,6 @@ void BrowserTab::addStyles(Node &node, const SortedCSSRules& rules)
     }
 }
 
-CSSRules getDefaultStyleSheet()
-{
-    std::ifstream file("assets/styles/browser.css");
-    if (!file.is_open())
-    {
-        std::cerr << "Error opening default style sheet!";
-        return {};
-    }
-    std::string fileContents = {std::istreambuf_iterator<char>(file),
-        std::istreambuf_iterator<char>()};
-
-    auto parser = CSSParser(trim(fileContents));
-    return parser.parse();
-}
-
 /// Converts a tree into a list of nodes.
 std::vector<const Node*> BrowserTab::nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const
 {
@@ -245,6 +258,123 @@ std::vector<Layout*> layoutTreeToList(Layout* tree, std::vector<Layout*> &list)
     return list;
 }
 
+void BrowserTab::loadScripts()
+{
+    // If we are loading a new page and we already have an existing
+    // JSContext, we need to set a discarded flag so that any pending
+    // timeouts are discarded.
+    if (m_js) 
+    {
+        m_js->discarded = true;
+    }
+    m_js = std::make_unique<JSContext>(this);
+    auto scripts = getScriptLinks(m_node.get());
+    for (const auto& script : scripts)
+    {
+        auto scriptUrl = m_url.resolve(script);
+
+        // Make sure this script is allowed by the Content Security Policy.
+        // If there are no allowed origins defined, then allow the script.
+        if (!allowRequest(scriptUrl))
+        {
+            m_logger.info("blocked script due to CSP: " + script);
+            continue;
+        }
+        try
+        {
+            auto body = scriptUrl.request(m_url).body;
+
+            // Rather than run the script right away, schedule it to be processed later.
+            auto task = std::make_unique<Task<JSContext*, std::string, std::string>>(
+                "JSContext::run(\"" + script + "\")", 
+                &JSContext::run, 
+                m_js.get(), 
+                script, 
+                body
+            );
+            taskRunner.scheduleTask(std::move(task));
+        }
+        catch (...)
+        {
+            m_logger.error("failed to load script: " + script);
+        }
+    }
+}
+
+CSSRules BrowserTab::getDefaultStyleSheet()
+{
+    std::ifstream file("assets/styles/browser.css");
+    if (!file.is_open())
+    {
+        m_logger.error("error opening default style sheet!");
+        return {};
+    }
+    std::string fileContents = {std::istreambuf_iterator<char>(file),
+        std::istreambuf_iterator<char>()};
+
+    auto parser = CSSParser(trim(fileContents));
+    return parser.parse();
+}
+
+void BrowserTab::loadStyles()
+{
+    m_rules = getDefaultStyleSheet();
+    auto links = getStyleSheetLinks(m_node.get());
+    for (const auto& link : links)
+    {
+        try 
+        {
+            auto linkUrl = m_url.resolve(link);
+
+            // Make sure this style is allowed by the Content Security Policy.
+            // If there are no allowed origins defined, this allow the style.
+            if (!allowRequest(linkUrl))
+            {
+                m_logger.info("blocked style due to CSP: " + link);
+                continue;
+            }
+
+            auto linkBody = linkUrl.request(m_url).body;
+            auto linkResults = CSSParser(trim(linkBody)).parse();
+            m_rules.merge(linkResults);
+        }
+        catch (...)
+        {
+            m_logger.error("failed to load style: " + link);
+        }
+    }
+}
+
+bool BrowserTab::allowRequest(const URL& url)
+{
+    auto origin = url.origin();
+    auto it = find(m_allowedOrigins.begin(), m_allowedOrigins.end(), origin);
+    bool containsUrl = it != m_allowedOrigins.end();
+    return m_allowedOrigins.empty() || containsUrl;
+}
+
+void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers)
+{
+    m_allowedOrigins.clear();
+
+    if (headers.contains("content-security-policy"))
+    {
+        auto policy = split(headers["content-security-policy"], " ", false);
+        if (policy.size() > 0 && policy[0] == "default-src")
+        {
+            for (const auto& origin : policy) 
+            {
+                if (origin == "default-src")
+                {
+                    continue;
+                }
+                auto url = URL(origin).origin();
+                m_allowedOrigins.push_back(url);
+            }
+        }
+    }
+}
+
 std::vector<std::string> BrowserTab::getStyleSheetLinks(const Node* tree)
 {
     std::vector<std::string> links;
@@ -289,149 +419,6 @@ std::vector<std::string> BrowserTab::getScriptLinks(const Node* tree)
     return links;
 }
 
-void BrowserTab::load(URL url, std::optional<std::string> payload)
-{
-    try
-    {
-        m_status = LOADING;
-        std::cout << "[BrowserTab] Fetching URL: " << url.describe() << std::endl;
-        m_history.push_back(url);
-        auto response = url.request(m_url, payload);
-        std::string body = response.errorMessage.has_value() ? response.errorMessage.value() : response.body;
-        m_url = url;
-        auto resultNodes = HTMLParser(body).parse();
-        m_node = std::move(resultNodes);
-        loadContentSecurityPolicy(response.headers);
-        loadScripts();
-        loadStyles();
-        m_status = LOADED;
-        setNeedsRender();
-    }
-    catch (...)
-    {
-        std::cerr << "[BrowserTab] Failed to load the browser!\n";
-        m_status = ERROR;
-    }
-}
-
-void BrowserTab::loadScripts()
-{
-    // If we are loading a new page and we already have an existing
-    // JSContext, we need to set a discarded flag so that any pending
-    // timeouts are discarded.
-    if (m_js) 
-    {
-        m_js->discarded = true;
-    }
-    m_js = std::make_unique<JSContext>(this);
-    auto scripts = getScriptLinks(m_node.get());
-    for (const auto& script : scripts)
-    {
-        auto scriptUrl = m_url.resolve(script);
-
-        // Make sure this script is allowed by the Content Security Policy.
-        // If there are no allowed origins defined, then allow the script.
-        if (!allowRequest(scriptUrl))
-        {
-            std::cout << "Blocked script due to CSP: " << script << std::endl;
-            continue;
-        }
-        try
-        {
-            auto body = scriptUrl.request(m_url).body;
-
-            // Rather than run the script right away, schedule it to be processed later.
-            auto task = std::make_unique<Task<JSContext*, std::string, std::string>>(
-                "JSContext::run(\"" + script + "\")", 
-                &JSContext::run, 
-                m_js.get(), 
-                script, 
-                body
-            );
-            taskRunner.scheduleTask(std::move(task));
-        }
-        catch (...)
-        {
-            std::cout << "Failed to load script: " << script << std::endl;
-        }
-    }
-}
-
-void BrowserTab::loadStyles()
-{
-    m_rules = getDefaultStyleSheet();
-    auto links = getStyleSheetLinks(m_node.get());
-    for (const auto& link : links)
-    {
-        try 
-        {
-            auto linkUrl = m_url.resolve(link);
-
-            // Make sure this style is allowed by the Content Security Policy.
-            // If there are no allowed origins defined, this allow the style.
-            if (!allowRequest(linkUrl))
-            {
-                std::cout << "Blocked style due to CSP: " << link << std::endl;
-                continue;
-            }
-
-            auto linkBody = linkUrl.request(m_url).body;
-            auto linkResults = CSSParser(trim(linkBody)).parse();
-            m_rules.merge(linkResults);
-        }
-        catch (...)
-        {
-            std::cout << "Failed to load style: " << link << std::endl;
-        }
-    }
-}
-
-bool BrowserTab::allowRequest(const URL& url)
-{
-    auto origin = url.origin();
-    auto it = find(m_allowedOrigins.begin(), m_allowedOrigins.end(), origin);
-    bool containsUrl = it != m_allowedOrigins.end();
-    return m_allowedOrigins.empty() || containsUrl;
-}
-
-void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers)
-{
-    m_allowedOrigins.clear();
-
-    if (headers.contains("content-security-policy"))
-    {
-        auto policy = split(headers["content-security-policy"], " ", false);
-        if (policy.size() > 0 && policy[0] == "default-src")
-        {
-            for (const auto& origin : policy) 
-            {
-                if (origin == "default-src")
-                {
-                    continue;
-                }
-                auto url = URL(origin).origin();
-                m_allowedOrigins.push_back(url);
-            }
-        }
-    }
-}
-
-// For debugging - prints the sorted CSS styles to the console.
-void printStyles(const SortedCSSRules& rules)
-{
-    std::cout << "Sorted CSS Styles:" << std::endl;
-
-    for (const auto& rule : rules)
-    {
-        std::cout << rule.first << ": " << std::endl;
-
-        for (const auto& style : rule.second.styles)
-        {
-            std::cout << "    " << style.first << ": " << style.second << std::endl;
-        }
-    }
-}
-
 /// Recursively paints all layout objects, combining the 
 /// results into the provided display commands reference.
 void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList)
@@ -462,7 +449,6 @@ void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Com
 
 void BrowserTab::click(Point point)
 {
-    if (m_status != LOADED) return;
     // The layout tree needs to be up to date, so do a re-render.
     render();
 
@@ -507,7 +493,6 @@ void BrowserTab::click(Point point)
                 {
                     auto url = m_url.resolve(it->second);
                     load(url);
-                    browser->linkClicked(url);
                     break;
                 }
             } 
@@ -603,31 +588,11 @@ std::optional<URL> BrowserTab::goBack()
     return url;
 }
 
-void BrowserTab::scrollDown()
-{
-    // Scroll down, but prevent scrolling past the bottom of the document.
-    int verticalPadding = 2 * Constants::VSTEP;
-    int maxY = std::max(m_document->height + verticalPadding - m_height, 0);
-    m_scroll = std::min(m_scroll + Constants::SCROLL_STEP, maxY);
-    draw();
-}
-
-void BrowserTab::scrollUp()
-{
-    m_scroll -= Constants::SCROLL_STEP;
-    if (m_scroll < 0) 
-    {
-        m_scroll = 0;
-    }
-    draw();
-}
-
 void BrowserTab::keyPress(std::string text)
 {
-    if (m_js->dispatchEvent("keydown", m_focus)) return;
-
     if (m_focus)
     {
+        if (m_js->dispatchEvent("keydown", m_focus)) return;
         if (text == "\U0000007f")
         {
             // Handle backspace by removing the last character.

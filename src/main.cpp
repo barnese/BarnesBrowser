@@ -5,7 +5,6 @@
 #include <QFile>
 #include <QStyleHints>
 #include <QTextStream>
-#include <iostream>
 
 /// Loads style sheets used by Qt to style the UI.
 void loadStyleSheets(QApplication* app)
@@ -23,8 +22,6 @@ void loadStyleSheets(QApplication* app)
 /// Main entry point.
 int main(int argc, char *argv[]) 
 {
-    std::cout << "[Main] Starting. Thread ID = " << std::this_thread::get_id() << std::endl;
-
     QApplication app(argc, argv);
 
     // Force the application to use light mode.
@@ -34,7 +31,7 @@ int main(int argc, char *argv[])
 
     Browser browser;
     browser.resize(815, 600);
-    browser.newTab(URL("http://localhost:8000/count"));
+    browser.newTab(URL("http://localhost:8000"));
     browser.show();
     
     return app.exec();

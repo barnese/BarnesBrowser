@@ -226,10 +226,6 @@ std::map<std::string, std::string, CaseInsensitiveLess> parseHeaders(std::string
         headers[name] = trim(value);
     }
 
-    // Make sure these headers are not found.
-    assert(headers.find("transfer-encoding") == headers.end());
-    assert(headers.find("content-encoding") == headers.end());
-
     return headers;
 }
 
