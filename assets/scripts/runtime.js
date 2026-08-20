@@ -57,6 +57,12 @@ Object.defineProperty(Node.prototype, 'innerHTML', {
     }
 });
 
+Object.defineProperty(Node.prototype, 'style', {
+    set: function(s) {
+        currentJSContext.setStyle(this.handle, s.toString());
+    }
+});
+
 function XMLHttpRequest() {
     this.handle = Object.keys(XHR_REQUESTS).length;
     XHR_REQUESTS[this.handle] = this;

@@ -45,6 +45,7 @@ JSContext::JSContext(BrowserTab* tab)
     dukglue_register_method(m_duk, &JSContext::querySelectorAll, "querySelectorAll");
     dukglue_register_method(m_duk, &JSContext::getAttribute, "getAttribute");
     dukglue_register_method(m_duk, &JSContext::setInnerHtml, "setInnerHtml");
+    dukglue_register_method(m_duk, &JSContext::setStyle, "setStyle");
     dukglue_register_method(m_duk, &JSContext::sendXmlHttpRequest, "sendXmlHttpRequest");
     dukglue_register_method(m_duk, &JSContext::setTimeout, "setTimeout");
     dukglue_register_method(m_duk, &JSContext::requestAnimationFrame, "requestAnimationFrame");
@@ -110,6 +111,16 @@ void JSContext::setInnerHtml(int handle, std::string html)
         child->parent = node;
     }
     m_tab->setNeedsRender();
+}
+
+void JSContext::setStyle(int handle, std::string style)
+{
+    auto node = getNode(handle);
+    if (auto element = dynamic_cast<Element*>(node))
+    {
+        element->attributes["style"] = style;
+        m_tab->setNeedsRender();
+    }    
 }
 
 std::string JSContext::runLoad(int handle, URL tabUrl, URL fullUrl, std::string body)
