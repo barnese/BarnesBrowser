@@ -19,22 +19,22 @@ console.log("[test.js] hello!");
 //xhr.send();
 
 // TEST 3: Opacity animation test
-var div = document.querySelectorAll("div")[1];
-var totalFrames = 120;
-var currentFrame = 0;
-var changePerFrame = (0.999 - 0.1) / totalFrames;
-function animate() {
-    currentFrame++;
-    var newOpacity = currentFrame * changePerFrame + 0.1;
-    div.style = "opacity:" + newOpacity;
-    return currentFrame < totalFrames;
-}
+// var div = document.querySelectorAll("div")[1];
+// var totalFrames = 120;
+// var currentFrame = 0;
+// var changePerFrame = (0.999 - 0.1) / totalFrames;
+// function animate() {
+//     currentFrame++;
+//     var newOpacity = currentFrame * changePerFrame + 0.1;
+//     div.style = "opacity:" + newOpacity;
+//     return currentFrame < totalFrames;
+// }
 
-function runAnimationFrame() {
-    if (animate())
-        requestAnimationFrame(runAnimationFrame);
-}
-requestAnimationFrame(runAnimationFrame);
+// function runAnimationFrame() {
+//     if (animate())
+//         requestAnimationFrame(runAnimationFrame);
+// }
+//requestAnimationFrame(runAnimationFrame);
 // END TEST 3
 
 

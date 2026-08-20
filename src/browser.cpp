@@ -231,6 +231,14 @@ void Browser::changeTab(size_t index)
 
     m_logger.info("changing tab to " + std::to_string(index));
     setActiveTab(m_tabs.at(index).get());
+
+    std::lock_guard lock(m_mutex);
+    auto task = std::make_unique<Task<BrowserTab*>>(
+        "BrowserTab::setNeedsRender",
+        &BrowserTab::setNeedsRender,
+        m_activeTab
+    );
+    m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
 void Browser::setActiveTab(BrowserTab* tab)

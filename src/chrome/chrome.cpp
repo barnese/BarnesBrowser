@@ -33,7 +33,7 @@ void Chrome::createTabBar()
     m_tabBarLayout->setSpacing(10);
 
     connect(m_addTabButton, &QPushButton::clicked, this, &Chrome::newTabRequested);
-    connect(m_tabBar, &QTabBar::currentChanged, this, &Chrome::handleTabChanged);
+    connect(m_tabBar, &QTabBar::tabBarClicked, this, &Chrome::handleTabChanged);
 }
 
 void Chrome::createAddressBar()
