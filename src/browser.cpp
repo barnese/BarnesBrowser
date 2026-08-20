@@ -120,23 +120,17 @@ void Browser::scheduleAnimationFrame()
         m_animationTimer = new QTimer(this);
         m_animationTimer->setSingleShot(true);
         connect(m_animationTimer, &QTimer::timeout, this, [this] {
-            int scroll;
-            BrowserTab* activeTab;
-            {
-                std::lock_guard lock(m_mutex);
-                scroll = m_activeTabScroll;
-                activeTab = m_activeTab;
-                m_animationTimer = nullptr;
-                m_needsAnimationFrame = false;
-            }
+            std::lock_guard lock(m_mutex);
+            m_animationTimer = nullptr;
+            m_needsAnimationFrame = false;
             auto task = std::make_unique<Task<BrowserTab*, int>>(
                 "BrowserTab::runAnimationFrame",
                 &BrowserTab::runAnimationFrame,
                 m_activeTab,
-                scroll
+                m_activeTabScroll
             );
-            activeTab->taskRunner.scheduleTask(std::move(task));
-        });
+            m_activeTab->taskRunner.scheduleTask(std::move(task));
+       });
         m_animationTimer->start(Constants::REFRESH_RATE_MS);   
     }
 }

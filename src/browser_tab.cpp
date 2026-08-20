@@ -53,6 +53,8 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         loadScripts();
         loadStyles();
         setNeedsRender();
+        m_scroll = 0;
+        m_scrollChangedInTab = true;
         m_loaded = true;
     }
     catch (...)
@@ -100,7 +102,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
     {
         documentHeight = (int)ceil(m_document->height + 2 * Constants::VSTEP);
     }
-    CommitData commitData(m_url, m_scroll, documentHeight, std::move(m_displayList));
+    CommitData commitData(m_url, newScroll, documentHeight, std::move(m_displayList));
     m_displayList = std::nullopt;
     browser->commit(this, commitData);
     m_scrollChangedInTab = false;

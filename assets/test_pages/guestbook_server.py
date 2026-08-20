@@ -147,6 +147,8 @@ def show_count():
     out = "<!doctype html>"
     out += "<div>Let's count up to 99</div>"
     out += "<div>Output</div>"
+    for i in range(100): 
+        out += "<p>Extra line {}</p>".format(i)
     out += "<script src='/eventloop.js'></script>"
     return out
 
