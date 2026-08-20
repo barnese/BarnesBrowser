@@ -1,12 +1,17 @@
 #include "browser.h"
 
 #include "constants.h"
+#include "helpers/thread_registry.h"
 
 #include <QBoxLayout>
 
 Browser::Browser(QWidget* parent) 
     : QWidget(parent), m_logger(Logger("Browser"))
 {
+    // Add the current thread to the thread registry,
+    // which allows us to have human-readable thread names.
+    threadRegistry().add(std::this_thread::get_id(), "Browser Thread");
+
     m_logger.info("starting");
 
     auto* layout = new QVBoxLayout(this);

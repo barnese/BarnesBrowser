@@ -47,6 +47,7 @@ add_executable(main
     src/helpers/measure_time.cpp
     src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp
+    src/helpers/thread_registry.cpp
     src/html_tree/element.cpp
     src/html_tree/html_parser.cpp
     src/html_tree/text.cpp

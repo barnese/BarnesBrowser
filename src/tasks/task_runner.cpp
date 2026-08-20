@@ -1,5 +1,7 @@
 #include "task_runner.h"
 
+#include "helpers/thread_registry.h"
+
 TaskRunner::TaskRunner()
     : m_logger(Logger("TaskRunner")),
       m_thread([this](std::stop_token stopToken) {
@@ -26,6 +28,10 @@ void TaskRunner::scheduleTask(std::unique_ptr<ITask> task)
 
 void TaskRunner::run(std::stop_token stopToken)
 {
+    // Add the current thread to the thread registry,
+    // which allows us to have human-readable thread names.
+    threadRegistry().add(std::this_thread::get_id(), "Main Thread");
+
     m_logger.info("starting");
 
     while (true)
