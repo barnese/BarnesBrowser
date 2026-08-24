@@ -4,6 +4,7 @@
 #include <QOpenGLTextureBlitter>
 #include <QSize>
 
+/// Context used to allow commands to paint their contents.
 struct PaintContext
 {
     QPainter& painter;
