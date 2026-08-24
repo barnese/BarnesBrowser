@@ -1,7 +1,9 @@
 #include "blend.h"
 
 #include <QPainter>
-#include <QGraphicsItemGroup>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLPaintDevice>
+#include <QOpenGLFunctions>
 #include <sstream>
 
 Blend::Blend(
@@ -46,44 +48,90 @@ QPainter::CompositionMode parseBlendMode(const std::string& blendMode)
 
 void Blend::execute(PaintContext& context)
 {
-    if (m_blendMode.has_value() || m_opacity < 1)
-    {
-        // Create an offscreen layer matching the destination.
-        QImage layer(rect.size(), QImage::Format_RGBA8888);
-        layer.fill(Qt::transparent);
-
-        QPainter layerPainter(&layer);
-        PaintContext layerContext {
-            layerPainter,
-            context.blitter,
-            context.viewportSize
-        };
-        layerPainter.translate(-rect.topLeft());
-
-        // Draw the children onto that layer.
-        for (const auto& child : children)
-        {
-            child->execute(layerContext);
-        }
-
-        layerContext.painter.save();
-
-        // Composite the finished layer onto the main surface.
-        if (m_blendMode.has_value())
-        {
-            layerContext.painter.setCompositionMode(parseBlendMode(m_blendMode.value()));    
-        }
-        layerContext.painter.setOpacity(m_opacity);
-        layerContext.painter.drawImage(0, 0, layer);
-        layerContext.painter.restore();
-    }    
-    else 
+    // If no blending is needed, just run the children and return.
+    if (!m_blendMode.has_value() && m_opacity >= 1)
     {
         for (const auto& child : children)
         {
             child->execute(context);
         }
+        return;
     }
+    
+    auto* glContext = QOpenGLContext::currentContext();
+    auto* gl = glContext->functions();
+
+    // Save the framebuffer we are currently drawing into.
+    GLint previousFbo = 0;
+    gl->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFbo);
+
+    // Create an offscreen FBO.
+    QOpenGLFramebufferObjectFormat format;
+    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+    format.setSamples(0); // Non-multisampled
+    auto fbo = QOpenGLFramebufferObject(rect.size(), format);
+
+    // Draw the children onto that FBO.
+    fbo.bind();
+
+    QOpenGLPaintDevice device(rect.size());
+    QPainter painter(&device);
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(QRect(QPoint(0, 0), rect.size()), Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    painter.translate(-rect.left(), -rect.top());
+
+    PaintContext blendContext { painter, context.blitter, rect.size() };
+
+    for (const auto& item : children)
+    {
+        item->execute(blendContext);
+    }
+
+    // Restore the destination framebuffer and composite
+    // the completed FBO with the desired blend mode.
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
+    
+    context.painter.save();
+
+    if (m_blendMode.has_value())
+    {
+        painter.setCompositionMode(parseBlendMode(m_blendMode.value()));
+    }
+
+    context.painter.setOpacity(m_opacity);
+    
+    // The code below drawImage attempts to move everything to the
+    // GPU, and it mostly works, but it doesn't support all blending
+    // modes. To do that, I think I need to use shaders. That's a
+    // project for another day, so I'll keep the drawImage for now,
+    // even though it uses the CPU.
+    context.painter.drawImage(rect.topLeft(), fbo.toImage());
+
+    // context.painter.beginNativePainting();
+
+    // gl->glEnable(GL_BLEND);
+    // gl->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    // context.blitter->bind();
+    // context.blitter->setOpacity(m_opacity);
+
+    // const QRect viewport(QPoint(0, 0), context.viewportSize);
+    // const QMatrix4x4 target = QOpenGLTextureBlitter::targetTransform(rect, viewport);
+
+    // context.blitter->blit(
+    //     fbo.texture(),
+    //     target,
+    //     QOpenGLTextureBlitter::OriginBottomLeft);
+
+    // context.blitter->setOpacity(1.0f);
+    // context.blitter->release();
+
+    // gl->glDisable(GL_BLEND);
+
+    // context.painter.endNativePainting();
+
+    context.painter.restore();
 }
 
 std::unique_ptr<Command> Blend::clone(std::unique_ptr<Command> child)
