@@ -20,7 +20,12 @@ FetchContent_MakeAvailable(Catch2)
 find_package(OpenSSL REQUIRED)
 
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders ON)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Core)
+find_package(Qt6 REQUIRED COMPONENTS 
+    Core
+    Gui 
+    OpenGLWidgets
+    Widgets
+)
 
 add_subdirectory(third_party/duktape)
 
@@ -41,6 +46,8 @@ target_include_directories(dukglue SYSTEM INTERFACE ${dukglue_src_SOURCE_DIR}/in
 add_executable(main
     src/chrome/chrome.cpp
     src/commands/blend.cpp
+    src/commands/composited_layer.cpp
+    src/commands/draw_composited_layer.cpp
     src/commands/draw_line.cpp
     src/commands/draw_rounded_rect.cpp
     src/commands/draw_text.cpp
@@ -86,9 +93,10 @@ target_compile_options(main PRIVATE
 target_link_libraries(main PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
-    Qt6::Widgets
-    Qt6::Gui
     Qt6::Core
+    Qt6::Gui
+    Qt6::OpenGLWidgets
+    Qt6::Widgets
     duktape
     dukglue
 )

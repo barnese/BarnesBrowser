@@ -4,7 +4,7 @@ console.log("[eventloop.js] Hello!");
 var count = 0;
 function callback() {
     // Simulate slowness
-    for (var i = 0; i < 5e6; i++);
+    //for (var i = 0; i < 5e6; i++);
     var output = document.querySelectorAll("div")[1];
     output.innerHTML = "count: " + (count++);
     if (count < 100) {

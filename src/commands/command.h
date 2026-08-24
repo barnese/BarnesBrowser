@@ -1,18 +1,31 @@
 #pragma once
 
+#include "paint_context.h"
+
 #include <string>
 #include <QImage>
 #include <QRect>
 
-/// Defines an interface for a graphics command for a browser scene.
+/// Defines an interface for a painting and visual effects commands
+/// used to draw the visual content of a web page. Commands form
+/// trees, hence the ability for a command to have children and parent.
 class Command
 {
 public:
     virtual ~Command() = default;
-    virtual void execute(QImage* surface) = 0;
+
+    // Executes this command.
+    virtual void execute(PaintContext& context) = 0;
+
+    // Provide the ability to clone this command, but with new children.
+    virtual std::unique_ptr<Command> clone(std::unique_ptr<Command> child) = 0;
+
+    // Return a string describing this command.
     virtual std::string describe() const = 0;
 
     QRect rect;
+    Command* parent;
+    std::vector<std::unique_ptr<Command>> children;
 };
 
 /// @brief Helper that takes any number of unique pointers and puts them

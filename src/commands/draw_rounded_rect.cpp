@@ -20,10 +20,9 @@ DrawRoundedRect::DrawRoundedRect(QRect r, QString color, double radius)
     rect = r;
 }
 
-void DrawRoundedRect::execute(QImage* surface)
+void DrawRoundedRect::execute(PaintContext& context)
 {
-    QPainter painter(surface);
-
+    QPainter& painter = context.painter;
     auto color = parseColor(m_color);
     auto brush = QBrush(color);
     painter.setBrush(brush);
@@ -35,13 +34,15 @@ void DrawRoundedRect::execute(QImage* surface)
 std::string DrawRoundedRect::describe() const
 {
     std::stringstream s; 
-    s << "DrawRoundedRect { ";
-    s << "left: " << rect.left() << ", ";
-    s << "top: " << rect.top() << ", ";
-    s << "right: " << rect.right() << ", ";
-    s << "bottom: " << rect.bottom() << ", ";
+    s << "DrawRoundedRect(rect: {";
+    s << rect.left() << ", " << rect.top() << ", " << rect.right() << ", " << rect.bottom() << "}, ";
     s << "color: " << m_color.toStdString() << ", ";
     s << "radius: " << m_radius;
-    s << " }";
+    s << ")";
     return s.str();
+}
+
+std::unique_ptr<Command> DrawRoundedRect::clone(std::unique_ptr<Command>)
+{
+    return nullptr;
 }

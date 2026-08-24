@@ -12,8 +12,9 @@ DrawLine::DrawLine(int x1, int y1, int x2, int y2, QString color, int thickness)
     rect = {x1, y1, x2 - x1, y2 - y1};
 }
 
-void DrawLine::execute(QImage* surface)
+void DrawLine::execute(PaintContext& context)
 {
+    QPainter& painter = context.painter;
     QLine line(
         rect.left(),
         rect.top(),
@@ -21,7 +22,6 @@ void DrawLine::execute(QImage* surface)
         rect.bottom()
     );
     
-    QPainter painter(surface);
     auto color = parseColor(m_color);
     auto pen = QPen(color, m_thickness);
     painter.setPen(pen);
@@ -31,13 +31,15 @@ void DrawLine::execute(QImage* surface)
 std::string DrawLine::describe() const
 {
     std::stringstream s; 
-    s << "DrawLine { ";
-    s << "left: " << rect.left() << ", ";
-    s << "top: " << rect.top() << ", ";
-    s << "right: " << rect.right() << ", ";
-    s << "bottom: " << rect.bottom() << ", ";
+    s << "DrawLine(rect: {";
+    s << rect.left() << ", " << rect.top() << ", " << rect.right() << ", " << rect.bottom() << "}, ";
     s << "color: " << m_color.toStdString() << ", ";
     s << "thickness: " << m_thickness;
-    s << " }";
+    s << ")";
     return s.str();
+}
+
+std::unique_ptr<Command> DrawLine::clone(std::unique_ptr<Command>)
+{
+    return nullptr;
 }

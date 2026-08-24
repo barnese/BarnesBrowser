@@ -19,9 +19,9 @@ DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
     };
 }
 
-void DrawText::execute(QImage* surface)
+void DrawText::execute(PaintContext& context)
 {
-    QPainter painter(surface);
+    QPainter& painter = context.painter;
     auto color = parseColor(m_color);
     painter.setPen(color);
     painter.setFont(m_font);
@@ -31,14 +31,15 @@ void DrawText::execute(QImage* surface)
 std::string DrawText::describe() const
 {
     std::stringstream s; 
-    s << "DrawText { ";
-    s << "left: " << rect.left() << ", ";
-    s << "top: " << rect.top() << ", ";
-    s << "right: " << rect.right() << ", ";
-    s << "bottom: " << rect.bottom() << ", ";
+    s << "DrawText(rect: {";
+    s << rect.left() << ", " << rect.top() << ", " << rect.right() << ", " << rect.bottom() << "}, ";
     s << "text: \"" << m_text.toStdString() << "\", ";
-    s << "font: " << m_font.family().toStdString() << ", ";
     s << "color: " << m_color.toStdString();
-    s << " }";
+    s << ")";
     return s.str();
+}
+
+std::unique_ptr<Command> DrawText::clone(std::unique_ptr<Command>)
+{
+    return nullptr;
 }

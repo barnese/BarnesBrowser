@@ -1,30 +1,38 @@
 #include "browser_view.h"
 
-#include <QPixmap>
+#include <QOpenGLWidget>
 
 BrowserView::BrowserView(QWidget* parent)
-    : QGraphicsView(parent),
-      m_scene{this},
-      m_pixmapItem(m_scene.addPixmap({}))
+    : QOpenGLWidget(parent)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    setScene(&m_scene);
 }
 
-void BrowserView::updateSurface(const QImage& surface)
+void BrowserView::initializeGL()
 {
-    // Translate the given QImage surface into a QPixmap,
-    // which creates a display-optimized version of the surface.
-    // PixmapItem then displays the Pixmap onto the scene.
-    m_pixmapItem->setPixmap(QPixmap::fromImage(surface));
-    m_scene.setSceneRect(m_pixmapItem->boundingRect());
+    m_blitter.create();
+}
+
+void BrowserView::paintGL()
+{
+    QPainter painter(this);
+
+    painter.fillRect(rect(), Qt::white);
+
+    PaintContext context {
+        painter,
+        &m_blitter,
+        size()
+    };
+
+    emit paintRequested(context);
 }
 
 void BrowserView::resizeEvent(QResizeEvent* event)
 {
-    QGraphicsView::resizeEvent(event);
-    int width = viewport()->size().width();
-    int height = viewport()->size().height();
+    QOpenGLWidget::resizeEvent(event);
+    int width = size().width();
+    int height = size().height();
     resize(width, height);
 }
 
@@ -46,7 +54,7 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
         {
             keyPress(eventText);
         }
-        QGraphicsView::keyPressEvent(event);
+        QOpenGLWidget::keyPressEvent(event);
     }
 }
 
@@ -59,7 +67,7 @@ void BrowserView::mousePressEvent(QMouseEvent* event)
     }
     else 
     {
-        QGraphicsView::mousePressEvent(event);
+        QOpenGLWidget::mousePressEvent(event);
     }
 }
 
@@ -77,6 +85,6 @@ void BrowserView::wheelEvent(QWheelEvent* event)
     }
     else
     {
-        QGraphicsView::wheelEvent(event);
+        QOpenGLWidget::wheelEvent(event);
     }
 }

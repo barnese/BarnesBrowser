@@ -3,6 +3,8 @@
 #include "browser_view.h"
 #include "browser_tab.h"
 #include "commit_data.h"
+#include "commands/composited_layer.h"
+#include "commands/paint_context.h"
 #include "chrome/chrome.h"
 #include "helpers/measure_time.h"
 #include "logger.h"
@@ -46,21 +48,26 @@ private:
     void handleResize(int width, int height);
     void handleScrollDown();
     void handleScrollUp();
-    void rasterAndDraw();
+    void handlePaintRequest(PaintContext context);
+    void compositeRasterAndDraw();
     void rasterTab();
     void render();
     void draw();
+    void composite();
+    void paintDrawList();
     int clampScroll(const int scroll);
     void newTabInternal(std::optional<URL> url = std::nullopt);
     void mainTimerFired();
+    void printDrawList();
 
+    Logger m_logger;
     std::mutex m_mutex;
     BrowserView* m_view;
     Chrome* m_chrome;
     QTimer m_timer;
     QTimer* m_animationTimer;
     bool m_needsAnimationFrame;
-    bool m_needsRasterAndDraw;
+    bool m_needsCompositeRasterAndDraw;
     
     // Tab-specific members    
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
@@ -70,5 +77,6 @@ private:
     int m_activeTabHeight;
     std::vector<std::unique_ptr<Command>> m_activeTabDisplayList;
     QImage m_tabSurface;
-    Logger m_logger;
+    std::vector<std::unique_ptr<CompositedLayer>> m_compositedLayers;
+    std::vector<std::unique_ptr<Command>> m_drawList;
 };

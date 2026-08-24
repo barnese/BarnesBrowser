@@ -1,18 +1,17 @@
 #include "blend.h"
 
 #include <QPainter>
+#include <QGraphicsItemGroup>
 #include <sstream>
 
 Blend::Blend(
     std::optional<std::string> blendMode, 
     double opacity,
     std::vector<std::unique_ptr<Command>> children
-)
-    : m_blendMode(blendMode),
-      m_opacity(opacity),
-      m_children(std::move(children))
+) : VisualEffect({}, std::move(children))
 {
-    rect = {};
+    m_blendMode = blendMode;
+    m_opacity = opacity;
 
     // Expand the bounding box to enclose each child's rectangle.
     for (const auto& child : children)
@@ -45,49 +44,61 @@ QPainter::CompositionMode parseBlendMode(const std::string& blendMode)
     }
 }
 
-void Blend::execute(QImage* surface)
+void Blend::execute(PaintContext& context)
 {
-    // Only need to apply blending if a blend mode or opacity has been set.
     if (m_blendMode.has_value() || m_opacity < 1)
     {
         // Create an offscreen layer matching the destination.
-        QImage layer(surface->size(), QImage::Format_RGBA8888);
+        QImage layer(rect.size(), QImage::Format_RGBA8888);
         layer.fill(Qt::transparent);
 
+        QPainter layerPainter(&layer);
+        PaintContext layerContext {
+            layerPainter,
+            context.blitter,
+            context.viewportSize
+        };
+        layerPainter.translate(-rect.topLeft());
+
         // Draw the children onto that layer.
-        for (const auto& child : m_children)
+        for (const auto& child : children)
         {
-            child->execute(&layer);
+            child->execute(layerContext);
         }
 
+        layerContext.painter.save();
+
         // Composite the finished layer onto the main surface.
-        QPainter painter(surface);
         if (m_blendMode.has_value())
         {
-            painter.setCompositionMode(parseBlendMode(m_blendMode.value()));    
+            layerContext.painter.setCompositionMode(parseBlendMode(m_blendMode.value()));    
         }
-        painter.setOpacity(m_opacity);
-        painter.drawImage(0, 0, layer);
-    }
+        layerContext.painter.setOpacity(m_opacity);
+        layerContext.painter.drawImage(0, 0, layer);
+        layerContext.painter.restore();
+    }    
     else 
     {
-        for (const auto& child : m_children)
+        for (const auto& child : children)
         {
-            child->execute(surface);
+            child->execute(context);
         }
     }
 }
 
-std::string Blend::describe() const
+std::unique_ptr<Command> Blend::clone(std::unique_ptr<Command> child)
 {
+    std::vector<std::unique_ptr<Command>> children;
+    children.push_back(std::move(child));
+    return std::make_unique<Blend>(m_blendMode, m_opacity, std::move(children));
+}
+
+std::string Blend::describe() const
+{    
     std::stringstream s; 
-    s << "Opacity { ";
-    s << "left: " << rect.left() << ", ";
-    s << "top: " << rect.top() << ", ";
-    s << "right: " << rect.right() << ", ";
-    s << "bottom: " << rect.bottom() << ", ";
-    s << "opacity: " << m_opacity << ", ";
-    s << "blend mode: " << (m_blendMode.has_value() ? m_blendMode.value() : "not set");
-    s << " }";
+    s << "Blend(children: " << children.size();
+    s << ", opacity: " << m_opacity;
+    s << ", blend: " << (m_blendMode.has_value() ? m_blendMode.value() : "not set");
+    s << ")";
     return s.str();
 }

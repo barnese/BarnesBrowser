@@ -1,5 +1,8 @@
 #include "browser.h"
 
+#include "commands/blend.h"
+#include "commands/draw_composited_layer.h"
+#include "commands/paint_command.h"
 #include "constants.h"
 #include "helpers/thread_registry.h"
 
@@ -26,6 +29,7 @@ Browser::Browser(QWidget* parent)
     connect(m_chrome, &Chrome::addressChanged, this, &Browser::changeAddress);
     connect(m_chrome, &Chrome::navigateBackRequested, this, &Browser::goBack);
     
+    connect(m_view, &BrowserView::paintRequested, this, &Browser::handlePaintRequest);
     connect(m_view, &BrowserView::click, this, &Browser::handleClick);
     connect(m_view, &BrowserView::keyPress, this, &Browser::handleKeyPress);
     connect(m_view, &BrowserView::resize, this, &Browser::handleResize);
@@ -37,7 +41,7 @@ Browser::Browser(QWidget* parent)
 
     m_animationTimer = nullptr;
     m_needsAnimationFrame = false;
-    m_needsRasterAndDraw = false;
+    m_needsCompositeRasterAndDraw = false;
     m_activeTabHeight = 0;
     m_activeTabScroll = 0;
     m_activeTabDisplayList.clear();
@@ -56,7 +60,7 @@ void Browser::mainTimerFired()
 {
     // Continuously check if we need to raster/draw 
     // or schedule an animation frame.
-    rasterAndDraw();
+    compositeRasterAndDraw();
     scheduleAnimationFrame();
 }
 
@@ -96,19 +100,21 @@ void Browser::setNeedsAnimationFrame(BrowserTab* tab)
 
 void Browser::setNeedsRasterAndDraw()
 {
-    m_needsRasterAndDraw = true;
+    m_needsCompositeRasterAndDraw = true;
 }
 
-void Browser::rasterAndDraw()
+void Browser::compositeRasterAndDraw()
 {
     std::lock_guard lock(m_mutex);
-    if (!m_needsRasterAndDraw) return;
-    m_logger.info("rastering and drawing");
-    measure.start("rasterAndDraw");
+    if (!m_needsCompositeRasterAndDraw) return;
+    m_logger.info("composite rastering and drawing");
+    measure.start("compositeRasterAndDraw");
+    composite();
     rasterTab();
+    paintDrawList();
     draw();
-    measure.stop("rasterAndDraw");
-    m_needsRasterAndDraw = false;
+    measure.stop("compositeRasterAndDraw");
+    m_needsCompositeRasterAndDraw = false;
 }
 
 void Browser::scheduleAnimationFrame()
@@ -137,34 +143,115 @@ void Browser::scheduleAnimationFrame()
 
 void Browser::rasterTab()
 {
-    if (m_activeTabHeight == 0)
+    for (const auto& compositedLayer : m_compositedLayers)
     {
-        return;
-    }
-
-    if (m_activeTabHeight < m_view->size().height())
-    {
-        m_activeTabHeight = m_view->size().height();
-    }
-
-    if (m_tabSurface.isNull() || m_tabSurface.height() != m_activeTabHeight)
-    {
-        m_tabSurface = QImage(QSize(m_view->size().width(), m_activeTabHeight), QImage::Format_RGBA8888);
-    }
-
-    m_tabSurface.fill(Qt::white);
-
-    for (const auto& command : m_activeTabDisplayList)
-    {
-        command->execute(&m_tabSurface);
+        compositedLayer->raster();
     }
 }
 
 void Browser::draw()
 {
-    auto tabRect = QRect(0, m_activeTabScroll, m_view->size().width(), m_activeTabHeight);
-    auto visibleSurface = m_tabSurface.copy(tabRect);
-    m_view->updateSurface(visibleSurface);
+    // Tell the view we need to update. This will cause the 
+    // view to send back a paint request signal with the 
+    // painter that we can use to draw.
+    m_view->update();
+}
+
+void Browser::handlePaintRequest(PaintContext context)
+{
+    // TODO: How should we account for m_activeTabScroll?
+    for (const auto& item : m_drawList)
+    {
+        item->execute(context);
+    }
+}
+
+/// Converts a tree of commands to a vector.
+void treeToList(Command* command, std::vector<Command*>& list)
+{
+    list.push_back(command);
+
+    for (const auto& child : command->children)    
+        treeToList(child.get(), list);
+}
+
+void addParentPointers(std::vector<std::unique_ptr<Command>>& commands, Command* parent = nullptr)
+{
+    for (auto& command : commands)
+    {
+        command->parent = parent;
+        addParentPointers(command->children, command.get());
+    }
+}
+
+void Browser::composite()
+{
+    // To make it easy to access ancestor visual effects and compare 
+    // them, add parent pointers to our display list tree.
+    addParentPointers(m_activeTabDisplayList);
+
+    m_compositedLayers.clear();
+
+    std::vector<Command*> allCommands;
+    std::vector<Command*> paintCommands;
+
+    for (const auto& command : m_activeTabDisplayList)
+    {
+        treeToList(command.get(), allCommands);
+    }
+
+    for (auto const& command : allCommands)
+    {
+        if (auto paintCommand = dynamic_cast<PaintCommand*>(command))
+        {
+            paintCommands.push_back(paintCommand);
+        }
+    }
+
+    for (auto command : paintCommands)
+    {
+        auto layer = std::make_unique<CompositedLayer>(command);
+        m_compositedLayers.push_back(std::move(layer));
+    }
+}
+
+void Browser::paintDrawList()
+{
+    std::map<Command*, Command*> newEffects;
+
+    m_drawList.clear();
+
+    for (const auto& compositedLayer : m_compositedLayers)
+    {
+        if (!compositedLayer->displayItems.has_value()) 
+            continue;
+
+        std::unique_ptr<Command> current =
+            std::make_unique<DrawCompositedLayer>(compositedLayer.get());
+
+        auto parent = compositedLayer->displayItems->front()->parent;
+
+        while (parent)
+        {
+            if (newEffects.contains(parent))
+            {
+                newEffects.at(parent)->children.push_back(std::move(current));
+                break;
+            }
+            else 
+            {
+                auto cloned = parent->clone(std::move(current));
+                newEffects[parent] = cloned.get();
+                current = std::move(cloned);
+                parent = parent->parent;
+            }
+        }
+
+        if (!parent)
+        {
+            m_drawList.push_back(std::move(current));
+        }
+    }
 }
 
 void Browser::scheduleLoad(URL url)
@@ -205,7 +292,7 @@ void Browser::newTabInternal(std::optional<URL> url)
         address = "";
         tabName = "New Tab";
     }
-    m_view->centerOn(0, 0);
+    //m_view->centerOn(0, 0);
     m_view->setFocus();
     m_chrome->addTab(tabName, address, m_tabs.size() - 1);
 }
@@ -271,7 +358,7 @@ void Browser::changeAddress(QString newAddress)
     {
         auto url = URL(newAddress.toStdString());
         scheduleLoad(url);
-        m_view->centerOn(0, 0);
+        //m_view->centerOn(0, 0);
         m_view->setFocus();
         m_chrome->setAddress(newAddress);
     }
@@ -335,4 +422,20 @@ void Browser::handleScrollUp()
     m_activeTabScroll = clampScroll(m_activeTabScroll - Constants::SCROLL_STEP);
     setNeedsRasterAndDraw();
     m_needsAnimationFrame = true;
+}
+
+// Debugging helpers
+void printCommand(const Command* command, int depth = 0)
+{
+    QString indent(depth * 2, ' ');
+    std::cout << indent.toStdString() << command->describe() << std::endl;
+    for (const auto& child : command->children)
+        printCommand(child.get(), depth + 1);
+}
+
+void Browser::printDrawList()
+{
+    std::cout << "DRAW LIST:" << std::endl;
+    for (const auto& command : m_drawList)
+        printCommand(command.get());
 }

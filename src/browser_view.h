@@ -1,30 +1,34 @@
 #pragma once
 
 #include "point.h"
+#include "commands/paint_context.h"
 
 #include <string>
-#include <QGraphicsPixmapItem>
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QKeyEvent>
+#include <QOpenGLWidget>
+#include <QOpenGLTextureBlitter>
+#include <QPainter>
 #include <QWheelEvent>
 
-
 /// Holds the browser's graphical window and handles user interactions.
-class BrowserView : public QGraphicsView
+class BrowserView : public QOpenGLWidget
 {
     Q_OBJECT
 
 public:
     explicit BrowserView(QWidget* parent = nullptr);
-    void updateSurface(const QImage& surface);
 
 signals:
+    void paintRequested(PaintContext& context);
     void click(Point point);
     void keyPress(std::string text);
     void resize(int width, int height);
     void scrollDown();
     void scrollUp();
+
+protected:
+    void initializeGL() override;
+    void paintGL() override;
 
 private:
     void resizeEvent(QResizeEvent* event) override;
@@ -32,6 +36,5 @@ private:
     void mousePressEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
 
-    QGraphicsScene m_scene;
-    QGraphicsPixmapItem* m_pixmapItem;
+    QOpenGLTextureBlitter m_blitter;
 };
