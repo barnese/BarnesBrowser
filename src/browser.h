@@ -48,7 +48,7 @@ private:
     void handleResize(int width, int height);
     void handleScrollDown();
     void handleScrollUp();
-    void handlePaintRequest(PaintContext context);
+    void handlePaintRequest(PaintContext& context);
     void compositeRasterAndDraw();
     void rasterTab();
     void render();

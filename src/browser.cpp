@@ -1,6 +1,5 @@
 #include "browser.h"
 
-#include "commands/blend.h"
 #include "commands/draw_composited_layer.h"
 #include "commands/paint_command.h"
 #include "constants.h"
@@ -157,9 +156,10 @@ void Browser::draw()
     m_view->update();
 }
 
-void Browser::handlePaintRequest(PaintContext context)
+void Browser::handlePaintRequest(PaintContext& context)
 {
-    // TODO: How should we account for m_activeTabScroll?
+    context.scroll = m_activeTabScroll;
+
     for (const auto& item : m_drawList)
     {
         item->execute(context);

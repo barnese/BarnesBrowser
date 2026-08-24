@@ -31,7 +31,7 @@ void DrawCompositedLayer::execute(PaintContext& context)
     context.blitter->bind();
     context.blitter->setOpacity(opacity);
 
-    auto viewport = QRect(QPoint(0, 0), context.viewportSize);
+    auto viewport = QRect(QPoint(0, context.scroll), context.viewportSize);
     auto targetTransform = QOpenGLTextureBlitter::targetTransform(targetRect, viewport);
 
     context.blitter->blit(fbo->texture(), targetTransform, QOpenGLTextureBlitter::OriginBottomLeft);
