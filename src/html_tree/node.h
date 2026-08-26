@@ -1,5 +1,7 @@
 #pragma once
 
+#include "styles/css_animation.h"
+
 #include <map>
 #include <memory>
 #include <optional>
@@ -43,5 +45,6 @@ public:
     Node* parent = nullptr;
     std::vector<std::unique_ptr<Node>> children;
     std::map<std::string, std::string> styles;
+    std::map<std::string, std::unique_ptr<CSSAnimation>> animations;
     bool isFocused;
 };

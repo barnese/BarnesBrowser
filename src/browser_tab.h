@@ -33,6 +33,7 @@ public:
     std::optional<URL> goBack();
     void render();
     void setNeedsRender();
+    void setNeedsLayout();
     void runAnimationFrame(const int scroll);
     
     // Event handlers
@@ -93,8 +94,10 @@ private:
     /// Rasterized backing store for the entire document. (AKA "tab surface")
     QImage m_documentSurface;
 
-    /// When true, some data in the tab has changed and needs to be re-rendered.
-    bool m_needsRender;
+    /// Dirty flags to indicate when something needs to be re-rendered.
+    bool m_needsStyle;
+    bool m_needsLayout;
+    bool m_needsPaint;
 
     Logger m_logger;
 };

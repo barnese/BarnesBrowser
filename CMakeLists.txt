@@ -66,6 +66,7 @@ add_executable(main
     src/layout/text_layout.cpp
     src/styles/css_parser.cpp
     src/styles/descendant_selector.cpp
+    src/styles/numeric_animation.cpp
     src/styles/style_helpers.cpp
     src/styles/tag_selector.cpp
     src/scripting/js_context.cpp

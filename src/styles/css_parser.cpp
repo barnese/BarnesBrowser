@@ -5,6 +5,7 @@
 #include "styles/descendant_selector.h"
 #include "styles/selector.h"
 #include "styles/tag_selector.h"
+#include "constants.h"
 
 #include <algorithm>
 
@@ -26,12 +27,21 @@ void CSSParser::whitespace()
 
 std::string CSSParser::word()
 {
+    std::vector<char> specials = {',', '/', '#', '-', '.', '%', '(', ')', '"', '\''};
     size_t start = m_i;
+    bool inQuote = false;
     while (m_i < m_text.size())
     {
-        std::vector<char> specials = {'#', '-', '.', '%'};
-        if (std::isalnum(m_text[m_i]) || 
-            std::ranges::contains(specials, m_text[m_i]))
+        auto cur = m_text[m_i];
+
+        if (cur == '\'')
+        {
+            inQuote = !inQuote;
+        }
+        
+        if (std::isalnum(cur) || 
+            std::ranges::contains(specials, cur) ||
+            (inQuote && cur == ':'))
         {
             m_i += 1;
         }
@@ -58,26 +68,26 @@ void CSSParser::literal(char literal)
     m_i += 1;
 }
 
-std::tuple<std::string, std::string> CSSParser::pair()
+std::tuple<std::string, std::string> CSSParser::pair(std::vector<char> until)
 {
     auto property = word();
     whitespace();
     literal(':');
     whitespace();
-    auto value = word();
-    return { toLowercase(property), value };
+    auto value = untilChars(until);
+    return { toLowercase(property), trim(value) };
 }
 
-std::map<std::string, std::string> CSSParser::body()
+StringMap CSSParser::body()
 {
-    std::map<std::string, std::string> pairs;
+    StringMap pairs;
 
     // Parse sequences of styles by calling parsing functions in a loop.
     while (m_i < m_text.size() && m_text[m_i] != '}')
     {
         try
         {
-            auto [property, value] = pair();
+            auto [property, value] = pair({';', '}'});
             pairs[property] = value;
             whitespace();
             literal(';');
@@ -120,6 +130,17 @@ std::optional<char> CSSParser::ignoreUntil(std::vector<char> chars)
     }
 
     return {};
+}
+
+std::string CSSParser::untilChars(std::vector<char> chars)
+{
+    auto start = m_i;
+    while (m_i < m_text.size() && !std::ranges::contains(chars, m_text[m_i]))
+    {
+        m_i += 1;
+    }
+
+    return m_text.substr(start, m_i - start);
 }
 
 std::unique_ptr<Selector> CSSParser::selector()
@@ -236,4 +257,53 @@ QColor parseColor(const QString& color)
     }
 
     return QColor(color);
+}
+
+StringMap parseTransition(std::string& value)
+{
+    StringMap properties;
+
+    if (value.empty()) return properties;
+
+    for (auto item : split(value, ",", false))
+    {
+        auto innerItems = split(item, " ");
+        auto property = innerItems[0];
+        auto duration = innerItems[1];
+        // Remove the last character from the duration.
+        double value = std::stod(duration.substr(0, duration.size() - 1));
+        auto frames = (int)(value / (Constants::REFRESH_RATE_MS * 0.001));
+        properties[property] = std::to_string(frames);
+    }
+
+    return properties;
+}
+
+/// @returns a map of only the transitioning properties, mapping
+/// each property to its old value, new value an duration (in frames).
+StringTupleMap diffStyles(StringMap& oldStyle, StringMap& newStyle)
+{
+    StringTupleMap transitions;
+
+    auto it = newStyle.find("transition");
+    if (it == newStyle.end()) return transitions;
+    auto items = parseTransition(it->second);
+
+    for (const auto& [property, numFrames] : items)
+    {
+        auto oldIt = oldStyle.find(property);
+        if (oldIt == oldStyle.end()) continue;
+
+        auto newIt = newStyle.find(property);
+        if (newIt == newStyle.end()) continue;
+
+        auto oldValue = oldIt->second;
+        auto newValue = newIt->second;
+
+        if (oldValue == newValue) continue;
+
+        transitions[property] = std::make_tuple(oldValue, newValue, numFrames);
+    }
+    
+    return transitions;
 }

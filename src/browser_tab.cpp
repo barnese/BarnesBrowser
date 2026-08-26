@@ -10,6 +10,7 @@
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "scripting/js_context.h"
+#include "styles/numeric_animation.h"
 
 #include <algorithm>
 #include <fstream>
@@ -32,7 +33,9 @@ BrowserTab::BrowserTab(int width, int height)
     m_scrollChangedInTab = false;
     m_focus = nullptr;
     m_loaded = false;
-    m_needsRender = false;
+    m_needsStyle = false;
+    m_needsLayout = false;
+    m_needsPaint = false;
 }
 
 BrowserTab::~BrowserTab() = default;
@@ -65,7 +68,13 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
 
 void BrowserTab::setNeedsRender()
 {
-    m_needsRender = true;
+    m_needsStyle = true;
+    browser->setNeedsAnimationFrame(this);
+}
+
+void BrowserTab::setNeedsLayout()
+{
+    m_needsLayout = true;
     browser->setNeedsAnimationFrame(this);
 }
 
@@ -89,6 +98,20 @@ void BrowserTab::runAnimationFrame(const int scroll)
         m_js->dispatchRunRAFHandlers();
         browser->measure.stop("script-runRAFHandlers");
     }
+
+    // Run any CSS transition animations.
+    for (const auto& node : nodeTreeToList())
+    {
+        for (const auto& [propertyName, animation] : node->animations)
+        {
+            auto value = animation->animate();
+            if (value.has_value())
+            {
+                node->styles[propertyName] = value.value();
+                setNeedsLayout();
+            }
+        }
+    }
     
     render();
     
@@ -110,17 +133,32 @@ void BrowserTab::runAnimationFrame(const int scroll)
 
 void BrowserTab::render()
 {
-    if (!m_needsRender || !m_loaded) return;
     m_logger.info("rendering");
     browser->measure.start("render");
-    auto sortedRules = sort(m_rules);
-    addStyles(*m_node, sortedRules);
-    m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
-    m_document->layout();
-    std::vector<std::unique_ptr<Command>> displayList;
-    paintTree(*m_document, displayList);
-    m_displayList = std::move(displayList);
-    m_needsRender = false;
+
+    if (m_needsStyle)
+    {
+        auto sortedRules = sort(m_rules);
+        addStyles(*m_node, sortedRules);
+        m_needsLayout = true;
+        m_needsStyle = false;
+    }
+
+    if (m_needsLayout)
+    {
+        m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
+        m_document->layout();
+        m_needsPaint = true;
+        m_needsLayout = false;
+    }
+
+    if (m_needsPaint)
+    {
+        std::vector<std::unique_ptr<Command>> displayList;
+        paintTree(*m_document, displayList);
+        m_displayList = std::move(displayList);
+        m_needsPaint = false;
+    }
 
     int clampedScroll = clampScroll(m_scroll);
     if (clampedScroll != m_scroll)
@@ -142,6 +180,9 @@ void BrowserTab::resize(int width, int height)
 /// Adds styles to the given node and its children. 
 void BrowserTab::addStyles(Node &node, const SortedCSSRules& rules)
 {
+    StringMap oldStyle = node.styles;
+    node.styles.clear();
+
     // Apply default styling for inherited properties first
     // since these can be overridden by explicit rules below.
     for (const auto& [property, defaultValue] : Constants::INHERITED_PROPERTIES)
@@ -204,7 +245,30 @@ void BrowserTab::addStyles(Node &node, const SortedCSSRules& rules)
             float parentPixels = pixelsToFloat(parentFontSize);
             element->styles["font-size"] = std::format("{}px", nodePercent * parentPixels);
         }
-    } 
+    }
+
+    if (!oldStyle.empty())
+    {
+        auto transitions = diffStyles(oldStyle, node.styles);
+        for (const auto& [property, values] : transitions)
+        {
+            const auto& [oldValue, newValue, numFrames] = values;
+
+            if (property == "opacity")
+            {
+                setNeedsRender();
+                auto animation = std::make_unique<NumericAnimation>(
+                    std::stod(oldValue), 
+                    std::stod(newValue), 
+                    std::stoi(numFrames)
+                );
+                auto animationResult = animation->animate();
+                node.animations[property] = std::move(animation);
+                if (animationResult.has_value())
+                    node.styles[property] = animationResult.value();
+            }
+        }
+    }
 
     for (auto& child : node.children)
     {
