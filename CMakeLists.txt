@@ -91,6 +91,19 @@ target_compile_options(main PRIVATE
     -pedantic
 )
 
+# Debug Options - Enable in tasks.json.
+option(
+    SHOW_COMPOSITED_LAYER_BORDERS 
+    "Enables composition layer borders" 
+    OFF
+)
+
+if(SHOW_COMPOSITED_LAYER_BORDERS)
+    target_compile_definitions(main PRIVATE 
+        SHOW_COMPOSITED_LAYER_BORDERS=$<BOOL:${SHOW_COMPOSITED_LAYER_BORDERS}>
+    )
+endif()
+
 target_link_libraries(main PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto

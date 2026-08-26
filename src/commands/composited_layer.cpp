@@ -53,18 +53,31 @@ void CompositedLayer::raster()
     
     QOpenGLPaintDevice device(size);
     QPainter painter(&device);
+    PaintContext context { painter, nullptr, size };
 
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.setCompositionMode(QPainter::CompositionMode_Source);    
     painter.fillRect(QRect(QPoint(0, 0), size), Qt::transparent);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    painter.save();
     painter.translate(-bounds.left(), -bounds.top());
-
-    PaintContext context { painter, nullptr, size };
 
     for (const auto& item : *displayItems)
     {
         item->execute(context);
     }
+
+    painter.restore();
+    
+#if SHOW_COMPOSITED_LAYER_BORDERS
+    {
+        // For debugging: draws a red outline around composited layers.
+        QPen pen(Qt::red);
+        painter.setPen(pen);
+        painter.setBrush(Qt::NoBrush);
+        QRect debugRect(1, 1, size.width() - 2, size.height() - 2);
+        painter.drawRect(debugRect);
+    }
+#endif
 
     painter.end();
 
@@ -72,4 +85,14 @@ void CompositedLayer::raster()
     gl->glFlush();
 
     m_fbo->release();
+}
+
+void CompositedLayer::add(Command* displayItem)
+{
+    displayItems->push_back(displayItem);
+}
+
+bool CompositedLayer::canMerge(Command* displayItem)
+{
+    return displayItem->parent == displayItems->front()->parent;
 }

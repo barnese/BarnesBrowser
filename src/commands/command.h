@@ -33,6 +33,10 @@ public:
     // Can be used for compositing animations.
     Node* node;
 
+    // Set to true when a visual effect should go into the 
+    // display list and false when it should go into a 
+    // composited layer.
+    bool needsCompositing = false;
 };
 
 /// @brief Helper that takes any number of unique pointers and puts them

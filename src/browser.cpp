@@ -235,25 +235,40 @@ void Browser::composite()
     m_compositedLayers.clear();
 
     std::vector<Command*> allCommands;
-    std::vector<Command*> paintCommands;
+    std::vector<Command*> nonCompositedCommands;
 
     for (const auto& command : m_activeTabDisplayList)
     {
         treeToList(command.get(), allCommands);
     }
 
-    for (auto const& command : allCommands)
+    for (auto const& cmd : allCommands)
     {
-        if (auto paintCommand = dynamic_cast<PaintCommand*>(command))
+        if ((dynamic_cast<PaintCommand*>(cmd) || !cmd->needsCompositing) &&
+            (!cmd->parent || cmd->parent->needsCompositing))
         {
-            paintCommands.push_back(paintCommand);
+            nonCompositedCommands.push_back(cmd);
         }
     }
 
-    for (auto command : paintCommands)
+    for (auto cmd : nonCompositedCommands)
     {
-        auto layer = std::make_unique<CompositedLayer>(command);
-        m_compositedLayers.push_back(std::move(layer));
+        // Loop backwards through the composited layers.
+        bool didBreak = false;
+        for (auto it = m_compositedLayers.crbegin(); it != m_compositedLayers.crend(); ++it)
+        {
+            if ((**it).canMerge(cmd))
+            {
+                (**it).add(std::move(cmd));
+                didBreak = true;
+                break;
+            }
+        }
+        if (!didBreak)
+        {
+            auto layer = std::make_unique<CompositedLayer>(cmd);
+            m_compositedLayers.push_back(std::move(layer));
+        }
     }
 }
 
@@ -268,7 +283,7 @@ Command* Browser::getLatest(Command* effect)
     {
         return effect;
     }
-    if (dynamic_cast<Blend*>(effect) == nullptr)
+    if (!dynamic_cast<Blend*>(effect))
     {
         return effect;
     }

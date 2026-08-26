@@ -15,6 +15,17 @@ public:
         {
             // Join the child rect with this rect.
             rect |= child->rect;
+
+            // A visual effect needs compositing if any of its descendants do.
+            // If one effect is in the draw phase, then the ones above it will
+            // have to be as well.
+            if (auto* effect = dynamic_cast<VisualEffect*>(child.get()))
+            { 
+                if (effect->needsCompositing)
+                {                
+                    needsCompositing = true;
+                }
+            }
         }
     }
 };

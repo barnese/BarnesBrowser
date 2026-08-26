@@ -15,6 +15,7 @@ Blend::Blend(
 {
     m_blendMode = blendMode;
     m_opacity = opacity;
+    needsCompositing = blendMode.has_value() || opacity < 1;
 
     // Expand the bounding box to enclose each child's rectangle.
     for (const auto& child : children)
