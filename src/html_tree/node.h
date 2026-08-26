@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+class VisualEffect;
+
 /// Abstract base class that represents a node of a tree.
 class Node
 {
@@ -47,4 +49,5 @@ public:
     std::map<std::string, std::string> styles;
     std::map<std::string, std::unique_ptr<CSSAnimation>> animations;
     bool isFocused;
+    VisualEffect* blendOp = nullptr;
 };

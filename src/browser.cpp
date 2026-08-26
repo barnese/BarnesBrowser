@@ -1,5 +1,6 @@
 #include "browser.h"
 
+#include "commands/blend.h"
 #include "commands/draw_composited_layer.h"
 #include "commands/paint_command.h"
 #include "constants.h"
@@ -40,7 +41,9 @@ Browser::Browser(QWidget* parent)
 
     m_animationTimer = nullptr;
     m_needsAnimationFrame = false;
-    m_needsCompositeRasterAndDraw = false;
+    m_needsComposite = false;
+    m_needsRaster = false;
+    m_needsDraw = false;
     m_activeTabHeight = 0;
     m_activeTabScroll = 0;
     m_activeTabDisplayList.clear();
@@ -84,7 +87,16 @@ void Browser::commit(BrowserTab* tab, CommitData& commitData)
         {
             m_activeTabDisplayList = std::move(commitData.displayList.value());
         }
-        setNeedsRasterAndDraw();
+        
+        m_compositedUpdates = commitData.compositedUpdates;
+        if (m_compositedUpdates.empty())
+        {
+            setNeedsComposite();
+        }
+        else 
+        {
+            setNeedsDraw();
+        }
     }
 }
 
@@ -97,23 +109,53 @@ void Browser::setNeedsAnimationFrame(BrowserTab* tab)
     }
 }
 
-void Browser::setNeedsRasterAndDraw()
+void Browser::setNeedsComposite()
 {
-    m_needsCompositeRasterAndDraw = true;
+    m_needsComposite = true;
+    m_needsRaster = true;
+    m_needsDraw = true;
+}
+
+void Browser::setNeedsDraw()
+{
+    m_needsDraw = true;
+}
+
+void Browser::setNeedsRaster()
+{
+    m_needsRaster = true;
+    m_needsDraw = true;
 }
 
 void Browser::compositeRasterAndDraw()
 {
     std::lock_guard lock(m_mutex);
-    if (!m_needsCompositeRasterAndDraw) return;
+    if (!m_needsComposite && !m_needsRaster && !m_needsDraw) return;
     m_logger.info("composite rastering and drawing");
     measure.start("compositeRasterAndDraw");
-    composite();
-    rasterTab();
-    paintDrawList();
-    draw();
+    if (m_needsComposite)
+    {
+        measure.start("composite");
+        composite();
+        measure.stop("composite");
+    }
+    if (m_needsRaster)
+    {
+        measure.start("raster");
+        rasterTab();
+        measure.stop("raster");
+    }
+    if (m_needsDraw)
+    {
+        measure.start("draw");
+        paintDrawList();
+        draw();
+        measure.stop("draw");
+    }
     measure.stop("compositeRasterAndDraw");
-    m_needsCompositeRasterAndDraw = false;
+    m_needsComposite = false;
+    m_needsRaster = false;
+    m_needsDraw = false;
 }
 
 void Browser::scheduleAnimationFrame()
@@ -215,6 +257,24 @@ void Browser::composite()
     }
 }
 
+Command* Browser::getLatest(Command* effect)
+{
+    auto node = effect->node;
+    if (!node)
+    {
+        return effect;
+    }
+    if (!m_compositedUpdates.contains(node))
+    {
+        return effect;
+    }
+    if (dynamic_cast<Blend*>(effect) == nullptr)
+    {
+        return effect;
+    }
+    return m_compositedUpdates[node];
+}
+
 void Browser::paintDrawList()
 {
     std::map<Command*, Command*> newEffects;
@@ -233,15 +293,18 @@ void Browser::paintDrawList()
 
         while (parent)
         {
-            if (newEffects.contains(parent))
+            // Get an updated visual effect from composited updates, if there is one.
+            auto newParent = getLatest(parent);
+
+            if (newEffects.contains(newParent))
             {
-                newEffects.at(parent)->children.push_back(std::move(current));
+                newEffects.at(newParent)->children.push_back(std::move(current));
                 break;
             }
             else 
             {
-                auto cloned = parent->clone(std::move(current));
-                newEffects[parent] = cloned.get();
+                auto cloned = newParent->clone(std::move(current));
+                newEffects[newParent] = cloned.get();
                 current = std::move(cloned);
                 parent = parent->parent;
             }
@@ -335,6 +398,16 @@ void Browser::setActiveTab(BrowserTab* tab)
     m_activeTabUrl = std::nullopt;
     m_needsAnimationFrame = true;
     m_animationTimer = nullptr;
+    clearData();
+}
+
+void Browser::clearData()
+{
+    m_activeTabScroll = 0;
+    m_activeTabUrl = std::nullopt;
+    m_activeTabDisplayList.clear();
+    m_compositedLayers.clear();
+    m_compositedUpdates.clear();
 }
 
 void Browser::goBack()
@@ -411,7 +484,7 @@ void Browser::handleScrollDown()
     std::lock_guard lock(m_mutex);
     if (!m_activeTabHeight) return;
     m_activeTabScroll = clampScroll(m_activeTabScroll + Constants::SCROLL_STEP);
-    setNeedsRasterAndDraw();
+    setNeedsRaster();
     m_needsAnimationFrame = true;
 }
 
@@ -420,7 +493,7 @@ void Browser::handleScrollUp()
     std::lock_guard lock(m_mutex);
     if (!m_activeTabHeight) return;
     m_activeTabScroll = clampScroll(m_activeTabScroll - Constants::SCROLL_STEP);
-    setNeedsRasterAndDraw();
+    setNeedsRaster();
     m_needsAnimationFrame = true;
 }
 

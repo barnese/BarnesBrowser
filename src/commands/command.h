@@ -1,6 +1,7 @@
 #pragma once
 
 #include "paint_context.h"
+#include "html_tree/node.h"
 
 #include <string>
 #include <QImage>
@@ -26,6 +27,12 @@ public:
     QRect rect;
     Command* parent;
     std::vector<std::unique_ptr<Command>> children;
+
+    // For keeping track of the HTML tree node that
+    // painted this display item as a sort of identifier.
+    // Can be used for compositing animations.
+    Node* node;
+
 };
 
 /// @brief Helper that takes any number of unique pointers and puts them

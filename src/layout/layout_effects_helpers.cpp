@@ -25,14 +25,14 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
         auto borderRadius = pixelsToFloat(node->findStyle("border-radius", "0px"));
 
         commands.push_back(
-            std::make_unique<Blend>("destination-in", opacity, commandList(
+            std::make_unique<Blend>("destination-in", opacity, nullptr, commandList(
                 std::make_unique<DrawRoundedRect>(rect, "white", borderRadius) 
             ))
         );
     }
 
     // Apply the blend and opacity effects to each of the given commands. 
-    return commandList(
-        std::make_unique<Blend>(blendMode, opacity, std::move(commands))
-    );
+    auto blendOp = std::make_unique<Blend>(blendMode, opacity, node, std::move(commands));
+    node->blendOp = blendOp.get();
+    return commandList(std::move(blendOp));
 }

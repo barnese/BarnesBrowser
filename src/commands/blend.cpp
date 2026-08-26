@@ -9,8 +9,9 @@
 Blend::Blend(
     std::optional<std::string> blendMode, 
     double opacity,
+    Node* node,
     std::vector<std::unique_ptr<Command>> children
-) : VisualEffect({}, std::move(children))
+) : VisualEffect({}, std::move(children), node)
 {
     m_blendMode = blendMode;
     m_opacity = opacity;
@@ -138,7 +139,7 @@ std::unique_ptr<Command> Blend::clone(std::unique_ptr<Command> child)
 {
     std::vector<std::unique_ptr<Command>> children;
     children.push_back(std::move(child));
-    return std::make_unique<Blend>(m_blendMode, m_opacity, std::move(children));
+    return std::make_unique<Blend>(m_blendMode, m_opacity, node, std::move(children));
 }
 
 std::string Blend::describe() const

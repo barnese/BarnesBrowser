@@ -78,6 +78,12 @@ void BrowserTab::setNeedsLayout()
     browser->setNeedsAnimationFrame(this);
 }
 
+void BrowserTab::setNeedsPaint()
+{
+    m_needsPaint = true;
+    browser->setNeedsAnimationFrame(this);
+}
+
 int BrowserTab::clampScroll(const int scroll)
 {
     int height = ceil(m_document->height + 2 * Constants::VSTEP);
@@ -108,11 +114,14 @@ void BrowserTab::runAnimationFrame(const int scroll)
             if (value.has_value())
             {
                 node->styles[propertyName] = value.value();
-                setNeedsLayout();
+                m_compositedUpdates.push_back(node);                
+                setNeedsPaint();
             }
         }
     }
     
+    bool needsComposite = m_needsStyle || m_needsLayout;
+
     render();
     
     std::optional<int> newScroll = std::nullopt;
@@ -125,7 +134,19 @@ void BrowserTab::runAnimationFrame(const int scroll)
     {
         documentHeight = (int)ceil(m_document->height + 2 * Constants::VSTEP);
     }
-    CommitData commitData(m_url, newScroll, documentHeight, std::move(m_displayList));
+
+    std::map<Node*, VisualEffect*> compositedUpdates;
+    if (!needsComposite)
+    {
+        m_compositedUpdates = {};
+        for (const auto& node : m_compositedUpdates)
+        {
+            compositedUpdates[node] = node->blendOp;
+        }
+    }
+    m_compositedUpdates.clear();
+
+    CommitData commitData(m_url, newScroll, documentHeight, std::move(m_displayList), compositedUpdates);
     m_displayList = std::nullopt;
     browser->commit(this, commitData);
     m_scrollChangedInTab = false;

@@ -6,8 +6,9 @@
 class VisualEffect : public Command
 {
 public:
-    VisualEffect(QRect r, std::vector<std::unique_ptr<Command>> commands) 
+    VisualEffect(QRect r, std::vector<std::unique_ptr<Command>> commands, Node* n)
     {
+        node = n;
         rect = r;
         children = std::move(commands);
         for (const auto& child : children)

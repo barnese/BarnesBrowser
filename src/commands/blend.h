@@ -15,6 +15,7 @@ public:
     Blend(
         std::optional<std::string> blendMode, 
         double opacity, 
+        Node* node,
         std::vector<std::unique_ptr<Command>> children
     );
     void execute(PaintContext& context) override;

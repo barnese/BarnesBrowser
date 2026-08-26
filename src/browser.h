@@ -5,6 +5,7 @@
 #include "commit_data.h"
 #include "commands/composited_layer.h"
 #include "commands/paint_context.h"
+#include "commands/visual_effect.h"
 #include "chrome/chrome.h"
 #include "helpers/measure_time.h"
 #include "logger.h"
@@ -35,7 +36,9 @@ public:
     void linkClicked(URL url);
     void scheduleAnimationFrame();
     void setNeedsAnimationFrame(BrowserTab* tab);
-    void setNeedsRasterAndDraw();
+    void setNeedsComposite();
+    void setNeedsDraw();
+    void setNeedsRaster();
     void scheduleLoad(URL url);
     void commit(BrowserTab* tab, CommitData& commitData);
 
@@ -43,6 +46,7 @@ public:
 
 private:
     void setActiveTab(BrowserTab* tab);
+    void clearData();
     void handleClick(Point point);
     void handleKeyPress(std::string text);
     void handleResize(int width, int height);
@@ -54,6 +58,7 @@ private:
     void render();
     void draw();
     void composite();
+    Command* getLatest(Command* effect);
     void paintDrawList();
     int clampScroll(const int scroll);
     void newTabInternal(std::optional<URL> url = std::nullopt);
@@ -67,7 +72,9 @@ private:
     QTimer m_timer;
     QTimer* m_animationTimer;
     bool m_needsAnimationFrame;
-    bool m_needsCompositeRasterAndDraw;
+    bool m_needsComposite;
+    bool m_needsRaster;
+    bool m_needsDraw;
     
     // Tab-specific members    
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
@@ -78,5 +85,6 @@ private:
     std::vector<std::unique_ptr<Command>> m_activeTabDisplayList;
     QImage m_tabSurface;
     std::vector<std::unique_ptr<CompositedLayer>> m_compositedLayers;
+    std::map<Node*, VisualEffect*> m_compositedUpdates;
     std::vector<std::unique_ptr<Command>> m_drawList;
 };

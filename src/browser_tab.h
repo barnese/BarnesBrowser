@@ -34,6 +34,7 @@ public:
     void render();
     void setNeedsRender();
     void setNeedsLayout();
+    void setNeedsPaint();
     void runAnimationFrame(const int scroll);
     
     // Event handlers
@@ -77,6 +78,7 @@ private:
 
     std::unique_ptr<Node> m_node;
     std::optional<std::vector<std::unique_ptr<Command>>> m_displayList;    
+    std::vector<Node*> m_compositedUpdates;
     std::unique_ptr<DocumentLayout> m_document;
     std::unique_ptr<JSContext> m_js;
     URL m_url;
