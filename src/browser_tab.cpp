@@ -93,6 +93,8 @@ int BrowserTab::clampScroll(const int scroll)
 
 void BrowserTab::runAnimationFrame(const int scroll)
 {
+    if (!m_node) return;
+    
     if (!m_scrollChangedInTab)
     {
         m_scroll = scroll;
