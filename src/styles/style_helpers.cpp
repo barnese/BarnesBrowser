@@ -1,4 +1,5 @@
 #include "style_helpers.h"
+#include "helpers/string_helpers.h"
 #include "constants.h"
 
 QFont::Weight cssFontWeightToQt(const std::string& input)
@@ -41,4 +42,10 @@ void replaceHTMLCharacterEntities(QString& word)
         auto symbol = QString::fromStdString(entity.second);
         word.replace(code, symbol);
     }
+}
+
+int overrideSizeWithStyle(const Node* node, int size, std::string styleName)
+{
+    auto style = node->findStyle(styleName);
+    return style.has_value() ? pixelsToFloat(style.value()) : size;
 }

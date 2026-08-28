@@ -1,0 +1,60 @@
+#include "transform.h"
+
+#include <sstream>
+
+Transform::Transform(
+    std::optional<QPointF> translation, 
+    QRect rect, 
+    Node* node, 
+    std::vector<std::unique_ptr<Command>> children
+) : VisualEffect(rect, std::move(children), node), m_translation(translation)
+{
+}
+
+void Transform::execute(PaintContext& context)
+{
+    if (m_translation.has_value())
+    {
+        context.painter.translate(m_translation.value());
+    }
+    
+    for (const auto& command : children)
+    {
+        command->execute(context);
+    }
+}
+
+std::unique_ptr<Command> Transform::clone(std::unique_ptr<Command> child)
+{
+    std::vector<std::unique_ptr<Command>> children;
+    children.push_back(std::move(child));
+    return std::make_unique<Transform>(m_translation, rect, node, commandList(std::move(child)));
+}
+
+std::string Transform::describe() const
+{
+    std::stringstream s; 
+    s << "Transform(translate(";
+    if (m_translation.has_value())
+    {
+        s << m_translation.value().x()
+          << ", " 
+          << m_translation.value().y();
+    }
+    else
+    {   
+        s << "no-op";
+    }
+    s << "))";
+    return s.str();
+}
+
+QRect mapTranslation(QRect rect, std::optional<QPointF> translation)
+{
+    if (!translation.has_value())
+        return rect;
+
+    QTransform matrix;
+    matrix.translate(translation->x(), translation->y());
+    return matrix.mapRect(rect);
+}

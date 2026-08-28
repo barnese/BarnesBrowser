@@ -2,6 +2,7 @@
 
 #include "browser.h"
 #include "commit_data.h"
+#include "commands/transform.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
@@ -154,6 +155,16 @@ void BrowserTab::runAnimationFrame(const int scroll)
     m_scrollChangedInTab = false;
 }
 
+void printLayoutTree(const Layout* layout, int depth = 0)
+{
+    if (depth == 0)
+        std::cout << "Document Layout:" << std::endl;
+    QString indent(depth * 2, ' ');
+    std::cout << indent.toStdString() << layout->describe() << std::endl;
+    for (const auto& child : layout->children)
+        printLayoutTree(child.get(), depth + 1);
+}
+
 void BrowserTab::render()
 {
     m_logger.info("rendering");
@@ -171,6 +182,7 @@ void BrowserTab::render()
     {
         m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
         m_document->layout();
+        printLayoutTree(m_document.get());
         m_needsPaint = true;
         m_needsLayout = false;
     }
@@ -536,38 +548,48 @@ void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Com
     );
 }
 
+/// Finds the absolute bounds for a layout object in
+/// coordinates of what the user sees including the translation
+/// offset by walking up the node tree and mapping through 
+/// each translation found.
+QRect absoluteBoundsForObj(Layout* layout)
+{
+    QRect rect(layout->x, layout->y, layout->width, layout->height);
+    auto current = layout->node;
+    while (current)
+    {
+        auto translation = parseTransform(current->findStyle("transform", ""));
+        rect = mapTranslation(rect, translation);
+        current = current->parent;
+    }
+    return rect;
+}
+
 void BrowserTab::click(Point point)
 {
     // The layout tree needs to be up to date, so do a re-render.
     render();
 
+    if (m_focus)
+        m_focus->isFocused = false;
+
     auto x = point.x;
-    auto y = point.y + m_scroll;
+    auto y = point.y + m_scroll;    
 
     std::vector<Layout*> list;
     list = layoutTreeToList(m_document.get(), list);
+    auto locRect = QRect(x, y, 1, 1);
 
-    std::vector<Layout*> filteredList;
-    for (const auto& layout : list)
+    std::vector<Layout*> objs;
+    for (const auto& obj : list)
     {
-        if (layout->x <= x && x < layout->x + layout->width &&
-            layout->y <= y && y < layout->y + layout->height)
-        {
-            filteredList.push_back(layout);
-        }
+        if (absoluteBoundsForObj(obj).intersects(locRect))
+            objs.push_back(obj);
     }
 
-    if (filteredList.empty())
-    {
-        return;
-    }
+    if (objs.empty()) return;
 
-    if (m_focus)
-    {
-        m_focus->isFocused = false;
-    }
-
-    auto last = filteredList.back();
+    auto last = objs.back();
     Node* elt = last->node;
     while (elt != nullptr)
     {

@@ -15,6 +15,7 @@
 #include <QFontMetrics>
 #include <QRect>
 #include <memory>
+#include <sstream>
 
 BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previous)
 {
@@ -31,7 +32,7 @@ BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previou
 void BlockLayout::layout()
 {
     x = parent->x;
-    width = parent->width;
+    width = overrideSizeWithStyle(node, parent->width, "width");
 
     if (previous)
         y = previous->y + previous->height;
@@ -50,6 +51,8 @@ void BlockLayout::layout()
     height = 0;
     for (const auto& child : children)
         height += child->height;
+
+    height = overrideSizeWithStyle(node, height, "height");
 }
 
 void BlockLayout::layoutBlock()
@@ -294,4 +297,13 @@ QFont BlockLayout::getFont(QString family, int size, int weight, int style)
         m_fonts[key] = font;
     }
     return m_fonts[key];
+}
+
+std::string BlockLayout::describe() const
+{
+    std::stringstream s; 
+    s << "BlockLayout(rect: {"
+      << x << ", " << y << ", " << width << ", " << height
+      << "}, node: " << node->describe() << ")";
+    return s.str();
 }

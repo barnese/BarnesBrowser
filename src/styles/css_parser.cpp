@@ -307,3 +307,17 @@ StringTupleMap diffStyles(StringMap& oldStyle, StringMap& newStyle)
     
     return transitions;
 }
+
+std::optional<QPointF> parseTransform(const std::string& transformString)
+{
+    if (!transformString.contains("translate("))
+        return std::nullopt;
+
+    auto leftParen = transformString.find('(');
+    auto rightParen = transformString.find(')');
+    auto innerText = transformString.substr(leftParen + 1, rightParen - leftParen);
+    auto values = split(innerText, ",");
+    auto x = pixelsToFloat(values[0]);
+    auto y = pixelsToFloat(values[1]);
+    return QPointF(x, y);
+}

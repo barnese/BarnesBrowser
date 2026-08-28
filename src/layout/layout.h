@@ -17,6 +17,7 @@ public:
     virtual std::vector<std::unique_ptr<Command>> paint() const = 0;
     virtual bool shouldPaint() const = 0;
     virtual std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const = 0;
+    virtual std::string describe() const = 0;
 
     void addChild(std::unique_ptr<Layout> child)
     {

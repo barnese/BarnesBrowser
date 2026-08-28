@@ -2,14 +2,16 @@
 
 #include "selector.h"
 
+#include <QColor>
+#include <QPointF>
+#include <QString>
+
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
-#include <QColor>
-#include <QString>
 
 using StringMap = std::map<std::string, std::string>;
 
@@ -27,6 +29,8 @@ QColor parseColor(const QString& color);
 
 using StringTupleMap = std::map<std::string, std::tuple<std::string, std::string, std::string>>;
 StringTupleMap diffStyles(StringMap& oldStyle, StringMap& newStyle);
+
+std::optional<QPointF> parseTransform(const std::string& transformString);
 
 /// Defines a parser for parsing CSS. This class uses parsing
 /// functions to parse the property-value format of stylesheets.

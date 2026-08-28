@@ -22,6 +22,7 @@ public:
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;
     std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const override;
+    std::string describe() const override;
 
 private:
     QFont getFont(QString family, int size, int weight, int style);

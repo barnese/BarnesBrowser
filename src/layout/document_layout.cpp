@@ -3,6 +3,8 @@
 #include "block_layout.h"
 #include "constants.h"
 
+#include <sstream>
+
 DocumentLayout::DocumentLayout(Node* node, int parentWidth)
 {
     this->node = node;
@@ -40,4 +42,13 @@ std::vector<std::unique_ptr<Command>> DocumentLayout::paint() const
 std::vector<std::unique_ptr<Command>> DocumentLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     return commands;
+}
+
+std::string DocumentLayout::describe() const
+{
+    std::stringstream s; 
+    s << "DocumentLayout(rect: {"
+      << x << ", " << y << ", " << width << ", " << height
+      << "}, node: " << node->describe() << ")";
+    return s.str();
 }

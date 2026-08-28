@@ -59,3 +59,11 @@ TEST_CASE("CSSParser should ignore comments", TAG)
     ComparableRules expected { { "p", { { "color", "red" } } } };
     REQUIRE(makeComparable(actual) == expected);
 }
+
+TEST_CASE("parseTransform should parse the values", TAG)
+{
+    std::string input = "transform:translate(50px, 200px)";
+    QPointF expected(50, 200);
+    auto actual = parseTransform(input);
+    REQUIRE(actual == expected);
+}

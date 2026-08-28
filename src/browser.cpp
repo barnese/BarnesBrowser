@@ -263,6 +263,11 @@ void Browser::composite()
                 didBreak = true;
                 break;
             }
+            else if ((**it).compositedBounds().intersects(cmd->rect))
+            {
+                auto layer = std::make_unique<CompositedLayer>(cmd);
+                m_compositedLayers.push_back(std::move(layer));
+            }
         }
         if (!didBreak)
         {

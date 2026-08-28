@@ -13,6 +13,7 @@
 #include <QFontMetrics>
 #include <memory>
 #include <iostream>
+#include <sstream>
 
 InputLayout::InputLayout(
     Node* node, 
@@ -127,4 +128,13 @@ std::vector<std::unique_ptr<Command>> InputLayout::paintEffects(std::vector<std:
 {
     QRect rect(x, y, width, height);
     return paintVisualEffects(node, std::move(commands), rect);
+}
+
+std::string InputLayout::describe() const
+{
+    std::stringstream s; 
+    s << "InputLayout(rect: {"
+      << x << ", " << y << ", " << width << ", " << height
+      << "}, node: " << node->describe() << ")";
+    return s.str();
 }

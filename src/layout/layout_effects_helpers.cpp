@@ -2,6 +2,8 @@
 
 #include "commands/blend.h"
 #include "commands/draw_rounded_rect.h"
+#include "commands/transform.h"
+#include "styles/css_parser.h"
 #include "helpers/string_helpers.h"
 
 std::vector<std::unique_ptr<Command>> paintVisualEffects(
@@ -12,6 +14,8 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
     auto opacity = std::stod(node->findStyle("opacity", "1.0"));
     auto blendMode = node->findStyle("mix-blend-mode");
     auto overflow = node->findStyle("overflow");
+    auto transformStyle = node->findStyle("transform", "");
+    auto translation = parseTransform(transformStyle);
 
     // Apply overflow clipping by creating a new layer, draw the clip 
     // mask into it, then blend it in using "destination-in compositing".
@@ -34,5 +38,7 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
     // Apply the blend and opacity effects to each of the given commands. 
     auto blendOp = std::make_unique<Blend>(blendMode, opacity, node, std::move(commands));
     node->blendOp = blendOp.get();
-    return commandList(std::move(blendOp));
+
+    auto transform = std::make_unique<Transform>(translation, rect, node, commandList(std::move(blendOp)));
+    return commandList(std::move(transform));
 }

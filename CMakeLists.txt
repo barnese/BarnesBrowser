@@ -51,6 +51,7 @@ add_executable(main
     src/commands/draw_line.cpp
     src/commands/draw_rounded_rect.cpp
     src/commands/draw_text.cpp
+    src/commands/transform.cpp
     src/helpers/measure_time.cpp
     src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp
@@ -140,6 +141,8 @@ target_link_libraries(tests PRIVATE
     Catch2::Catch2WithMain
     OpenSSL::SSL
     OpenSSL::Crypto
+    Qt6::Core
+    Qt6::Gui
 )
 
 include(CTest)

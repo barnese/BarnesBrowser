@@ -1,6 +1,7 @@
 #include "line_layout.h"
 
 #include <QFontMetrics>
+#include <sstream>
 
 LineLayout::LineLayout(
     Node* node, 
@@ -70,4 +71,13 @@ std::vector<std::unique_ptr<Command>> LineLayout::paint() const
 std::vector<std::unique_ptr<Command>> LineLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     return commands;
+}
+
+std::string LineLayout::describe() const
+{
+    std::stringstream s; 
+    s << "LineLayout(rect: {"
+      << x << ", " << y << ", " << width << ", " << height
+      << "}, node: " << node->describe() << ")";
+    return s.str();
 }

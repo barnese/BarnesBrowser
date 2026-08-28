@@ -6,6 +6,7 @@
 
 #include <QFontMetrics>
 #include <memory>
+#include <sstream>
 
 TextLayout::TextLayout(
     Node* node, 
@@ -77,4 +78,13 @@ QFont TextLayout::getFont(QString family, int size, int weight, int style)
 std::vector<std::unique_ptr<Command>> TextLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     return commands;
+}
+
+std::string TextLayout::describe() const
+{
+    std::stringstream s; 
+    s << "TextLayout(rect: {"
+      << x << ", " << y << ", " << width << ", " << height
+      << "}, node: " << trim(node->describe()) << ")";
+    return s.str();
 }
