@@ -24,6 +24,9 @@ public:
     // Return a string describing this command.
     virtual std::string describe() const = 0;
 
+    // Map the given rect into the Command's coordinate space.
+    virtual QRect map(QRect rect) const = 0;
+
     QRect rect;
     Command* parent;
     std::vector<std::unique_ptr<Command>> children;

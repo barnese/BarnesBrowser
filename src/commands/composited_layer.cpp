@@ -35,6 +35,27 @@ QRectF CompositedLayer::compositedBounds() const
     return rect;
 }
 
+QRect localToAbsolute(const Command* displayItem, QRect rect)
+{
+    while (displayItem->parent)
+    {
+        rect = displayItem->parent->map(rect);
+        displayItem = displayItem->parent;
+    }
+
+    return rect;
+}
+
+QRectF CompositedLayer::absoluteBounds() const
+{
+    QRectF rect;
+    for (const auto item : *displayItems)
+    {
+        rect |= localToAbsolute(item, item->rect);
+    }
+    return rect;
+}
+
 void CompositedLayer::raster()
 {
     auto bounds = compositedBounds();
@@ -44,9 +65,7 @@ void CompositedLayer::raster()
 
     if (!m_fbo || m_fbo->size() != size)
     {
-        QOpenGLFramebufferObjectFormat format;
-        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-        m_fbo = std::make_unique<QOpenGLFramebufferObject>(size, format);
+        m_fbo = std::make_unique<QOpenGLFramebufferObject>(size);
     }
 
     m_fbo->bind();
@@ -94,5 +113,6 @@ void CompositedLayer::add(Command* displayItem)
 
 bool CompositedLayer::canMerge(Command* displayItem)
 {
+    if (displayItems->empty()) return false;
     return displayItem->parent == displayItems->front()->parent;
 }

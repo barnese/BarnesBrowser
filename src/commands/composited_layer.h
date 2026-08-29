@@ -8,6 +8,8 @@
 #include <QRect>
 #include <optional>
 
+QRect localToAbsolute(const Command* displayItem, QRect rect);
+
 class CompositedLayer
 {
 public:
@@ -15,6 +17,7 @@ public:
     void raster();
     QOpenGLFramebufferObject* getFramebuffer() { return m_fbo.get(); }    
     QRectF compositedBounds() const;
+    QRectF absoluteBounds() const;
     void add(Command* displayItem);
     
     /// Deteremines if display item has the same parents as the 

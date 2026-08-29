@@ -26,7 +26,6 @@ BrowserTab::BrowserTab(int width, int height)
     : m_url(""),
       m_width(width),
       m_height(height),
-      m_documentSurface(),
       m_logger(Logger("BrowserTab"))
 {
     m_logger.info("starting");

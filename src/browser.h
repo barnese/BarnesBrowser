@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <optional>
-#include <QImage>
 #include <QTimer>
 #include <QWidget>
 #include <vector>
@@ -83,7 +82,6 @@ private:
     int m_activeTabScroll;
     int m_activeTabHeight;
     std::vector<std::unique_ptr<Command>> m_activeTabDisplayList;
-    QImage m_tabSurface;
     std::vector<std::unique_ptr<CompositedLayer>> m_compositedLayers;
     std::map<Node*, VisualEffect*> m_compositedUpdates;
     std::vector<std::unique_ptr<Command>> m_drawList;

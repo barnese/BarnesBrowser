@@ -6,4 +6,5 @@
 /// commmands, such as VisualEffects.
 class PaintCommand : public Command
 {
+    QRect map(QRect rect) const override { return rect; }
 };

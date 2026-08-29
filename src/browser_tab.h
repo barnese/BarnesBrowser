@@ -13,7 +13,6 @@
 
 #include <string>
 #include <optional>
-#include <QImage>
 #include <QObject>
 
 class JSContext;
@@ -93,9 +92,6 @@ private:
     int m_width;
     int m_height;
     
-    /// Rasterized backing store for the entire document. (AKA "tab surface")
-    QImage m_documentSurface;
-
     /// Dirty flags to indicate when something needs to be re-rendered.
     bool m_needsStyle;
     bool m_needsLayout;

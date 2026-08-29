@@ -242,7 +242,7 @@ void Browser::composite()
         treeToList(command.get(), allCommands);
     }
 
-    for (auto const& cmd : allCommands)
+    for (const auto& cmd : allCommands)
     {
         if ((dynamic_cast<PaintCommand*>(cmd) || !cmd->needsCompositing) &&
             (!cmd->parent || cmd->parent->needsCompositing))
@@ -253,26 +253,27 @@ void Browser::composite()
 
     for (auto cmd : nonCompositedCommands)
     {
+        bool needsNewLayer = true;
+
         // Loop backwards through the composited layers.
-        bool didBreak = false;
         for (auto it = m_compositedLayers.crbegin(); it != m_compositedLayers.crend(); ++it)
         {
             if ((**it).canMerge(cmd))
             {
-                (**it).add(std::move(cmd));
-                didBreak = true;
+                (**it).add(cmd);
+                needsNewLayer = false;
                 break;
             }
-            else if ((**it).compositedBounds().intersects(cmd->rect))
+            else if ((**it).absoluteBounds().intersects(localToAbsolute(cmd, cmd->rect)))
             {
-                auto layer = std::make_unique<CompositedLayer>(cmd);
-                m_compositedLayers.push_back(std::move(layer));
+                needsNewLayer = true;
+                break;
             }
         }
-        if (!didBreak)
-        {
-            auto layer = std::make_unique<CompositedLayer>(cmd);
-            m_compositedLayers.push_back(std::move(layer));
+
+        if (needsNewLayer)
+        {            
+            m_compositedLayers.push_back(std::make_unique<CompositedLayer>(cmd));
         }
     }
 }
@@ -423,6 +424,7 @@ void Browser::setActiveTab(BrowserTab* tab)
 
 void Browser::clearData()
 {
+    m_logger.info("clearing data");
     m_activeTabScroll = 0;
     m_activeTabUrl = std::nullopt;
     m_activeTabDisplayList.clear();

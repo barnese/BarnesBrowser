@@ -21,6 +21,7 @@ public:
     void execute(PaintContext& context) override;
     std::string describe() const override;
     std::unique_ptr<Command> clone(std::unique_ptr<Command> child) override;
+    QRect map(QRect rect) const override;
 
 private:
     std::optional<QPointF> m_translation;

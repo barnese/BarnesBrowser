@@ -4,6 +4,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLPaintDevice>
 #include <QOpenGLFunctions>
+#include <iostream>
 #include <sstream>
 
 Blend::Blend(
@@ -59,7 +60,7 @@ void Blend::execute(PaintContext& context)
         }
         return;
     }
-    
+
     auto* glContext = QOpenGLContext::currentContext();
     auto* gl = glContext->functions();
 
@@ -69,72 +70,201 @@ void Blend::execute(PaintContext& context)
 
     // Create an offscreen FBO.
     QOpenGLFramebufferObjectFormat format;
-    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-    format.setSamples(0); // Non-multisampled
+    format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
+    format.setSamples(0);
     auto fbo = QOpenGLFramebufferObject(rect.size(), format);
 
-    // Draw the children onto that FBO.
-    fbo.bind();
-
-    QOpenGLPaintDevice device(rect.size());
-    QPainter painter(&device);
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(QRect(QPoint(0, 0), rect.size()), Qt::transparent);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    painter.translate(-rect.left(), -rect.top());
-
-    PaintContext blendContext { painter, context.blitter, rect.size() };
-
-    for (const auto& item : children)
+    if (!fbo.isValid())
     {
-        item->execute(blendContext);
+        std::cerr << "[Blend] FBO is invalid" << std::endl;
+        return;
     }
 
+    if (!fbo.bind())
+    {
+        std::cerr << "[Blend] FBO bind failed" << std::endl;
+        return;
+    }
+
+    {
+        QOpenGLPaintDevice device(rect.size());
+        QPainter layerPainter(&device);
+        layerPainter.setCompositionMode(QPainter::CompositionMode_Source);
+        layerPainter.fillRect(QRect(QPoint(0, 0), rect.size()), Qt::transparent);
+        layerPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        
+        // Make child coordinates remain in the parent's coordinates.
+        layerPainter.translate(-rect.left(), -rect.top());
+
+        PaintContext blendContext { 
+            layerPainter, 
+            context.blitter, 
+            rect.size() 
+        };
+        
+        for (const auto& item : children)
+        {
+            item->execute(blendContext);
+        }
+    } // layerPainter is destroyed here; FBO is still bound.
+    
     // Restore the destination framebuffer and composite
     // the completed FBO with the desired blend mode.
     gl->glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
     
     context.painter.save();
+    context.painter.setOpacity(m_opacity);
 
     if (m_blendMode.has_value())
     {
-        painter.setCompositionMode(parseBlendMode(m_blendMode.value()));
+        context.painter.setCompositionMode(parseBlendMode(m_blendMode.value()));
     }
 
-    context.painter.setOpacity(m_opacity);
-    
     // The code below drawImage attempts to move everything to the
     // GPU, and it mostly works, but it doesn't support all blending
     // modes. To do that, I think I need to use shaders. That's a
     // project for another day, so I'll keep the drawImage for now,
     // even though it uses the CPU.
     context.painter.drawImage(rect.topLeft(), fbo.toImage());
-
-    // context.painter.beginNativePainting();
-
-    // gl->glEnable(GL_BLEND);
-    // gl->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    // context.blitter->bind();
-    // context.blitter->setOpacity(m_opacity);
-
-    // const QRect viewport(QPoint(0, 0), context.viewportSize);
-    // const QMatrix4x4 target = QOpenGLTextureBlitter::targetTransform(rect, viewport);
-
-    // context.blitter->blit(
-    //     fbo.texture(),
-    //     target,
-    //     QOpenGLTextureBlitter::OriginBottomLeft);
-
-    // context.blitter->setOpacity(1.0f);
-    // context.blitter->release();
-
-    // gl->glDisable(GL_BLEND);
-
-    // context.painter.endNativePainting();
-
     context.painter.restore();
 }
+
+// An attempt at full GPU drawing. This somewhat works, but has rendering issues.
+/*
+void Blend::execute(PaintContext& context)
+{
+    if (!m_blendMode.has_value() && m_opacity >= 1.0)
+    {
+        for (const auto& child : children)
+            child->execute(context);
+
+        return;
+    }
+
+    if (children.empty() || rect.isEmpty())
+        return;
+
+    QOpenGLContext* glContext = QOpenGLContext::currentContext();
+    QOpenGLFunctions* gl = glContext->functions();
+
+    // Save the parent framebuffer.
+    GLint previousFbo = 0;
+    gl->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFbo);
+
+    GLint previousViewport[4] = {};
+    gl->glGetIntegerv(GL_VIEWPORT, previousViewport);
+
+    // Create an offscreen layer.
+    QOpenGLFramebufferObjectFormat format;
+    format.setSamples(0);
+    format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
+
+    QOpenGLFramebufferObject layerFbo(rect.size(), format);
+
+    if (!layerFbo.isValid())
+        return;
+
+    if (!layerFbo.bind())
+        return;
+
+    gl->glViewport(0, 0, layerFbo.width(), layerFbo.height());
+
+    // Draw all children into the layer.
+    {
+        QOpenGLPaintDevice device(layerFbo.size());
+        
+        QPainter layerPainter(&device);
+        layerPainter.setCompositionMode(QPainter::CompositionMode_Source);
+        layerPainter.fillRect(QRect(QPoint(0, 0), layerFbo.size()), Qt::transparent);
+        layerPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+        // Children continue using coordinates from the parent canvas.
+        layerPainter.translate(-rect.left(), -rect.top());
+
+        PaintContext layerContext{
+            layerPainter,
+            context.blitter,
+            layerFbo.size()
+        };
+
+        for (const auto& child : children)
+            child->execute(layerContext);
+
+        layerPainter.end();
+    }
+
+    // Restore the parent framebuffer.
+    gl->glBindFramebuffer(
+        GL_FRAMEBUFFER,
+        static_cast<GLuint>(previousFbo));
+
+    gl->glViewport(
+        previousViewport[0],
+        previousViewport[1],
+        previousViewport[2],
+        previousViewport[3]);
+
+
+    context.painter.beginNativePainting();
+    gl->glEnable(GL_BLEND);
+    gl->glBlendEquation(GL_FUNC_ADD);
+
+    if (m_blendMode.has_value())
+    {
+        if (*m_blendMode == "source")
+        {    
+            gl->glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
+        }
+        else if (*m_blendMode == "source-over")
+        {            
+            gl->glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        }
+        else if (*m_blendMode == "destination-over")
+        {
+            gl->glBlendFuncSeparate(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+        }
+        else if (*m_blendMode == "destination")
+        {
+            gl->glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ZERO, GL_ONE);
+        }
+        else
+        {
+            gl->glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        }
+    }
+    else
+    {
+        gl->glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    // Composite the completed layer texture back onto the parent.
+    QOpenGLTextureBlitter blitter;
+    blitter.create();
+    blitter.bind(GL_TEXTURE_2D);
+    blitter.setOpacity(static_cast<float>(m_opacity));
+    blitter.setRedBlueSwizzle(false);
+
+    const QRect viewport(
+        previousViewport[0],
+        previousViewport[1],
+        previousViewport[2],
+        previousViewport[3]);
+
+    const QMatrix4x4 targetTransform =
+        QOpenGLTextureBlitter::targetTransform(
+            QRectF(rect),
+            viewport);
+
+    blitter.blit(
+        layerFbo.texture(),
+        targetTransform,
+        QOpenGLTextureBlitter::OriginBottomLeft);
+
+    blitter.release();
+
+    context.painter.endNativePainting();
+}
+*/
 
 std::unique_ptr<Command> Blend::clone(std::unique_ptr<Command> child)
 {
@@ -152,3 +282,20 @@ std::string Blend::describe() const
     s << ")";
     return s.str();
 }
+
+QRect Blend::map(QRect rect) const
+{
+    if (children.empty()) return rect;
+
+    if (const auto& blend = dynamic_cast<Blend*>(children.back().get()))
+    {
+        if (blend->getBlendMode() == "destination-in")
+        {
+            QRect bounds = rect.translated(0, 0);
+            return bounds.intersected(blend->rect);
+        }
+    }
+
+    return rect;
+}
+

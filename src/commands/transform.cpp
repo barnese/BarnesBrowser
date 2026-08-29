@@ -15,6 +15,7 @@ void Transform::execute(PaintContext& context)
 {
     if (m_translation.has_value())
     {
+        context.painter.save();
         context.painter.translate(m_translation.value());
     }
     
@@ -22,12 +23,15 @@ void Transform::execute(PaintContext& context)
     {
         command->execute(context);
     }
+
+    if (m_translation.has_value())
+    {
+        context.painter.restore();
+    }
 }
 
 std::unique_ptr<Command> Transform::clone(std::unique_ptr<Command> child)
 {
-    std::vector<std::unique_ptr<Command>> children;
-    children.push_back(std::move(child));
     return std::make_unique<Transform>(m_translation, rect, node, commandList(std::move(child)));
 }
 
@@ -57,4 +61,9 @@ QRect mapTranslation(QRect rect, std::optional<QPointF> translation)
     QTransform matrix;
     matrix.translate(translation->x(), translation->y());
     return matrix.mapRect(rect);
+}
+
+QRect Transform::map(QRect rect) const
+{
+    return mapTranslation(rect, m_translation);
 }
