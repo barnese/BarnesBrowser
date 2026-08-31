@@ -36,4 +36,5 @@ public:
     int width;
     int height;
     QFont font;
+    double zoom;
 };

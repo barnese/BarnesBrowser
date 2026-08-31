@@ -35,6 +35,8 @@ Browser::Browser(QWidget* parent)
     connect(m_view, &BrowserView::resize, this, &Browser::handleResize);
     connect(m_view, &BrowserView::scrollDown, this, &Browser::handleScrollDown);
     connect(m_view, &BrowserView::scrollUp, this, &Browser::handleScrollUp);
+    connect(m_view, &BrowserView::zoom, this, &Browser::incrementZoom);
+    connect(m_view, &BrowserView::resetZoom, this, &Browser::resetZoom);
 
     connect(&m_timer, &QTimer::timeout, this, &Browser::mainTimerFired);
     m_timer.start(10);
@@ -517,6 +519,27 @@ void Browser::handleScrollUp()
     m_activeTabScroll = clampScroll(m_activeTabScroll - Constants::SCROLL_STEP);
     setNeedsRaster();
     m_needsAnimationFrame = true;
+}
+
+void Browser::incrementZoom(bool increment)
+{
+    auto task = std::make_unique<Task<BrowserTab*, bool>>(
+        "BrowserTab::zoom(" + std::to_string(increment) + ")",
+        &BrowserTab::zoom,
+        m_activeTab,
+        increment
+    );
+    m_activeTab->taskRunner.scheduleTask(std::move(task));
+}
+
+void Browser::resetZoom()
+{
+    auto task = std::make_unique<Task<BrowserTab*>>(
+        "BrowserTab::resetZoom()",
+        &BrowserTab::resetZoom,
+        m_activeTab
+    );
+    m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
 // Debugging helpers

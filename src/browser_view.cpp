@@ -38,6 +38,24 @@ void BrowserView::resizeEvent(QResizeEvent* event)
 
 void BrowserView::keyPressEvent(QKeyEvent* event)
 {
+    if (event->modifiers() & Qt::ControlModifier)
+    {
+        switch (event->key())
+        {
+        case Qt::Key_0:
+            resetZoom();
+            return;
+
+        case Qt::Key_Equal:
+            zoom(true);
+            return;
+
+        case Qt::Key_Minus:
+            zoom(false);
+            return;                
+        }
+    }
+
     switch (event->key())
     {
     case Qt::Key_Down:

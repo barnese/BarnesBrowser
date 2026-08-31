@@ -3,6 +3,7 @@
 #include "commands/draw_text.h"
 #include "styles/style_helpers.h"
 #include "helpers/string_helpers.h"
+#include "layout/layout_helpers.h"
 
 #include <QFontMetrics>
 #include <memory>
@@ -23,10 +24,13 @@ TextLayout::TextLayout(
 
 void TextLayout::layout()
 {
+    zoom = parent->zoom;
+    
     auto family = QString::fromStdString(node->findStyle("font-family", "Helvetica"));
     auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
     auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));
-    auto size = static_cast<int>(pixelsToFloat(node->findStyle("font-size", "14px")));
+    auto sizePx = pixelsToFloat(node->findStyle("font-size", "14px"));
+    auto size = dpx(sizePx * 0.75, zoom);
     
     font = getFont(family, size, weight, style);
     

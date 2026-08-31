@@ -2,8 +2,10 @@
 
 #include "block_layout.h"
 #include "constants.h"
+#include "layout_helpers.h"
 
 #include <sstream>
+#include <iostream>
 
 DocumentLayout::DocumentLayout(Node* node, int parentWidth)
 {
@@ -12,18 +14,26 @@ DocumentLayout::DocumentLayout(Node* node, int parentWidth)
     y = 0;
     width = 0;
     height = 0;
+    zoom = 1;
     m_parentWidth = parentWidth;
 }
 
 void DocumentLayout::layout()
 {
+    std::cout << "Warning, DocumentLayout::layout() called without zoom" << std::endl;
+    layout(zoom);
+}
+
+void DocumentLayout::layout(double zoom)
+{
+    this->zoom = zoom;
     auto child = std::make_unique<BlockLayout>(node, this);
     auto* childPtr = child.get();
     children.push_back(std::move(child));
    
-    width = m_parentWidth - 2 * Constants::HSTEP;
-    x = Constants::HSTEP;
-    y = Constants::VSTEP;
+    width = m_parentWidth - 2 * dpx(Constants::HSTEP, zoom);
+    x = dpx(Constants::HSTEP, zoom);
+    y = dpx(Constants::VSTEP, zoom);
 
     childPtr->layout();
     height = childPtr->height;

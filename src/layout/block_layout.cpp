@@ -9,6 +9,7 @@
 #include "layout/input_layout.h"
 #include "layout/line_layout.h"
 #include "layout/layout_effects_helpers.h"
+#include "layout/layout_helpers.h"
 #include "styles/style_helpers.h"
 #include "text_layout.h"
 
@@ -31,6 +32,7 @@ BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previou
 /// Contructs the layout tree for the current tree node.
 void BlockLayout::layout()
 {
+    zoom = parent->zoom;
     x = parent->x;
     width = overrideSizeWithStyle(node, parent->width, "width");
 
@@ -160,6 +162,7 @@ void BlockLayout::recurse(Node* node)
 void BlockLayout::processInput(Node* node)
 {
     const auto inputWidth = Constants::INPUT_WIDTH_PX;
+    width = dpx(inputWidth, zoom);
     if (m_cursorX + inputWidth > width)
     {
         newLine();
@@ -180,7 +183,8 @@ void BlockLayout::processInput(Node* node)
     const auto style = cssFontStyleToQt(styleString);
 
     const auto sizeString = node->findStyle("font-size", "14px");
-    const auto size = static_cast<int>(pixelsToFloat(sizeString));
+    const auto sizePx = pixelsToFloat(sizeString);
+    const auto size = dpx(sizePx * 0.75, zoom);
 
     const QFont font = getFont(family, size, weight, style);
     const QFontMetrics metrics(font);
@@ -206,7 +210,8 @@ void BlockLayout::processWord(Node* node, QString& word)
     auto style = cssFontStyleToQt(styleString);
 
     auto sizeString = node->findStyle("font-size", "14px");
-    auto size = static_cast<int>(pixelsToFloat(sizeString));
+    auto sizePx = pixelsToFloat(sizeString);
+    auto size = dpx(sizePx * 0.75, zoom);
 
     auto colorString = node->findStyle("color", "black");
     QString color = QString::fromStdString(colorString);

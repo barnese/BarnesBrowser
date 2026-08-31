@@ -16,6 +16,7 @@ LineLayout::LineLayout(
 
 void LineLayout::layout()
 {
+    zoom = parent->zoom;
     width = parent->width;
     x = parent->x;
 

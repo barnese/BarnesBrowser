@@ -63,6 +63,7 @@ add_executable(main
     src/layout/document_layout.cpp
     src/layout/input_layout.cpp
     src/layout/layout_effects_helpers.cpp
+    src/layout/layout_helpers.cpp
     src/layout/line_layout.cpp
     src/layout/text_layout.cpp
     src/styles/css_parser.cpp

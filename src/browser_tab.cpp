@@ -30,6 +30,7 @@ BrowserTab::BrowserTab(int width, int height)
 {
     m_logger.info("starting");
     m_scroll = 0;
+    m_zoom = 1;
     m_scrollChangedInTab = false;
     m_focus = nullptr;
     m_loaded = false;
@@ -45,6 +46,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     try
     {
         m_loaded = false;
+        m_zoom = 1;
         m_logger.info("loading: " + url.describe());
         m_history.push_back(url);
         auto response = url.request(m_url, payload);
@@ -180,8 +182,8 @@ void BrowserTab::render()
     if (m_needsLayout)
     {
         m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
-        m_document->layout();
-        printLayoutTree(m_document.get());
+        m_document->layout(m_zoom);
+        //printLayoutTree(m_document.get());
         m_needsPaint = true;
         m_needsLayout = false;
     }
@@ -208,6 +210,35 @@ void BrowserTab::resize(int width, int height)
 {
     m_width = width;
     m_height = height;
+    setNeedsRender();
+}
+
+void BrowserTab::zoom(bool increment)
+{
+    std::string direction = increment ? "in" : "out";
+    m_logger.info("zoomed " + direction);
+
+    if (increment)
+    {
+        m_zoom *= 1.1;
+        m_scroll *= 1.1;
+    }
+    else 
+    {
+        m_zoom /= 1.1;
+        m_scroll /= 1.1;
+    }
+
+    m_scrollChangedInTab = true;
+    setNeedsRender();
+}
+
+void BrowserTab::resetZoom()
+{
+    m_logger.info("reset zoom");
+    m_scroll /= m_zoom;
+    m_zoom = 1;
+    m_scrollChangedInTab = true;
     setNeedsRender();
 }
 

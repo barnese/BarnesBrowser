@@ -40,6 +40,8 @@ public:
     void click(Point point);
     void keyPress(std::string text);
     void resize(int width, int height);
+    void zoom(bool increment);
+    void resetZoom();
 
     // Public Getters/Setters
     URL getLoadedUrl() { return m_url; };
@@ -91,6 +93,7 @@ private:
     bool m_scrollChangedInTab;
     int m_width;
     int m_height;
+    double m_zoom;
     
     /// Dirty flags to indicate when something needs to be re-rendered.
     bool m_needsStyle;

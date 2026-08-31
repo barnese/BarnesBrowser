@@ -25,6 +25,8 @@ signals:
     void resize(int width, int height);
     void scrollDown();
     void scrollUp();
+    void zoom(bool increment);
+    void resetZoom();
 
 protected:
     void initializeGL() override;

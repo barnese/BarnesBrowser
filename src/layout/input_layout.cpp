@@ -9,6 +9,7 @@
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout/layout_effects_helpers.h"
+#include "layout/layout_helpers.h"
 
 #include <QFontMetrics>
 #include <memory>
@@ -28,12 +29,14 @@ InputLayout::InputLayout(
 
 void InputLayout::layout()
 {
+    zoom = parent->zoom;
     width = Constants::INPUT_WIDTH_PX;
 
     auto family = QString::fromStdString(node->findStyle("font-family", "Helvetica"));
     auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
     auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));
-    auto size = static_cast<int>(pixelsToFloat(node->findStyle("font-size", "14px")));
+    auto sizePx = pixelsToFloat(node->findStyle("font-size", "14px"));
+    auto size = dpx(sizePx * 0.75, zoom);
     font = getFont(family, size, weight, style);
     QFontMetrics metrics(font);
 

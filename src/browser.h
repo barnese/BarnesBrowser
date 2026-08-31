@@ -51,6 +51,8 @@ private:
     void handleResize(int width, int height);
     void handleScrollDown();
     void handleScrollUp();
+    void incrementZoom(bool increment);
+    void resetZoom();
     void handlePaintRequest(PaintContext& context);
     void compositeRasterAndDraw();
     void rasterTab();
