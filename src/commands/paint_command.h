@@ -7,4 +7,5 @@
 class PaintCommand : public Command
 {
     QRect map(QRect rect) const override { return rect; }
+    QRect unmap(QRect rect) const override { return rect; }
 };

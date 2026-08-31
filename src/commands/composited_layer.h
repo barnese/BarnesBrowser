@@ -9,6 +9,7 @@
 #include <optional>
 
 QRect localToAbsolute(const Command* displayItem, QRect rect);
+QRect absoluteToLocal(const Command* displayItem, QRect rect);
 
 class CompositedLayer
 {

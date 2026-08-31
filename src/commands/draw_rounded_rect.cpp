@@ -25,9 +25,10 @@ void DrawRoundedRect::execute(PaintContext& context)
     QPainter& painter = context.painter;
     auto color = parseColor(m_color);
     auto brush = QBrush(color);
+    
     painter.setBrush(brush);
-    auto pen = QPen(Qt::transparent);
-    painter.setPen(pen);
+    painter.setPen(Qt::NoPen);
+    painter.setRenderHint(QPainter::Antialiasing);
     painter.drawRoundedRect(rect, m_radius, m_radius);
 }
 

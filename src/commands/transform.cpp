@@ -53,17 +53,25 @@ std::string Transform::describe() const
     return s.str();
 }
 
-QRect mapTranslation(QRect rect, std::optional<QPointF> translation)
+QRect mapTranslation(QRect rect, std::optional<QPointF> translation, bool reversed)
 {
     if (!translation.has_value())
         return rect;
 
     QTransform matrix;
-    matrix.translate(translation->x(), translation->y());
+    if (reversed)
+        matrix.translate(-translation->x(), -translation->y());
+    else
+        matrix.translate(translation->x(), translation->y());
     return matrix.mapRect(rect);
 }
 
 QRect Transform::map(QRect rect) const
 {
-    return mapTranslation(rect, m_translation);
+    return mapTranslation(rect, m_translation, false);
+}
+
+QRect Transform::unmap(QRect rect) const
+{
+    return mapTranslation(rect, m_translation, true);
 }

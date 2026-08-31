@@ -28,4 +28,6 @@ public:
             }
         }
     }
+
+    QRect unmap(QRect rect) const override { return rect; }
 };

@@ -7,7 +7,7 @@
 #include <QRect>
 
 /// Helper function that maps a rect through a translation.
-QRect mapTranslation(QRect rect, std::optional<QPointF> translation);
+QRect mapTranslation(QRect rect, std::optional<QPointF> translation, bool reversed);
 
 class Transform : public VisualEffect
 {
@@ -22,6 +22,7 @@ public:
     std::string describe() const override;
     std::unique_ptr<Command> clone(std::unique_ptr<Command> child) override;
     QRect map(QRect rect) const override;
+    QRect unmap(QRect rect) const override;
 
 private:
     std::optional<QPointF> m_translation;

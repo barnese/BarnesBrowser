@@ -16,6 +16,33 @@ CompositedLayer::CompositedLayer(Command* displayItem)
     }
 }
 
+QRect localToAbsolute(const Command* displayItem, QRect rect)
+{
+    while (displayItem->parent)
+    {
+        rect = displayItem->parent->map(rect);
+        displayItem = displayItem->parent;
+    }
+
+    return rect;
+}
+
+QRect absoluteToLocal(const Command* displayItem, QRect rect)
+{
+    std::vector<Command*> parentChain;
+    while (displayItem->parent)
+    {
+        parentChain.push_back(displayItem->parent);
+        displayItem = displayItem->parent;
+    }
+    for (auto it = parentChain.crbegin(); it != parentChain.crend(); ++it)
+    {
+        rect = (**it).unmap(rect);
+    }
+
+    return rect;
+}
+
 QRectF CompositedLayer::compositedBounds() const
 {
     QRect rect;
@@ -26,22 +53,12 @@ QRectF CompositedLayer::compositedBounds() const
     for (auto item : *displayItems)
     {
         // Join the item's rect with the local rect.
-        rect |= item->rect;
+        // Compute the clipped local rect to prevent rastering unseen items.
+        rect |= absoluteToLocal(item, localToAbsolute(item, item->rect));
     }
 
     // Add a little extra padding to the bounds by one on all sides.
     rect = rect.adjusted(-1, -1, 1, 1);
-
-    return rect;
-}
-
-QRect localToAbsolute(const Command* displayItem, QRect rect)
-{
-    while (displayItem->parent)
-    {
-        rect = displayItem->parent->map(rect);
-        displayItem = displayItem->parent;
-    }
 
     return rect;
 }

@@ -558,7 +558,7 @@ QRect absoluteBoundsForObj(Layout* layout)
     while (current)
     {
         auto translation = parseTransform(current->findStyle("transform", ""));
-        rect = mapTranslation(rect, translation);
+        rect = mapTranslation(rect, translation, false);
         current = current->parent;
     }
     return rect;
