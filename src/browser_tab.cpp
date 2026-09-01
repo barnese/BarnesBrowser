@@ -245,6 +245,7 @@ void BrowserTab::resetZoom()
 void BrowserTab::setDarkMode(bool darkMode)
 {
     m_darkMode = darkMode;
+    loadStyles();
     setNeedsRender();
 }
 
@@ -271,23 +272,21 @@ void BrowserTab::addStyles(Node &node, const SortedCSSRules& rules)
         }
     }
 
+    // Add style sheet styles to the element nodes based on the 
+    // given explicit CSS rules.
+    for (const auto& [name, rule] : rules)
+    {
+        if (name.starts_with(Constants::MEDIA_DARK_PREFIX) && !m_darkMode) continue;
+        if (!rule.node->matches(&node)) continue;
+
+        for (const auto& [property, value] : rule.styles)
+        {        
+            node.styles[property] = value;
+        }
+    }
+
     if (auto* element = dynamic_cast<Element*>(&node))
     {
-        // Add style sheet styles to the element nodes based on the 
-        // given explicit CSS rules.
-        for (const auto& [name, rule] : rules)
-        {
-            if (!rule.node->matches(&node))
-            {
-                continue;
-            }
-
-            for (const auto& [property, value] : rule.styles)
-            {
-                element->styles[property] = value;
-            }
-        }
-
         // Add style attribute styles. Note that the order is important
         // here because the style attribute overrides style sheet values.
         if (element->attributes.contains("style"))

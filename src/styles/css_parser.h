@@ -17,6 +17,7 @@ using StringMap = std::map<std::string, std::string>;
 
 struct NodeStyles
 {
+    std::string media;
     std::unique_ptr<Selector> node;
     StringMap styles;
 };
@@ -49,10 +50,14 @@ private:
     std::tuple<std::string, std::string> pair(std::vector<char> until);
     std::optional<char> ignoreUntil(std::vector<char> chars);
     std::string untilChars(std::vector<char> chars);
+    std::tuple<std::string, std::string> mediaQuery();
+    bool parseMedia(std::string& media);
 
     // The text to be parsed.
     std::string m_text;
     
     // The parser's current position parsing the text.
     size_t m_i;
+
+    bool m_darkMedia;
 };

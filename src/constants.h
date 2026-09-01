@@ -11,6 +11,12 @@ namespace Constants
     const std::string HTML_HEADER_SEPARATOR = "\r\n\r\n";
     const int SCROLL_STEP = 100;
     const int INPUT_WIDTH_PX = 200;
+
+    /// Prefix added to tag selectors for media dark styles.
+    /// The initial character is the Chinese Han which is sorted
+    /// after alphanumeric characters allowing media styles to 
+    /// naturally override normal styles.
+    const std::string MEDIA_DARK_PREFIX = "一media_dark_";
     
     /// Target refresh rate, 33 frames per millisecond.
     const int REFRESH_RATE_MS = 33;

@@ -11,7 +11,8 @@
 
 CSSParser::CSSParser(std::string text)
     : m_text(text),
-      m_i(0)
+      m_i(0),
+      m_darkMedia(false)
 {
     // Remove comments from the entire text.
     m_text = removeComments(m_text);
@@ -143,9 +144,24 @@ std::string CSSParser::untilChars(std::vector<char> chars)
     return m_text.substr(start, m_i - start);
 }
 
+std::tuple<std::string, std::string> CSSParser::mediaQuery()
+{
+    literal('@');
+    assert(word() == "media");
+    whitespace();
+    literal('(');
+    whitespace();
+    auto propAndVal = pair({')'});
+    whitespace();
+    literal(')');
+    return propAndVal;
+}
+
 std::unique_ptr<Selector> CSSParser::selector()
 {
     auto w = toLowercase(word());
+    if (m_darkMedia)
+        w = Constants::MEDIA_DARK_PREFIX + w;
     std::unique_ptr<Selector> out = std::make_unique<TagSelector>(w);
     whitespace();
     while (m_i < m_text.size() && m_text[m_i] != '{')
@@ -158,28 +174,57 @@ std::unique_ptr<Selector> CSSParser::selector()
     return out;
 }
 
+bool CSSParser::parseMedia(std::string& media)
+{
+    std::vector<std::string> supportedMediaTypes = { "dark", "light" };
+    if (m_text[m_i] == '@' && media.empty())
+    {
+        auto [prop, val] = mediaQuery();
+        if (prop == "prefers-color-scheme" && std::ranges::contains(supportedMediaTypes, val))
+        {
+            media = val;
+            if (val == "dark")
+                m_darkMedia = true;
+        }
+        whitespace();
+        literal('{');
+        whitespace();
+        return true;
+    }
+    else if (m_text[m_i] == '}' && !media.empty())
+    {
+        literal('}');
+        media = "";
+        whitespace();
+        m_darkMedia = false;
+        return true;
+    }
+    return false;
+}
+
 CSSRules CSSParser::parse()
 {
     CSSRules rules;
-
+    std::string media;
+    whitespace();
     while (m_i < m_text.size())
     {
         try 
         {
-            whitespace();
+            if (parseMedia(media)) continue;
             auto selector = this->selector();
             literal('{');
             whitespace();
             auto body = this->body();
             literal('}');
+            whitespace();
             auto name = selector->getName();
-            rules[name] = NodeStyles(std::move(selector), body);
+            rules[name] = NodeStyles(media, std::move(selector), body);
         } 
         catch (const CSSParserException& e) 
         {
-            //std::cout << "Parse failure: " << e.what() << std::endl;
-
             // We failed to parse the selector, so skip the whole rule.
+            // std::cout << "Parse failure: " << e.what() << std::endl;
             auto why = ignoreUntil({'}'});
             if (why == '}')
             {
@@ -205,6 +250,7 @@ SortedCSSRules sort(const CSSRules& rules)
     for (const auto& rule : rules)
     {
         auto name = rule.first;
+        auto media = rule.second.media;
         auto node = rule.second.node.get();
         auto styles = rule.second.styles;
 
@@ -213,6 +259,7 @@ SortedCSSRules sort(const CSSRules& rules)
             sortedRules.push_back({
                 name,
                 NodeStyles(
+                    media,
                     std::make_unique<TagSelector>(tagSelector->getName()), 
                     styles
                 )
@@ -227,6 +274,7 @@ SortedCSSRules sort(const CSSRules& rules)
             sortedRules.push_back({
                 name,
                 NodeStyles(
+                    media,
                     std::make_unique<DescendantSelector>(
                         std::move(s->ancestor), 
                         std::move(s->descendant)
