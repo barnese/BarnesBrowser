@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>Opacity Test Page</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <!--This style is just a parsing test.-->
+    <style id="test_style">.test-style{color:red;filter:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="filter"></filter></svg>#filter');}</style>
+    <h1>Opacity Test Page</h1>
+    <p>This is a test page. Below is some sample Python code.</p>
+    <pre class="code-sample">
+      class Person:
+        def __init__(self, name):
+          self.name = name
+    </pre>
+    <div>
+      <p>
+        For more information, visit this 
+        <a href="https://en.wikipedia.org/wiki/Python_(programming_language)">Python Site</a>.
+      </p>
+    </div>
+    <h2>Visual Effects Tests</h2>
+    <div>
+      Animation fade test
+    </div>
+    <div>-</div>
+    <div style="font-size: 40px; padding: 15px; text-align: center; background: orange; color: #00000080">
+      Semi-transparent test
+    </div>
+    <div>-</div>
+    <div style="font-size: 40px; padding: 15px; text-align: center; background: orange; color: black; opacity: .5">
+      Blended transparency test
+    </div>
+    <div>-</div>
+    <div style="background-color:orange; color: white">
+      Outer 
+      <div style="background-color:blue;mix-blend-mode:difference">
+        Inner - difference blend mode
+      </div>
+      Outer
+    </div>
+    <div>-</div>
+    <div style="border-radius:30px;background-color:lightblue;overflow:clip">
+      This test text exists here to ensure that the "div" element is
+      large enough that the border radius is obvious.
+    </div> 
+    <script src="test.js"></script>
+  </body>
+</html>

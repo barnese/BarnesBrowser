@@ -1,4 +1,4 @@
-console.log("[test.js] hello!");
+console.log("[opacity.js] hello!");
 
 // TEST 1: Uncomment this to test setTimeout.
 //function callback() {
