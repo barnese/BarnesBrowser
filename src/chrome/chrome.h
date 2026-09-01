@@ -15,6 +15,8 @@ public:
     Chrome(QWidget* parent = nullptr);
     void addTab(QString tabName, QString address, size_t index);
     void setAddress(QString address);
+    void focusAddressBar();
+    void setActiveTab(size_t index);
 
 signals:
     void newTabRequested();

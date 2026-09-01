@@ -22,7 +22,9 @@ UrlComponents getUrlComponents(std::string url)
     
     auto urlParts = split(parts[1], "/");
     components.host = urlParts[0];
-    components.path = "/" + urlParts[1];
+    components.path = "/";
+    if (urlParts.size() > 1)
+        components.path = "/" + urlParts[1];    
 
     if (components.host.contains(':')) 
     {

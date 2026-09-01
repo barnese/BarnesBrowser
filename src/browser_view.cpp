@@ -2,11 +2,19 @@
 
 #include <QOpenGLWidget>
 #include <QStyleHints>
+#include <QShortcut>
 
 BrowserView::BrowserView(QWidget* parent)
     : QOpenGLWidget(parent)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    // Setup a shortcut to handle Control+Tab key strokes for cycling tabs.
+    auto* shortcut = new QShortcut(QKeySequence(Qt::META | Qt::Key_Tab), this);
+    shortcut->setContext(Qt::WidgetShortcut);
+    connect(shortcut, &QShortcut::activated, this, [this]() {
+        cycleTabs();
+    });
 }
 
 void BrowserView::initializeGL()
@@ -48,16 +56,28 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
             resetZoom();
             return;
 
+        case Qt::Key_D:
+            darkModeToggleEvent();
+            return;
+
         case Qt::Key_Equal:
             zoom(true);
+            return;
+
+        case Qt::Key_L:
+            focusAddressBar();
+            return;
+
+        case Qt::Key_Left:
+            goBack();
             return;
 
         case Qt::Key_Minus:
             zoom(false);
             return;                
         
-        case Qt::Key_D:
-            darkModeToggleEvent();
+        case Qt::Key_T:
+            newTab();
             return;
         }
     }

@@ -38,6 +38,10 @@ Browser::Browser(QWidget* parent)
     connect(m_view, &BrowserView::zoom, this, &Browser::incrementZoom);
     connect(m_view, &BrowserView::resetZoom, this, &Browser::resetZoom);
     connect(m_view, &BrowserView::setDarkMode, this, &Browser::setDarkMode);
+    connect(m_view, &BrowserView::goBack, this, &Browser::goBack);
+    connect(m_view, &BrowserView::focusAddressBar, this, &Browser::focusAddressBar);
+    connect(m_view, &BrowserView::newTab, this, &Browser::createNewTab);
+    connect(m_view, &BrowserView::cycleTabs, this, &Browser::cycleTabs);
 
     connect(&m_timer, &QTimer::timeout, this, &Browser::mainTimerFired);
     m_timer.start(10);
@@ -204,6 +208,8 @@ void Browser::draw()
 
 void Browser::handlePaintRequest(PaintContext& context)
 {
+    if (!m_activeTab->isLoaded()) return;
+
     context.scroll = m_activeTabScroll;
 
     for (const auto& item : m_drawList)
@@ -372,7 +378,7 @@ void Browser::newTabInternal(std::optional<URL> url)
     if (url.has_value())
     {
         scheduleLoad(url.value());
-        address = QString::fromStdString(url.value().describe(false));
+        address = QString::fromStdString(url.value().describe());
         tabName = address;
     }
     else 
@@ -380,7 +386,6 @@ void Browser::newTabInternal(std::optional<URL> url)
         address = "";
         tabName = "New Tab";
     }
-    //m_view->centerOn(0, 0);
     m_view->setFocus();
     m_chrome->addTab(tabName, address, m_tabs.size() - 1);
 }
@@ -395,6 +400,7 @@ void Browser::linkClicked(URL url)
 void Browser::createNewTab()
 {
     newTab();
+    focusAddressBar();
 }
 
 void Browser::changeTab(size_t index)
@@ -419,12 +425,6 @@ void Browser::changeTab(size_t index)
 void Browser::setActiveTab(BrowserTab* tab)
 {
     m_activeTab = tab;
-    m_activeTabScroll = 0;
-    m_activeTabUrl = std::nullopt;
-    m_needsAnimationFrame = true;
-    m_animationTimer = nullptr;
-    clearData();
-
     m_activeTab->taskRunner.scheduleTask(
         std::make_unique<Task<BrowserTab*, bool>>(
             "BrowserTab::setDarkMode(" + std::to_string(m_darkMode) + ")",
@@ -433,6 +433,16 @@ void Browser::setActiveTab(BrowserTab* tab)
             m_darkMode
         )
     );
+    m_activeTab->taskRunner.scheduleTask(
+        std::make_unique<Task<BrowserTab*>>(
+            "BrowserTab::setNeedsPaints()",
+            &BrowserTab::setNeedsPaint,
+            m_activeTab
+        )
+    );
+    clearData();
+    m_needsAnimationFrame = true;
+    m_animationTimer = nullptr;
 }
 
 void Browser::clearData()
@@ -453,6 +463,14 @@ void Browser::goBack()
         m_activeTab
     );
     m_activeTab->taskRunner.scheduleTask(std::move(task));
+    clearData();
+}
+
+void Browser::focusAddressBar()
+{
+    std::lock_guard lock(m_mutex);
+    m_chrome->focusAddressBar();
+    setNeedsRaster();
 }
 
 void Browser::changeAddress(QString newAddress)
@@ -466,15 +484,34 @@ void Browser::changeAddress(QString newAddress)
     {
         auto url = URL(newAddress.toStdString());
         scheduleLoad(url);
-        //m_view->centerOn(0, 0);
         m_view->setFocus();
         m_chrome->setAddress(newAddress);
+    }
+}
+
+void Browser::cycleTabs()
+{
+    std::lock_guard lock(m_mutex);
+
+    auto it = std::ranges::find_if(m_tabs,
+        [this](BrowserTab* tab) { return tab == m_activeTab; },
+        &std::unique_ptr<BrowserTab>::get
+    );
+
+    if (it != m_tabs.end())
+    {
+        auto activeIndex = std::distance(m_tabs.begin(), it);
+        auto newIndex = (activeIndex + 1) % m_tabs.size();
+        m_chrome->setActiveTab(newIndex);
+        setActiveTab(m_tabs[newIndex].get());
     }
 }
 
 void Browser::handleClick(Point point)
 {
     std::lock_guard lock(m_mutex);
+    if (!m_activeTab->isLoaded()) return;
+    m_view->setFocus();
     auto task = std::make_unique<Task<BrowserTab*, Point>>(
         "BrowserTab::click(" + point.describe() + ")",
         &BrowserTab::click,

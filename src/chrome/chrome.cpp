@@ -76,3 +76,13 @@ void Chrome::setAddress(QString address)
 {
     m_addressBar->setText(address);
 }
+
+void Chrome::focusAddressBar()
+{
+    m_addressBar->setFocus();
+}
+
+void Chrome::setActiveTab(size_t index)
+{
+    m_tabBar->setCurrentIndex(index);
+}

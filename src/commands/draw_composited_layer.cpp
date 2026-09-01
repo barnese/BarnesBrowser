@@ -13,7 +13,10 @@ void DrawCompositedLayer::execute(PaintContext& context)
 {
     auto* fbo = m_compositedLayer->getFramebuffer();
 
-    if (!fbo || !fbo->isValid()) 
+    if (!fbo)
+        return;
+
+    if (!fbo->isValid()) 
         return;
 
     auto bounds = m_compositedLayer->compositedBounds();

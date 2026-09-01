@@ -28,6 +28,10 @@ signals:
     void zoom(bool increment);
     void resetZoom();
     void setDarkMode(bool darkMode);
+    void goBack();
+    void focusAddressBar();
+    void newTab();
+    void cycleTabs();
 
 protected:
     void initializeGL() override;

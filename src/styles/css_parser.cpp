@@ -147,7 +147,8 @@ std::string CSSParser::untilChars(std::vector<char> chars)
 std::tuple<std::string, std::string> CSSParser::mediaQuery()
 {
     literal('@');
-    assert(word() == "media");
+    if (word() != "media")
+        throw CSSParserException("unhandled CSS @ query");
     whitespace();
     literal('(');
     whitespace();

@@ -66,6 +66,8 @@ private:
     void mainTimerFired();
     void printDrawList();
     void setDarkMode(bool darkMode);
+    void focusAddressBar();
+    void cycleTabs();
 
     Logger m_logger;
     std::mutex m_mutex;

@@ -245,7 +245,6 @@ void BrowserTab::resetZoom()
 void BrowserTab::setDarkMode(bool darkMode)
 {
     m_darkMode = darkMode;
-    loadStyles();
     setNeedsRender();
 }
 
