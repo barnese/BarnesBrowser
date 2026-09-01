@@ -1,6 +1,7 @@
 #include "browser_view.h"
 
 #include <QOpenGLWidget>
+#include <QStyleHints>
 
 BrowserView::BrowserView(QWidget* parent)
     : QOpenGLWidget(parent)
@@ -84,6 +85,8 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
 void BrowserView::darkModeToggleEvent()
 {
     m_darkMode = !m_darkMode;
+    auto scheme = m_darkMode ? Qt::ColorScheme::Dark : Qt::ColorScheme::Light;
+    qApp->styleHints()->setColorScheme(scheme);
     setDarkMode(m_darkMode);
 }
 
