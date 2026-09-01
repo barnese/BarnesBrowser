@@ -242,15 +242,24 @@ void BrowserTab::resetZoom()
     setNeedsRender();
 }
 
+void BrowserTab::setDarkMode(bool darkMode)
+{
+    m_darkMode = darkMode;
+    setNeedsRender();
+}
+
 /// Adds styles to the given node and its children. 
 void BrowserTab::addStyles(Node &node, const SortedCSSRules& rules)
 {
     StringMap oldStyle = node.styles;
     node.styles.clear();
 
+    auto inheritedProperties = Constants::INHERITED_PROPERTIES;
+    inheritedProperties["color"] = (m_darkMode ? "white" : "black");
+
     // Apply default styling for inherited properties first
     // since these can be overridden by explicit rules below.
-    for (const auto& [property, defaultValue] : Constants::INHERITED_PROPERTIES)
+    for (const auto& [property, defaultValue] : inheritedProperties)
     {
         if (node.parent)
         {

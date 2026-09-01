@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 
     Browser browser;
     browser.resize(815, 600);
-    browser.newTab(URL("http://localhost:8000/transform2.html"));
+    browser.newTab(URL("http://localhost:8000"));
     browser.show();
     
     return app.exec();

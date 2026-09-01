@@ -17,7 +17,8 @@ void BrowserView::paintGL()
 {
     QPainter painter(this);
 
-    painter.fillRect(rect(), Qt::white);
+    QColor backgroundColor = (m_darkMode ? Qt::black : Qt::white);
+    painter.fillRect(rect(), backgroundColor);
 
     PaintContext context {
         painter,
@@ -53,6 +54,10 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
         case Qt::Key_Minus:
             zoom(false);
             return;                
+        
+        case Qt::Key_D:
+            darkModeToggleEvent();
+            return;
         }
     }
 
@@ -74,6 +79,12 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
         }
         QOpenGLWidget::keyPressEvent(event);
     }
+}
+
+void BrowserView::darkModeToggleEvent()
+{
+    m_darkMode = !m_darkMode;
+    setDarkMode(m_darkMode);
 }
 
 void BrowserView::mousePressEvent(QMouseEvent* event)

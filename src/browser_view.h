@@ -27,6 +27,7 @@ signals:
     void scrollUp();
     void zoom(bool increment);
     void resetZoom();
+    void setDarkMode(bool darkMode);
 
 protected:
     void initializeGL() override;
@@ -37,6 +38,8 @@ private:
     void keyPressEvent(QKeyEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
+    void darkModeToggleEvent();
 
     QOpenGLTextureBlitter m_blitter;
+    bool m_darkMode;
 };

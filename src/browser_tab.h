@@ -42,6 +42,7 @@ public:
     void resize(int width, int height);
     void zoom(bool increment);
     void resetZoom();
+    void setDarkMode(bool darkMode);
 
     // Public Getters/Setters
     URL getLoadedUrl() { return m_url; };
@@ -94,6 +95,7 @@ private:
     int m_width;
     int m_height;
     double m_zoom;
+    bool m_darkMode;
     
     /// Dirty flags to indicate when something needs to be re-rendered.
     bool m_needsStyle;

@@ -37,6 +37,7 @@ Browser::Browser(QWidget* parent)
     connect(m_view, &BrowserView::scrollUp, this, &Browser::handleScrollUp);
     connect(m_view, &BrowserView::zoom, this, &Browser::incrementZoom);
     connect(m_view, &BrowserView::resetZoom, this, &Browser::resetZoom);
+    connect(m_view, &BrowserView::setDarkMode, this, &Browser::setDarkMode);
 
     connect(&m_timer, &QTimer::timeout, this, &Browser::mainTimerFired);
     m_timer.start(10);
@@ -49,6 +50,7 @@ Browser::Browser(QWidget* parent)
     m_activeTabHeight = 0;
     m_activeTabScroll = 0;
     m_activeTabDisplayList.clear();
+    m_darkMode = false;
 }
 
 Browser::~Browser()
@@ -422,6 +424,15 @@ void Browser::setActiveTab(BrowserTab* tab)
     m_needsAnimationFrame = true;
     m_animationTimer = nullptr;
     clearData();
+
+    m_activeTab->taskRunner.scheduleTask(
+        std::make_unique<Task<BrowserTab*, bool>>(
+            "BrowserTab::setDarkMode(" + std::to_string(m_darkMode) + ")",
+            &BrowserTab::setDarkMode,
+            m_activeTab,
+            m_darkMode
+        )
+    );
 }
 
 void Browser::clearData()
@@ -540,6 +551,20 @@ void Browser::resetZoom()
         m_activeTab
     );
     m_activeTab->taskRunner.scheduleTask(std::move(task));
+}
+
+void Browser::setDarkMode(bool darkMode)
+{
+    m_darkMode = darkMode;
+
+    m_activeTab->taskRunner.scheduleTask(
+        std::make_unique<Task<BrowserTab*, bool>>(
+            "BrowserTab::setDarkMode(" + std::to_string(darkMode) + ")",
+            &BrowserTab::setDarkMode,
+            m_activeTab,
+            darkMode
+        )
+    );
 }
 
 // Debugging helpers

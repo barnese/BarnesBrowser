@@ -65,6 +65,7 @@ private:
     void newTabInternal(std::optional<URL> url = std::nullopt);
     void mainTimerFired();
     void printDrawList();
+    void setDarkMode(bool darkMode);
 
     Logger m_logger;
     std::mutex m_mutex;
@@ -76,6 +77,7 @@ private:
     bool m_needsComposite;
     bool m_needsRaster;
     bool m_needsDraw;
+    bool m_darkMode;
     
     // Tab-specific members    
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
