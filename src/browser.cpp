@@ -422,6 +422,13 @@ void Browser::changeTab(size_t index)
     m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
+void Browser::setTabTitle(std::string title)
+{
+    std::lock_guard lock(m_mutex);
+    auto activeIndex = getActiveTabIndex();
+    m_chrome->setTabName(QString::fromStdString(title), activeIndex);
+}
+
 void Browser::setActiveTab(BrowserTab* tab)
 {
     m_activeTab = tab;
@@ -489,10 +496,8 @@ void Browser::changeAddress(QString newAddress)
     }
 }
 
-void Browser::cycleTabs()
+size_t Browser::getActiveTabIndex()
 {
-    std::lock_guard lock(m_mutex);
-
     auto it = std::ranges::find_if(m_tabs,
         [this](BrowserTab* tab) { return tab == m_activeTab; },
         &std::unique_ptr<BrowserTab>::get
@@ -501,10 +506,19 @@ void Browser::cycleTabs()
     if (it != m_tabs.end())
     {
         auto activeIndex = std::distance(m_tabs.begin(), it);
-        auto newIndex = (activeIndex + 1) % m_tabs.size();
-        m_chrome->setActiveTab(newIndex);
-        setActiveTab(m_tabs[newIndex].get());
+        return activeIndex;
     }
+
+    return 0;
+}
+
+void Browser::cycleTabs()
+{
+    std::lock_guard lock(m_mutex);
+    auto activeIndex = getActiveTabIndex();
+    auto newIndex = (activeIndex + 1) % m_tabs.size();
+    m_chrome->setActiveTab(newIndex);
+    setActiveTab(m_tabs[newIndex].get());
 }
 
 void Browser::handleClick(Point point)

@@ -75,6 +75,8 @@ private:
     CSSRules getDefaultStyleSheet();
     std::vector<std::string> getStyleSheetLinks(const Node* tree);
     std::vector<std::string> getScriptLinks(const Node* tree);
+    std::string getTitle(const Node* tree);
+    void setTabTitle();
     std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const;
     std::vector<Node*> nodeTreeToList(Node* tree, std::vector<Node*>& list);
 

@@ -30,6 +30,7 @@ public:
     void newTab(std::optional<URL> url = std::nullopt);
     void createNewTab();
     void changeTab(size_t index);
+    void setTabTitle(std::string title);
     void changeAddress(QString newAddress);
     void goBack();
     void linkClicked(URL url);
@@ -68,6 +69,7 @@ private:
     void setDarkMode(bool darkMode);
     void focusAddressBar();
     void cycleTabs();
+    size_t getActiveTabIndex();
 
     Logger m_logger;
     std::mutex m_mutex;

@@ -7,6 +7,7 @@
 #include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
 #include "html_tree/element.h"
+#include "html_tree/text.h"
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
 #include "layout/layout.h"
@@ -54,6 +55,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         m_url = url;
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
+        setTabTitle();
         loadContentSecurityPolicy(response.headers);
         loadScripts();
         loadStyles();
@@ -555,6 +557,35 @@ std::vector<std::string> BrowserTab::getScriptLinks(const Node* tree)
     }
 
     return links;
+}
+
+std::string BrowserTab::getTitle(const Node* tree)
+{
+    std::vector<const Node*> nodeList;
+    nodeList = nodeTreeToList(tree, nodeList);
+
+    for (const auto& node : nodeList)
+    {
+        if (auto element = dynamic_cast<const Element*>(node))
+        {
+            if (element->tag == "title" && element->children.size() == 1)
+            {
+                if (auto text = dynamic_cast<const Text*>(element->children.front().get()))
+                {
+                    return text->getText();
+                }
+            }
+        }
+    }
+
+    // We couldn't find a title so use the URL instead.
+    return m_url.describe(false);
+}
+
+void BrowserTab::setTabTitle()
+{
+    auto title = getTitle(m_node.get());
+    browser->setTabTitle(title);
 }
 
 /// Recursively paints all layout objects, combining the 

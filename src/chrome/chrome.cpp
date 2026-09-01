@@ -77,6 +77,11 @@ void Chrome::setAddress(QString address)
     m_addressBar->setText(address);
 }
 
+void Chrome::setTabName(QString tabName, size_t index)
+{
+    m_tabBar->setTabText(index, tabName);
+}
+
 void Chrome::focusAddressBar()
 {
     m_addressBar->setFocus();
