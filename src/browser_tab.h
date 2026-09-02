@@ -43,6 +43,8 @@ public:
     void zoom(bool increment);
     void resetZoom();
     void setDarkMode(bool darkMode);
+    void advanceTab();
+    void enter();
 
     // Public Getters/Setters
     URL getLoadedUrl() { return m_url; };
@@ -71,6 +73,8 @@ private:
     void loadStyles();
     void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);
     void submitForm(Element* element);
+    void activateElement(Element* element);
+    void focusElement(Element* element);
 
     CSSRules getDefaultStyleSheet();
     std::vector<std::string> getStyleSheetLinks(const Node* tree);

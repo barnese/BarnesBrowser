@@ -1,5 +1,7 @@
 #include "line_layout.h"
 
+#include "layout/layout_effects_helpers.h"
+
 #include <QFontMetrics>
 #include <sstream>
 
@@ -71,6 +73,24 @@ std::vector<std::unique_ptr<Command>> LineLayout::paint() const
 
 std::vector<std::unique_ptr<Command>> LineLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
+    // Add an outline draw command if focused.
+    QRect outlineRect;
+    Node* outlineNode;
+
+    for (const auto& child : children)
+    {
+        if (child->node->parent->isFocused)
+        {
+            outlineRect |= child->getRect();
+            outlineNode = child->node->parent;
+        }
+    }
+
+    if (outlineNode)
+    {
+        paintOutline(outlineNode, commands, outlineRect, zoom);
+    }
+
     return commands;
 }
 

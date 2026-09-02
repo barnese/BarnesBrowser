@@ -46,6 +46,7 @@ void Chrome::createAddressBar()
 
     m_addressBar = new QLineEdit(this);
     m_addressBar->setFont(*m_font);
+    m_addressBar->setFocusPolicy(Qt::ClickFocus);
 
     m_addressBarLayout->addWidget(m_backButton);
     m_addressBarLayout->addWidget(m_addressBar);

@@ -38,8 +38,3 @@ std::string DrawText::describe() const
     s << ")";
     return s.str();
 }
-
-std::unique_ptr<Command> DrawText::clone(std::unique_ptr<Command>)
-{
-    return nullptr;
-}

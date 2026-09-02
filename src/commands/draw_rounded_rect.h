@@ -12,7 +12,6 @@ public:
     DrawRoundedRect(QRect rect, QString color, double radius);
     void execute(PaintContext& context) override;
     std::string describe() const override;
-    std::unique_ptr<Command> clone(std::unique_ptr<Command> child) override;
 
 private:
     QString m_color;

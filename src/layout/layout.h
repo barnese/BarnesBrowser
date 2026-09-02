@@ -6,6 +6,7 @@
 #include <memory>
 #include <QFont>
 #include <QGraphicsScene>
+#include <QRect>
 #include <vector>
 
 /// Abstract base class that represents a layout.
@@ -23,6 +24,11 @@ public:
     {
         child->parent = this;
         children.push_back(std::move(child));
+    }
+
+    QRect getRect()
+    {
+        return QRect(x, y, width, height);
     }
 
     Node* node;

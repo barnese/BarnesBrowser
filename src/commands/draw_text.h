@@ -12,7 +12,6 @@ public:
     DrawText(int x1, int y1, QString text, QFont font, QString color);
     void execute(PaintContext& context) override;
     std::string describe() const override;
-    std::unique_ptr<Command> clone(std::unique_ptr<Command> child) override;
 
 private:
     QString m_text;

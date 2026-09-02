@@ -35,6 +35,8 @@ Browser::Browser(QWidget* parent)
     connect(m_view, &BrowserView::resize, this, &Browser::handleResize);
     connect(m_view, &BrowserView::scrollDown, this, &Browser::handleScrollDown);
     connect(m_view, &BrowserView::scrollUp, this, &Browser::handleScrollUp);
+    connect(m_view, &BrowserView::handleEnter, this, &Browser::handleEnter);
+    connect(m_view, &BrowserView::handleTab, this, &Browser::handleTab);
     connect(m_view, &BrowserView::zoom, this, &Browser::incrementZoom);
     connect(m_view, &BrowserView::resetZoom, this, &Browser::resetZoom);
     connect(m_view, &BrowserView::setDarkMode, this, &Browser::setDarkMode);
@@ -55,6 +57,7 @@ Browser::Browser(QWidget* parent)
     m_activeTabScroll = 0;
     m_activeTabDisplayList.clear();
     m_darkMode = false;
+    m_focus = std::nullopt;
 }
 
 Browser::~Browser()
@@ -581,6 +584,32 @@ void Browser::handleScrollUp()
     m_activeTabScroll = clampScroll(m_activeTabScroll - Constants::SCROLL_STEP);
     setNeedsRaster();
     m_needsAnimationFrame = true;
+}
+
+void Browser::handleEnter()
+{
+    if (m_focus == "content")
+    {
+        m_activeTab->taskRunner.scheduleTask(
+            std::make_unique<Task<BrowserTab*>>(
+                "BrowserTab::enter()",
+                &BrowserTab::enter,
+                m_activeTab
+            )
+        );
+    }
+}
+
+void Browser::handleTab()
+{
+    m_focus = "content";
+    m_activeTab->taskRunner.scheduleTask(
+        std::make_unique<Task<BrowserTab*>>(
+            "BrowserTab::advanceTab(\"" + *m_focus + "\")",
+            &BrowserTab::advanceTab,
+            m_activeTab
+        )
+    );
 }
 
 void Browser::incrementZoom(bool increment)

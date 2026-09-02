@@ -33,7 +33,7 @@ BrowserTab::BrowserTab(int width, int height)
     m_scroll = 0;
     m_zoom = 1;
     m_scrollChangedInTab = false;
-    m_focus = nullptr;
+    focusElement(nullptr);
     m_loaded = false;
     m_needsStyle = false;
     m_needsLayout = false;
@@ -47,6 +47,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     try
     {
         m_loaded = false;
+        focusElement(nullptr);
         m_zoom = 1;
         m_logger.info("loading: " + url.describe());
         m_history.push_back(url);
@@ -248,6 +249,121 @@ void BrowserTab::setDarkMode(bool darkMode)
 {
     m_darkMode = darkMode;
     setNeedsRender();
+}
+
+int getTabIndex(Node* node)
+{
+    int tabIndex = 0;
+
+    if (auto element = dynamic_cast<Element*>(node))
+    {
+        tabIndex = std::stoi(element->findAttribute("tabindex", "9999999"));
+    }
+
+    return tabIndex == 0 ? 9999999 : tabIndex;
+}
+
+bool isFocusable(Element* element)
+{
+    if (getTabIndex(element) < 0) return false;
+    if (element->attributes.contains("tabindex")) return true;
+    std::vector<std::string> focusableElements = { "input", "button", "a" };
+    return std::ranges::contains(focusableElements, element->tag);
+}
+
+void BrowserTab::advanceTab()
+{
+    // Get all the focusable elements.
+    std::vector<Element*> focusableElements;
+    auto nodes = nodeTreeToList();
+    for (const auto& node : nodes)
+    {
+        if (auto element = dynamic_cast<Element*>(node))
+        {
+            if (isFocusable(element))
+            {
+                focusableElements.push_back(element);
+            }
+        }
+    }
+
+    // Sort them by their tabindex.
+    std::sort(focusableElements.begin(), focusableElements.end(), 
+        [](Element* a, Element* b) { 
+            return getTabIndex(a) < getTabIndex(b); 
+        });
+
+    // Find the index of the currently focused element.
+    size_t index = 0;
+    auto it = std::ranges::find_if(focusableElements,
+        [this](const Element* element) { return m_focus == element; });
+    if (it != focusableElements.end())
+    {
+        index = std::distance(focusableElements.begin(), it) + 1;
+    }
+
+    if (index < focusableElements.size())
+    {
+        focusElement(focusableElements[index]);
+        m_logger.info("set focus to " + m_focus->describe());
+    }
+    else 
+    {
+        focusElement(nullptr);
+        browser->focusAddressBar();
+    }
+
+    setNeedsRender();
+}
+
+void BrowserTab::enter()
+{
+    if (!m_focus) return;
+    if (m_js->dispatchEvent("click", m_focus)) return;
+    activateElement(m_focus);
+}
+
+void BrowserTab::activateElement(Element* element)
+{
+    if (element->tag == "input")
+    {
+        element->attributes["value"] = "";
+        setNeedsRender();
+    }
+    else if (element->tag == "a" && element->attributes.contains("href"))
+    {
+        auto href = element->findAttribute("href", "");
+        if (!href.empty())
+        {
+            auto url = m_url.resolve(href);
+            load(url);
+        }
+    }
+    else if (element->tag == "button")
+    {
+        Node* node = element;
+
+        while (node)
+        {
+            if (auto e = dynamic_cast<Element*>(node))
+            {
+                if (e->tag == "form" && e->attributes.contains("action"))
+                {
+                    submitForm(element);
+                }
+            }
+            node = node->parent;
+        }
+    }
+}
+
+void BrowserTab::focusElement(Element* element)
+{
+    if (m_focus)
+        m_focus->isFocused = false;
+    m_focus = element;
+    if (element)
+        element->isFocused = true;
 }
 
 /// Adds styles to the given node and its children. 
@@ -635,11 +751,10 @@ QRect absoluteBoundsForObj(Layout* layout)
 
 void BrowserTab::click(Point point)
 {
-    // The layout tree needs to be up to date, so do a re-render.
-    render();
+    focusElement(nullptr);
 
-    if (m_focus)
-        m_focus->isFocused = false;
+    // The layout tree needs to be up to date, so do a re-render.
+    //render();
 
     auto x = point.x;
     auto y = point.y + m_scroll;    
@@ -659,52 +774,16 @@ void BrowserTab::click(Point point)
 
     auto last = objs.back();
     Node* elt = last->node;
-    while (elt != nullptr)
+    while (elt)
     {
         if (auto element = dynamic_cast<Element*>(elt))
         {
-            if (element->tag == "a" && element->attributes.contains("href"))
+            if (isFocusable(element))
             {
-                if (m_js->dispatchEvent("click", elt)) return;
-
-                auto it = element->attributes.find("href");
-                if (it != element->attributes.end())
-                {
-                    auto url = m_url.resolve(it->second);
-                    load(url);
-                    break;
-                }
-            } 
-            else if (element->tag == "input")
-            {
-                if (m_js->dispatchEvent("click", elt)) return;
-
-                // Clicking an input element should clear its value.
-                element->attributes["value"] = "";
-                m_focus = element;
-                element->isFocused = true;
+                focusElement(element);
+                activateElement(element);
                 setNeedsRender();
-                break;
-            }
-            else if (element->tag == "button")
-            {
-                if (m_js->dispatchEvent("click", elt)) return;
-
-                // Find the button's form by walking up the HTML tree.
-                // If we find it, submit the form.
-                Node* n = element;
-                while (n != nullptr)
-                {
-                    if (auto e = dynamic_cast<Element*>(n)) 
-                    {
-                        if (e->tag == "form" && e->attributes.contains("action"))
-                        {
-                            submitForm(e);
-                            return;
-                        }
-                    }
-                    n = n->parent;
-                }
+                return;
             }
         }
         elt = elt->parent;
@@ -769,8 +848,11 @@ std::optional<URL> BrowserTab::goBack()
 
 void BrowserTab::keyPress(std::string text)
 {
-    if (m_focus)
+    if (m_focus && m_focus->tag == "input")
     {
+        if (!m_focus->attributes.contains("value"))
+            activateElement(m_focus);
+
         if (m_js->dispatchEvent("keydown", m_focus)) return;
         if (text == "\U0000007f")
         {

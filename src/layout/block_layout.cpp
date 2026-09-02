@@ -290,7 +290,9 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     QRect rect(x, y, width, height);
-    return paintVisualEffects(node, std::move(commands), rect);
+    auto cmds = paintVisualEffects(node, std::move(commands), rect);
+    paintOutline(node, cmds, rect, zoom);
+    return cmds;
 }
 
 QFont BlockLayout::getFont(QString family, int size, int weight, int style) 

@@ -130,7 +130,9 @@ QFont InputLayout::getFont(QString family, int size, int weight, int style)
 std::vector<std::unique_ptr<Command>> InputLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     QRect rect(x, y, width, height);
-    return paintVisualEffects(node, std::move(commands), rect);
+    auto cmds = paintVisualEffects(node, std::move(commands), rect);
+    paintOutline(node, cmds, rect, zoom);
+    return cmds;
 }
 
 std::string InputLayout::describe() const

@@ -38,8 +38,3 @@ std::string DrawLine::describe() const
     s << ")";
     return s.str();
 }
-
-std::unique_ptr<Command> DrawLine::clone(std::unique_ptr<Command>)
-{
-    return nullptr;
-}

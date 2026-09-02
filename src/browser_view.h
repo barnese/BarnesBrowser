@@ -32,6 +32,8 @@ signals:
     void focusAddressBar();
     void newTab();
     void cycleTabs();
+    void handleEnter();
+    void handleTab();
 
 protected:
     void initializeGL() override;

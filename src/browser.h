@@ -32,6 +32,7 @@ public:
     void changeTab(size_t index);
     void setTabTitle(std::string title);
     void changeAddress(QString newAddress);
+    void focusAddressBar();
     void goBack();
     void linkClicked(URL url);
     void scheduleAnimationFrame();
@@ -52,6 +53,8 @@ private:
     void handleResize(int width, int height);
     void handleScrollDown();
     void handleScrollUp();
+    void handleEnter();
+    void handleTab();
     void incrementZoom(bool increment);
     void resetZoom();
     void handlePaintRequest(PaintContext& context);
@@ -67,7 +70,6 @@ private:
     void mainTimerFired();
     void printDrawList();
     void setDarkMode(bool darkMode);
-    void focusAddressBar();
     void cycleTabs();
     size_t getActiveTabIndex();
 
@@ -93,4 +95,5 @@ private:
     std::vector<std::unique_ptr<CompositedLayer>> m_compositedLayers;
     std::map<Node*, VisualEffect*> m_compositedUpdates;
     std::vector<std::unique_ptr<Command>> m_drawList;
+    std::optional<std::string> m_focus;
 };

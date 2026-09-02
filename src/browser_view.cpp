@@ -86,7 +86,15 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
     {
     case Qt::Key_Down:
         scrollDown();
-        break;        
+        break;
+
+    case Qt::Key_Return:
+        handleEnter();
+        break;
+
+    case Qt::Key_Tab:
+        handleTab();
+        break;
 
     case Qt::Key_Up:
         scrollUp();        

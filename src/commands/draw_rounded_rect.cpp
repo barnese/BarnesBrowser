@@ -42,8 +42,3 @@ std::string DrawRoundedRect::describe() const
     s << ")";
     return s.str();
 }
-
-std::unique_ptr<Command> DrawRoundedRect::clone(std::unique_ptr<Command>)
-{
-    return nullptr;
-}

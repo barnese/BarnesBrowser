@@ -17,3 +17,6 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
     std::vector<std::unique_ptr<Command>> commands, 
     QRect rect
 );
+
+/// Adds a DrawOwnline command to the given commands.
+void paintOutline(Node* node, std::vector<std::unique_ptr<Command>>& commands, QRect rect, double zoom);
