@@ -4,6 +4,7 @@
 #include "html_tree/node.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 #include <QRect>
 
@@ -17,6 +18,15 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
     std::vector<std::unique_ptr<Command>> commands, 
     QRect rect
 );
+
+struct ParseOutlineResult
+{
+    int thickness;
+    std::string color;
+};
+
+/// Parses a CSS outline property.
+std::optional<ParseOutlineResult> parseOutline(const std::string& outlineString);
 
 /// Adds a DrawOwnline command to the given commands.
 void paintOutline(Node* node, std::vector<std::unique_ptr<Command>>& commands, QRect rect, double zoom);

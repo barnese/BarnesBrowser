@@ -38,6 +38,7 @@ BrowserTab::BrowserTab(int width, int height)
     m_needsStyle = false;
     m_needsLayout = false;
     m_needsPaint = false;
+    m_needsFocusScroll = false;
 }
 
 BrowserTab::~BrowserTab() = default;
@@ -130,6 +131,12 @@ void BrowserTab::runAnimationFrame(const int scroll)
     bool needsComposite = m_needsStyle || m_needsLayout;
 
     render();
+   
+    if (m_needsFocusScroll && m_focus)
+    {
+        scrollTo(m_focus);
+    }
+    m_needsFocusScroll = false;
     
     std::optional<int> newScroll = std::nullopt;
     if (m_scrollChangedInTab)
@@ -159,6 +166,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
     m_scrollChangedInTab = false;
 }
 
+// Debugging helper
 void printLayoutTree(const Layout* layout, int depth = 0)
 {
     if (depth == 0)
@@ -169,6 +177,25 @@ void printLayoutTree(const Layout* layout, int depth = 0)
         printLayoutTree(child.get(), depth + 1);
 }
 
+void printStyles(const CSSRules& rules)
+{
+    std::stringstream s;
+    s << "Styles:" << std::endl;
+
+    for (const auto& rule : rules)
+    {
+        s << rule.first << ": {";
+        std::string seprator = "";
+        for (const auto& style : rule.second.styles)
+        {
+            s << seprator << style.first << ": " << style.second;
+            seprator = ", ";
+        }
+        s << "}" << std::endl;
+    }
+    std::cout << s.str();
+}
+
 void BrowserTab::render()
 {
     m_logger.info("rendering");
@@ -176,8 +203,8 @@ void BrowserTab::render()
 
     if (m_needsStyle)
     {
-        auto sortedRules = sort(m_rules);
-        addStyles(*m_node, sortedRules);
+        //printStyles(m_rules);
+        addStyles(*m_node, m_rules);
         m_needsLayout = true;
         m_needsStyle = false;
     }
@@ -359,6 +386,8 @@ void BrowserTab::activateElement(Element* element)
 
 void BrowserTab::focusElement(Element* element)
 {
+    if (element && element != m_focus)
+        m_needsFocusScroll = true;
     if (m_focus)
         m_focus->isFocused = false;
     m_focus = element;
@@ -367,7 +396,7 @@ void BrowserTab::focusElement(Element* element)
 }
 
 /// Adds styles to the given node and its children. 
-void BrowserTab::addStyles(Node &node, const SortedCSSRules& rules)
+void BrowserTab::addStyles(Node &node, const CSSRules& rules)
 {
     StringMap oldStyle = node.styles;
     node.styles.clear();
@@ -514,6 +543,32 @@ std::vector<Layout*> layoutTreeToList(Layout* tree, std::vector<Layout*> &list)
     return list;
 }
 
+void BrowserTab::scrollTo(Element* element)
+{
+    // Find the layout object corresponding to the focused element.
+    Layout* obj;
+    std::vector<Layout*> layouts;
+    layouts = layoutTreeToList(m_document.get(), layouts);
+
+    for (const auto& layout : layouts)
+    {
+        if (layout->node == element)
+        {
+            obj = layout;
+            break;
+        }
+    }
+
+    if (!obj) return;
+    if (m_scroll < obj->y && obj->y < m_scroll + m_height) return;
+
+    // Now scroll to that layout object.
+    auto newScroll = obj->y - Constants::SCROLL_STEP;
+    m_logger.info("scrolling to " + std::to_string(newScroll));
+    m_scroll = clampScroll(newScroll);
+    m_scrollChangedInTab = true;
+}
+
 void BrowserTab::loadScripts()
 {
     // If we are loading a new page and we already have an existing
@@ -592,6 +647,14 @@ void BrowserTab::loadStyles()
 
             auto linkBody = linkUrl.request(m_url).body;
             auto linkResults = CSSParser(trim(linkBody)).parse();
+
+            // The map merge doesn't replace existing values,
+            // so we need to erase them first to allow the new
+            // values to replace the previous ones.
+            for (const auto& [key, value] : linkResults) 
+            {
+                m_rules.erase(key);
+            }
             m_rules.merge(linkResults);
         }
         catch (...)

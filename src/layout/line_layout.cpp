@@ -75,18 +75,22 @@ std::vector<std::unique_ptr<Command>> LineLayout::paintEffects(std::vector<std::
 {
     // Add an outline draw command if focused.
     QRect outlineRect;
-    Node* outlineNode;
+    Node* outlineNode = nullptr;
 
     for (const auto& child : children)
     {
-        if (child->node->parent->isFocused)
+        auto outlineString = child->node->parent->findStyle("outline", "");
+
+        if (outlineString.empty()) continue;
+
+        if (parseOutline(outlineString).has_value())
         {
             outlineRect |= child->getRect();
             outlineNode = child->node->parent;
         }
     }
 
-    if (outlineNode)
+    if (outlineNode != nullptr)
     {
         paintOutline(outlineNode, commands, outlineRect, zoom);
     }

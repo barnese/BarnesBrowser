@@ -67,7 +67,7 @@ private:
     /// Prevents scroll from going past top or bottom of the page.
     int clampScroll(const int scroll);
 
-    void addStyles(Node &node, const SortedCSSRules& rules);
+    void addStyles(Node &node, const CSSRules& rules);
     void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
     void loadScripts();
     void loadStyles();
@@ -75,6 +75,7 @@ private:
     void submitForm(Element* element);
     void activateElement(Element* element);
     void focusElement(Element* element);
+    void scrollTo(Element* element);
 
     CSSRules getDefaultStyleSheet();
     std::vector<std::string> getStyleSheetLinks(const Node* tree);
@@ -98,6 +99,7 @@ private:
     bool m_loaded;
     int m_scroll;
     bool m_scrollChangedInTab;
+    bool m_needsFocusScroll;
     int m_width;
     int m_height;
     double m_zoom;

@@ -3,6 +3,7 @@
 #include "css_parser_exception.h"
 #include "helpers/string_helpers.h"
 #include "styles/descendant_selector.h"
+#include "styles/pseudo_class_selector.h"
 #include "styles/selector.h"
 #include "styles/tag_selector.h"
 #include "constants.h"
@@ -158,17 +159,30 @@ std::tuple<std::string, std::string> CSSParser::mediaQuery()
     return propAndVal;
 }
 
-std::unique_ptr<Selector> CSSParser::selector()
+std::unique_ptr<Selector> CSSParser::simpleSelector()
 {
     auto w = toLowercase(word());
     if (m_darkMedia)
         w = Constants::MEDIA_DARK_PREFIX + w;
     std::unique_ptr<Selector> out = std::make_unique<TagSelector>(w);
+
+    if (m_i < m_text.size() && m_text[m_i] == ':')
+    {
+        literal(':');
+        auto pseudoClass = toLowercase(word());
+        out = std::make_unique<PseudoClassSelector>(pseudoClass, std::move(out));
+    }
+
+    return out;
+}
+
+std::unique_ptr<Selector> CSSParser::selector()
+{
+    auto out = simpleSelector();
     whitespace();
     while (m_i < m_text.size() && m_text[m_i] != '{')
     {
-        w = toLowercase(word());
-        auto descendant = std::make_unique<TagSelector>(w);
+        auto descendant = simpleSelector();
         out = std::make_unique<DescendantSelector>(std::move(out), std::move(descendant));
         whitespace();
     }
@@ -240,60 +254,6 @@ CSSRules CSSParser::parse()
     }
 
     return rules;
-}
-
-/// Helper function that sorts a map of CSSRules by priority while 
-/// maintaining the original order as much as possible (AKA cascade 
-/// ordering), returning the results as a vector of pairs.
-SortedCSSRules sort(const CSSRules& rules)
-{
-    SortedCSSRules sortedRules;
-    for (const auto& rule : rules)
-    {
-        auto name = rule.first;
-        auto media = rule.second.media;
-        auto node = rule.second.node.get();
-        auto styles = rule.second.styles;
-
-        if (auto tagSelector = dynamic_cast<TagSelector*>(node))
-        {
-            sortedRules.push_back({
-                name,
-                NodeStyles(
-                    media,
-                    std::make_unique<TagSelector>(tagSelector->getName()), 
-                    styles
-                )
-            });
-        }
-        else if (auto s = dynamic_cast<DescendantSelector*>(node))
-        {
-            if (s->descendant == nullptr && s->ancestor == nullptr) {
-                continue;
-            }
-
-            sortedRules.push_back({
-                name,
-                NodeStyles(
-                    media,
-                    std::make_unique<DescendantSelector>(
-                        std::move(s->ancestor), 
-                        std::move(s->descendant)
-                    ), 
-                    styles
-                )
-            });
-        }
-    }
-
-    std::stable_sort(sortedRules.begin(), sortedRules.end(), 
-        [](const auto& lhs, const auto& rhs) 
-        {
-            return lhs.second.node->getPriority() > rhs.second.node->getPriority();
-        }
-    );
-   
-    return sortedRules;
 }
 
 QColor parseColor(const QString& color)

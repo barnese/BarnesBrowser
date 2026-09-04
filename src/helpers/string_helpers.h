@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -22,5 +23,6 @@ std::string removeComments(std::string text);
 
 float percentToFloat(std::string percentString);
 float pixelsToFloat(std::string pixelString);
+std::optional<int> pixelsToInt(std::string pixelString);
 
 std::string urlEncode(const std::string& value);

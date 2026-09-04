@@ -153,6 +153,28 @@ float pixelsToFloat(std::string pixelString)
     return std::stof(pixelString);
 }
 
+std::optional<int> pixelsToInt(std::string pixelString)
+{
+    try 
+    {
+        if (pixelString.size() > 2 && pixelString.substr(pixelString.size() - 2) == "px")
+        {
+            auto numericPart = pixelString.substr(0, pixelString.size() - 2);
+            return std::stoi(numericPart);
+        }
+        else if (!pixelString.empty())
+        {
+            return std::stoi(pixelString);
+        }
+    }
+    catch (...) 
+    {
+        std::cerr << "[StringHelpers] pixelToInt() failed for: " << pixelString << std::endl;
+    }
+
+    return std::nullopt;
+}
+
 /// Percent URL encodes a string.
 std::string urlEncode(const std::string& value) 
 {

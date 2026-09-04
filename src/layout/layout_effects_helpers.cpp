@@ -6,6 +6,7 @@
 #include "commands/transform.h"
 #include "styles/css_parser.h"
 #include "helpers/string_helpers.h"
+#include "layout_helpers.h"
 
 std::vector<std::unique_ptr<Command>> paintVisualEffects(
     Node* node, 
@@ -44,8 +45,35 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
     return commandList(std::move(transform));
 }
 
+std::optional<ParseOutlineResult> parseOutline(const std::string& outlineString)
+{
+    if (outlineString.empty()) return std::nullopt;
+
+    auto values = split(outlineString, " ", false);
+
+    if (values.size() != 3) return std::nullopt;
+    if (values[1] != "solid") return std::nullopt;
+
+    auto thickness = pixelsToInt(values[0]);
+    if (!thickness.has_value()) return std::nullopt;
+
+    auto color = values[2];
+
+    return ParseOutlineResult(thickness.value(), color);
+}
+
 void paintOutline(Node* node, std::vector<std::unique_ptr<Command>>& commands, QRect rect, double zoom)
 {
-    if (!node->isFocused) return;
-    commands.push_back(std::make_unique<DrawOutline>(rect, "black", 1));
+    if (!node) return;
+
+    auto outline = parseOutline(node->findStyle("outline", ""));
+    
+    if (!outline.has_value()) return;
+    
+    commands.push_back(
+        std::make_unique<DrawOutline>(
+            rect, (*outline).color, 
+            dpx((*outline).thickness, zoom)
+        )
+    );
 }

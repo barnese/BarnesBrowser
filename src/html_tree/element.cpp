@@ -1,5 +1,7 @@
 #include "element.h"
 
+#include <sstream>
+
 Element::Element(const std::string& tag, Node* myParent)
     : tag(tag)
 {
@@ -9,17 +11,25 @@ Element::Element(const std::string& tag, Node* myParent)
 
 std::string Element::describe() const
 {
-    std::string text = "<" + tag;
+    std::stringstream s;
+
+    s << "<" + tag;
     
-    for (const auto& attribute : attributes)
+    for (const auto& attr : attributes)
     {
-        text += " ";
-        text += attribute.first;
-        text += "=\"";
-        text += attribute.second;
-        text += "\"";
+        s << " " << attr.first << "=\"" << attr.second << "\"";
     }
 
-    text += ">";
-    return text;
+    s << ">, styles: {";
+
+    std::string separator = "";
+    for (const auto& style : styles)
+    {
+        s << separator << style.first << ": " << style.second;
+        separator = ", ";
+    }
+
+    s << "}";
+
+    return s.str();
 }

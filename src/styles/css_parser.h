@@ -23,9 +23,7 @@ struct NodeStyles
 };
 
 using CSSRules = std::map<std::string, NodeStyles>;
-using SortedCSSRules = std::vector<std::pair<std::string, NodeStyles>>;
 
-SortedCSSRules sort(const CSSRules& rules);
 QColor parseColor(const QString& color);
 
 using StringTupleMap = std::map<std::string, std::tuple<std::string, std::string, std::string>>;
@@ -42,6 +40,7 @@ public:
     StringMap body();
     CSSRules parse();
     std::unique_ptr<Selector> selector();
+    std::unique_ptr<Selector> simpleSelector();
 
 private:
     void whitespace();

@@ -136,3 +136,31 @@ TEST_CASE("urlEncode() encodes various strings", TAG)
     REQUIRE(urlEncode("<=>") == "%3C%3D%3E");
     REQUIRE(urlEncode("|@") == "%7C%40");
 }
+
+TEST_CASE("pixelsToInt() returns int value for pixel string", TAG)
+{
+    int expected = 56;
+    auto actual = pixelsToInt("56px");
+    REQUIRE(actual.has_value());
+    REQUIRE(expected == actual.value());
+}
+
+TEST_CASE("pixelsToInt() returns int value for number string", TAG)
+{
+    int expected = 123;
+    auto actual = pixelsToInt("123");
+    REQUIRE(actual.has_value());
+    REQUIRE(expected == actual.value());
+}
+
+TEST_CASE("pixelsToInt() returns nullopt for empty string", TAG)
+{
+    auto actual = pixelsToInt("");
+    REQUIRE(!actual.has_value());
+}
+
+TEST_CASE("pixelsToInt() returns nullopt for invalid string", TAG)
+{
+    auto actual = pixelsToInt("invalid");
+    REQUIRE(!actual.has_value());
+}
