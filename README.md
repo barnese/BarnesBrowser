@@ -1,30 +1,28 @@
 # Barnes Browser
 
-This is a simple, experimental web browser written to explore browser concepts for educational purposes. Use at your own risk!
+This is a simple, experimental web browser written to explore browser concepts for educational purposes. It is a work in progress. Use at your own risk!
 
-It is based on the excellent [Web Browser Engineering](https://browser.engineering/) by Pavel Panchekha & Chris Harrelson.
+It is based on the book [Web Browser Engineering](https://browser.engineering/) by Pavel Panchekha & Chris Harrelson.
+
+The browser is primarily written in C++. See the code under `/src`. It uses CMake for building and package management. See `CMakeLists.txt` for build configuration settings. 
+
+This project also includes a simple, test web server, written in Python, that helps serve various pages to test the browser.
 
 ## Building the Project
 
-This project is written in C++. See the code under `/src`. It uses CMake for building and package management.
-
-### Visual Studio Code Setup
-
-To set up Visual Studio Code to run this project, add the following extensions:
+If you use Visual Studio Code to build and run this project, add the following extensions:
 
 1. CMake Tools - for extended CMake support
 2. clangd - for code completion
 
 The `.vscode/tasks.json` file includes various tasks for building the project. The default is a task to build and run, so Shift+Command+B should execute this task.
 
-Also note the `CMakeLists.txt` uses explicit list of `.cpp` files, so if you add a new one, be sure to add it to `add_executable`.
-
-### Project Dependencies
+## Project Dependencies
 
 These are the dependencies used in this project.
 
 1. [OpenSLL](https://www.openssl.org/) - used for SLL network connections
-2. [Qt](https://doc.qt.io/) - used for the graphical user interface
+2. [Qt](https://doc.qt.io/) - used for the graphical user interface and content rendering
 3. [Catch2](https://github.com/catchorg/Catch2) - used for unit tests
 4. [Duktape](https://duktape.org/) - used for the Javascript engine
 5. [Dukglue](https://github.com/Aloshi/dukglue) - a Duktape wrapper for convenience functions
