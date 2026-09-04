@@ -115,7 +115,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
     }
 
     // Run any CSS transition animations.
-    for (const auto& node : nodeTreeToList())
+    for (const auto& node : treeToList(m_node.get()))
     {
         for (const auto& [propertyName, animation] : node->animations)
         {
@@ -301,7 +301,7 @@ void BrowserTab::advanceTab()
 {
     // Get all the focusable elements.
     std::vector<Element*> focusableElements;
-    auto nodes = nodeTreeToList();
+    auto nodes = treeToList(m_node.get());
     for (const auto& node : nodes)
     {
         if (auto element = dynamic_cast<Element*>(node))
@@ -494,60 +494,11 @@ void BrowserTab::addStyles(Node &node, const CSSRules& rules)
     }
 }
 
-/// Converts a tree into a list of nodes.
-std::vector<const Node*> BrowserTab::nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const
-{
-    list.push_back(tree);
-    for (const auto& child : tree->getChildren())
-    {
-        nodeTreeToList(child.get(), list);
-    }
-    return list;
-}
-
-/// Mutable version of converting a tree into a list.
-std::vector<Node*> BrowserTab::nodeTreeToList(Node* tree, std::vector<Node*>& list)
-{
-    list.push_back(tree);
-    for (auto& child : tree->children)
-    {
-        nodeTreeToList(child.get(), list);
-    }
-    return list;
-}
-
-/// Convenience function to hide implementation details.
-std::vector<const Node*> BrowserTab::nodeTreeToList() const 
-{
-    std::vector<const Node*> list;
-    nodeTreeToList(m_node.get(), list);
-    return list;
-}
-
-/// Mutable convenience function to convert a tree to a list.
-std::vector<Node*> BrowserTab::nodeTreeToList()
-{
-    std::vector<Node*> list;
-    nodeTreeToList(m_node.get(), list);
-    return list;
-}
-
-std::vector<Layout*> layoutTreeToList(Layout* tree, std::vector<Layout*> &list)
-{
-    list.push_back(tree);
-    for (const auto& child : tree->children)
-    {
-        layoutTreeToList(child.get(), list);
-    }
-    return list;
-}
-
 void BrowserTab::scrollTo(Element* element)
 {
     // Find the layout object corresponding to the focused element.
     Layout* obj;
-    std::vector<Layout*> layouts;
-    layouts = layoutTreeToList(m_document.get(), layouts);
+    auto layouts = treeToList<Layout>(m_document.get());
 
     for (const auto& layout : layouts)
     {
@@ -693,11 +644,10 @@ void BrowserTab::loadContentSecurityPolicy(std::map<std::string, std::string, Ca
     }
 }
 
-std::vector<std::string> BrowserTab::getStyleSheetLinks(const Node* tree)
+std::vector<std::string> BrowserTab::getStyleSheetLinks(Node* tree)
 {
     std::vector<std::string> links;
-    std::vector<const Node*> nodeList;
-    nodeList = nodeTreeToList(tree, nodeList);
+    auto nodeList = treeToList<Node>(tree);
 
     for (const auto& node : nodeList) 
     {    
@@ -716,11 +666,10 @@ std::vector<std::string> BrowserTab::getStyleSheetLinks(const Node* tree)
     return links;
 }
 
-std::vector<std::string> BrowserTab::getScriptLinks(const Node* tree)
+std::vector<std::string> BrowserTab::getScriptLinks(Node* tree)
 {
     std::vector<std::string> links;
-    std::vector<const Node*> nodeList;
-    nodeList = nodeTreeToList(tree, nodeList);
+    auto nodeList = treeToList<Node>(tree);
 
     for (const auto& node : nodeList)
     {
@@ -737,10 +686,9 @@ std::vector<std::string> BrowserTab::getScriptLinks(const Node* tree)
     return links;
 }
 
-std::string BrowserTab::getTitle(const Node* tree)
+std::string BrowserTab::getTitle(Node* tree)
 {
-    std::vector<const Node*> nodeList;
-    nodeList = nodeTreeToList(tree, nodeList);
+    auto nodeList = treeToList<Node>(tree);
 
     for (const auto& node : nodeList)
     {
@@ -815,14 +763,10 @@ void BrowserTab::click(Point point)
 {
     focusElement(nullptr);
 
-    // The layout tree needs to be up to date, so do a re-render.
-    //render();
-
     auto x = point.x;
     auto y = point.y + m_scroll;    
 
-    std::vector<Layout*> list;
-    list = layoutTreeToList(m_document.get(), list);
+    auto list = treeToList<Layout>(m_document.get());
     auto locRect = QRect(x, y, 1, 1);
 
     std::vector<Layout*> objs;
@@ -859,8 +803,7 @@ void BrowserTab::submitForm(Element* element)
     if (m_js->dispatchEvent("submit", element)) return;
 
     std::vector<const Element*> inputs;
-    std::vector<const Node*> nodeList;
-    nodeList = nodeTreeToList(element, nodeList);
+    auto nodeList = treeToList<Node>(element);
 
     for (const auto& item : nodeList) 
     {    

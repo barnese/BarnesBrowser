@@ -2,6 +2,7 @@
 
 #include "browser_tab.h"
 #include "html_tree/html_parser.h"
+#include "html_tree/node_helpers.h"
 #include "js_context_exception.h"
 #include "styles/css_parser.h"
 #include "browser.h"
@@ -72,7 +73,7 @@ std::vector<int> JSContext::querySelectorAll(std::string selectorText)
 {
     std::vector<int> nodeHandles;
     auto selector = CSSParser(selectorText).selector();
-    auto nodeList = m_tab->nodeTreeToList();
+    auto nodeList = treeToList<Node>(m_tab->getNode());
     
     for (auto& node : nodeList) 
     {    

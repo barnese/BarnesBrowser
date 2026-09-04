@@ -13,3 +13,11 @@ void treeToList(Tree* node, std::vector<Tree*>& list)
     for (const auto& child : node->children)
         treeToList(child.get(), list);
 }
+
+template<typename Tree>
+std::vector<Tree*> treeToList(Tree* node)
+{
+    std::vector<Tree*> list;
+    treeToList(node, list);
+    return list;
+}

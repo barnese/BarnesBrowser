@@ -49,12 +49,8 @@ public:
 
     // Public Getters/Setters
     URL getLoadedUrl() { return m_url; };
-    const Node* getNode() const { return m_node.get(); };
+    Node* getNode() { return m_node.get(); };
     bool isLoaded() { return m_loaded; };
-
-    // Public Helpers
-    std::vector<const Node*> nodeTreeToList() const;
-    std::vector<Node*> nodeTreeToList();
 
     /// Checks to see if the url is allowed by the Content Security Policy.
     /// If no allowed origins are defined, then the URL is allowed.
@@ -79,12 +75,10 @@ private:
     void scrollTo(Element* element);
 
     CSSRules getDefaultStyleSheet();
-    std::vector<std::string> getStyleSheetLinks(const Node* tree);
-    std::vector<std::string> getScriptLinks(const Node* tree);
-    std::string getTitle(const Node* tree);
+    std::vector<std::string> getStyleSheetLinks(Node* tree);
+    std::vector<std::string> getScriptLinks(Node* tree);
+    std::string getTitle(Node* tree);
     void setTabTitle();
-    std::vector<const Node*> nodeTreeToList(const Node* tree, std::vector<const Node*>& list) const;
-    std::vector<Node*> nodeTreeToList(Node* tree, std::vector<Node*>& list);
 
     std::unique_ptr<Node> m_node;
     std::optional<std::vector<std::unique_ptr<Command>>> m_displayList;    
