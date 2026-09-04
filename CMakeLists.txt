@@ -44,6 +44,7 @@ add_library(dukglue INTERFACE)
 target_include_directories(dukglue SYSTEM INTERFACE ${dukglue_src_SOURCE_DIR}/include)
 
 add_executable(main
+    src/accessibility/accessibility_node.cpp
     src/chrome/chrome.cpp
     src/commands/blend.cpp
     src/commands/composited_layer.cpp
@@ -59,6 +60,7 @@ add_executable(main
     src/helpers/thread_registry.cpp
     src/html_tree/element.cpp
     src/html_tree/html_parser.cpp
+    src/html_tree/node_helpers.cpp
     src/html_tree/text.cpp
     src/layout/block_layout.cpp
     src/layout/document_layout.cpp

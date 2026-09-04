@@ -1,5 +1,6 @@
 #pragma once
 
+#include "accessibility/accessibility_node.h"
 #include "commands/command.h"
 #include "styles/css_parser.h"
 #include "helpers/case_insensitive_less.h"
@@ -89,6 +90,7 @@ private:
     std::optional<std::vector<std::unique_ptr<Command>>> m_displayList;    
     std::vector<Node*> m_compositedUpdates;
     std::unique_ptr<DocumentLayout> m_document;
+    std::unique_ptr<AccessibilityNode> m_accessibilityTree;
     std::unique_ptr<JSContext> m_js;
     URL m_url;
     std::vector<URL> m_history;
@@ -99,16 +101,17 @@ private:
     bool m_loaded;
     int m_scroll;
     bool m_scrollChangedInTab;
-    bool m_needsFocusScroll;
     int m_width;
     int m_height;
     double m_zoom;
     bool m_darkMode;
+    bool m_needsAccessibility;
     
     /// Dirty flags to indicate when something needs to be re-rendered.
     bool m_needsStyle;
     bool m_needsLayout;
     bool m_needsPaint;
+    bool m_needsFocusScroll;
 
     Logger m_logger;
 };

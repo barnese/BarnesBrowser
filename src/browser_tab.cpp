@@ -9,6 +9,7 @@
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "html_tree/node.h"
+#include "html_tree/node_helpers.h"
 #include "layout/document_layout.h"
 #include "layout/layout.h"
 #include "scripting/js_context.h"
@@ -29,16 +30,16 @@ BrowserTab::BrowserTab(int width, int height)
       m_height(height),
       m_logger(Logger("BrowserTab"))
 {
-    m_logger.info("starting");
     m_scroll = 0;
     m_zoom = 1;
     m_scrollChangedInTab = false;
-    focusElement(nullptr);
     m_loaded = false;
     m_needsStyle = false;
     m_needsLayout = false;
     m_needsPaint = false;
     m_needsFocusScroll = false;
+    m_needsAccessibility = false;
+    focusElement(nullptr);
 }
 
 BrowserTab::~BrowserTab() = default;
@@ -171,8 +172,8 @@ void printLayoutTree(const Layout* layout, int depth = 0)
 {
     if (depth == 0)
         std::cout << "Document Layout:" << std::endl;
-    QString indent(depth * 2, ' ');
-    std::cout << indent.toStdString() << layout->describe() << std::endl;
+    std::string indent(depth * 2, ' ');
+    std::cout << indent << layout->describe() << std::endl;
     for (const auto& child : layout->children)
         printLayoutTree(child.get(), depth + 1);
 }
@@ -214,8 +215,17 @@ void BrowserTab::render()
         m_document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
         m_document->layout(m_zoom);
         //printLayoutTree(m_document.get());
+        m_needsAccessibility = true;
         m_needsPaint = true;
         m_needsLayout = false;
+    }
+
+    if (m_needsAccessibility)
+    {
+        m_accessibilityTree = std::make_unique<AccessibilityNode>(m_node.get());
+        m_accessibilityTree->build();
+        m_accessibilityTree->printTree();
+        m_needsAccessibility = false;
     }
 
     if (m_needsPaint)
@@ -276,26 +286,6 @@ void BrowserTab::setDarkMode(bool darkMode)
 {
     m_darkMode = darkMode;
     setNeedsRender();
-}
-
-int getTabIndex(Node* node)
-{
-    int tabIndex = 0;
-
-    if (auto element = dynamic_cast<Element*>(node))
-    {
-        tabIndex = std::stoi(element->findAttribute("tabindex", "9999999"));
-    }
-
-    return tabIndex == 0 ? 9999999 : tabIndex;
-}
-
-bool isFocusable(Element* element)
-{
-    if (getTabIndex(element) < 0) return false;
-    if (element->attributes.contains("tabindex")) return true;
-    std::vector<std::string> focusableElements = { "input", "button", "a" };
-    return std::ranges::contains(focusableElements, element->tag);
 }
 
 void BrowserTab::advanceTab()
