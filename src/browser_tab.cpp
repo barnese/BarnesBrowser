@@ -161,8 +161,17 @@ void BrowserTab::runAnimationFrame(const int scroll)
     }
     m_compositedUpdates.clear();
 
-    CommitData commitData(m_url, newScroll, documentHeight, std::move(m_displayList), compositedUpdates);
+    CommitData commitData(
+        m_url, 
+        newScroll, 
+        documentHeight, 
+        std::move(m_displayList), 
+        compositedUpdates,
+        std::move(m_accessibilityTree),
+        m_focus
+    );
     m_displayList = std::nullopt;
+    m_accessibilityTree = nullptr;
     browser->commit(this, commitData);
     m_scrollChangedInTab = false;
 }
@@ -224,7 +233,7 @@ void BrowserTab::render()
     {
         m_accessibilityTree = std::make_unique<AccessibilityNode>(m_node.get());
         m_accessibilityTree->build();
-        m_accessibilityTree->printTree();
+        //m_accessibilityTree->printTree();
         m_needsAccessibility = false;
     }
 

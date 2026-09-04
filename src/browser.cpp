@@ -5,6 +5,7 @@
 #include "commands/paint_command.h"
 #include "constants.h"
 #include "helpers/thread_registry.h"
+#include "html_tree/node_helpers.h"
 
 #include <QBoxLayout>
 
@@ -37,6 +38,7 @@ Browser::Browser(QWidget* parent)
     connect(m_view, &BrowserView::scrollUp, this, &Browser::handleScrollUp);
     connect(m_view, &BrowserView::handleEnter, this, &Browser::handleEnter);
     connect(m_view, &BrowserView::handleTab, this, &Browser::handleTab);
+    connect(m_view, &BrowserView::toggleAccessibility, this, &Browser::handleAccessibilityToggle);
     connect(m_view, &BrowserView::zoom, this, &Browser::incrementZoom);
     connect(m_view, &BrowserView::resetZoom, this, &Browser::resetZoom);
     connect(m_view, &BrowserView::setDarkMode, this, &Browser::setDarkMode);
@@ -58,6 +60,11 @@ Browser::Browser(QWidget* parent)
     m_activeTabDisplayList.clear();
     m_darkMode = false;
     m_focus = std::nullopt;
+    m_needsAccessibility = false;
+    m_accessibilityEnabled = false;
+    m_hasSpokenDocument = false;
+    m_tabFocus = nullptr;
+    m_lastTabFocus = nullptr;
 }
 
 Browser::~Browser()
@@ -98,6 +105,8 @@ void Browser::commit(BrowserTab* tab, CommitData& commitData)
         {
             m_activeTabDisplayList = std::move(commitData.displayList.value());
         }
+        m_accessibilityTree = std::move(commitData.accessibilityTree);
+        m_tabFocus = commitData.focus;
         
         m_compositedUpdates = commitData.compositedUpdates;
         if (m_compositedUpdates.empty())
@@ -138,6 +147,13 @@ void Browser::setNeedsRaster()
     m_needsDraw = true;
 }
 
+void Browser::setNeedsAccessibility()
+{
+    if (!m_accessibilityEnabled) return;
+    m_needsAccessibility = true;
+    m_needsDraw = true;
+}
+
 void Browser::compositeRasterAndDraw()
 {
     std::lock_guard lock(m_mutex);
@@ -162,6 +178,10 @@ void Browser::compositeRasterAndDraw()
         paintDrawList();
         draw();
         measure.stop("draw");
+    }
+    if (m_needsAccessibility)
+    {
+        updateAccessibility();
     }
     measure.stop("compositeRasterAndDraw");
     m_needsComposite = false;
@@ -219,15 +239,6 @@ void Browser::handlePaintRequest(PaintContext& context)
     {
         item->execute(context);
     }
-}
-
-/// Converts a tree of commands to a vector.
-void treeToList(Command* command, std::vector<Command*>& list)
-{
-    list.push_back(command);
-
-    for (const auto& child : command->children)    
-        treeToList(child.get(), list);
 }
 
 void addParentPointers(std::vector<std::unique_ptr<Command>>& commands, Command* parent = nullptr)
@@ -463,6 +474,7 @@ void Browser::clearData()
     m_activeTabDisplayList.clear();
     m_compositedLayers.clear();
     m_compositedUpdates.clear();
+    m_accessibilityTree = std::nullopt;
 }
 
 void Browser::goBack()
@@ -610,6 +622,89 @@ void Browser::handleTab()
             m_activeTab
         )
     );
+}
+
+void Browser::handleAccessibilityToggle()
+{
+    std::lock_guard lock(m_mutex);
+    m_accessibilityEnabled = !m_accessibilityEnabled;
+    setNeedsAccessibility();
+}
+
+void Browser::updateAccessibility()
+{
+    if (!m_accessibilityTree) return;
+
+    if (!m_hasSpokenDocument)
+    {
+        speakDocument();
+        m_hasSpokenDocument = true;
+    }
+
+    // If the current tab's focus is not the last tab focus, we
+    // know focus has moved and we need to speak the focused node.
+    if (m_tabFocus && m_tabFocus != m_lastTabFocus)
+    {
+        std::vector<AccessibilityNode*> treeList;
+        treeToList(m_accessibilityTree->get(), treeList);
+
+        std::vector<AccessibilityNode*> nodes;
+        for (const auto& node : treeList)
+        {
+            if (node->getNode() == m_tabFocus)
+            {
+                nodes.push_back(node);
+            }
+        }
+
+        if (!nodes.empty())
+        {
+            m_focusAllyNode = nodes[0];
+            speakNode(m_focusAllyNode, "element focused ");
+        }
+
+        m_lastTabFocus = m_tabFocus;
+    }
+}
+
+void Browser::speakNode(const AccessibilityNode* node, const std::string& text)
+{
+    auto textToSpeak = text + node->text;
+    if (!textToSpeak.empty() && !node->children.empty() && node->children[0]->role == "StaticText")
+    {
+        textToSpeak += " " + node->children[0]->text;
+    }
+
+    if (!textToSpeak.empty())
+    {
+        speakText(textToSpeak);
+    }
+}
+
+void Browser::speakDocument()
+{
+    std::string text = "Here are the document contents: ";
+
+    std::vector<AccessibilityNode*> treeList;
+    treeToList(m_accessibilityTree->get(), treeList);
+
+    for (const auto& node : treeList)
+    {
+        auto newText = node->text;
+        if (!newText.empty())
+        {
+            text += "\n" + newText;
+        }
+    }
+
+    speakText(text);
+}
+
+void Browser::speakText(const std::string& text)
+{
+    // TODO: Integrate into the operating system's
+    // text-to-speech APIs. For now, log it.
+    m_logger.info("Speaking text:\n" + text);
 }
 
 void Browser::incrementZoom(bool increment)

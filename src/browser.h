@@ -1,5 +1,6 @@
 #pragma once
 
+#include "accessibility/accessibility_node.h"
 #include "browser_view.h"
 #include "browser_tab.h"
 #include "commit_data.h"
@@ -40,6 +41,7 @@ public:
     void setNeedsComposite();
     void setNeedsDraw();
     void setNeedsRaster();
+    void setNeedsAccessibility();
     void scheduleLoad(URL url);
     void commit(BrowserTab* tab, CommitData& commitData);
 
@@ -55,6 +57,11 @@ private:
     void handleScrollUp();
     void handleEnter();
     void handleTab();
+    void handleAccessibilityToggle();
+    void updateAccessibility();
+    void speakDocument();
+    void speakText(const std::string& text);
+    void speakNode(const AccessibilityNode* node, const std::string& text);
     void incrementZoom(bool increment);
     void resetZoom();
     void handlePaintRequest(PaintContext& context);
@@ -84,6 +91,9 @@ private:
     bool m_needsRaster;
     bool m_needsDraw;
     bool m_darkMode;
+    bool m_needsAccessibility;
+    bool m_accessibilityEnabled;
+    bool m_hasSpokenDocument;
     
     // Tab-specific members    
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;
@@ -96,4 +106,8 @@ private:
     std::map<Node*, VisualEffect*> m_compositedUpdates;
     std::vector<std::unique_ptr<Command>> m_drawList;
     std::optional<std::string> m_focus;
+    std::optional<std::unique_ptr<AccessibilityNode>> m_accessibilityTree;
+    Element* m_tabFocus;
+    Element* m_lastTabFocus;
+    AccessibilityNode* m_focusAllyNode;
 };

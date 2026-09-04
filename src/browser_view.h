@@ -34,6 +34,7 @@ signals:
     void cycleTabs();
     void handleEnter();
     void handleTab();
+    void toggleAccessibility();
 
 protected:
     void initializeGL() override;

@@ -14,13 +14,15 @@ public:
     void build();
     std::string describe() const;
     void printTree();
+    const Node* getNode() { return m_node; }
 
     std::string role;
+    std::string text;
+    std::vector<std::unique_ptr<AccessibilityNode>> children;
 
 private:
     void printTree(const AccessibilityNode* node, int depth = 0);
     void buildInternal(const Node* node);
 
     const Node* m_node;
-    std::vector<std::unique_ptr<AccessibilityNode>> children;
 };

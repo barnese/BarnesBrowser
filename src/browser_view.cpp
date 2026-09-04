@@ -56,6 +56,10 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
             resetZoom();
             return;
 
+        case Qt::Key_A:
+            toggleAccessibility();
+            return;
+
         case Qt::Key_D:
             darkModeToggleEvent();
             return;
