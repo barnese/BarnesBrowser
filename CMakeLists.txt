@@ -123,9 +123,9 @@ target_link_libraries(main PRIVATE
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
 add_executable(tests
-    src/tests/css_parser_tests.cpp
-    src/tests/string_helpers_tests.cpp
-    src/tests/url_tests.cpp
+    src/tests/test_css_parser.cpp
+    src/tests/test_string_helpers.cpp
+    src/tests/test_url.cpp
 
     src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp

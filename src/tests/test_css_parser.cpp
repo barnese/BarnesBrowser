@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "styles/css_parser.h"
 
-#define TAG "[css_parser_tests]"
+#define TAG "[test_css_parser]"
 
 using Attributes = std::map<std::string, std::string>;
 using ComparableRules = std::map<std::string, Attributes>;

@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "url.h"
 
-#define TAG "[url_tests]"
+#define TAG "[test_url]"
 
 URL getTestURL()
 {

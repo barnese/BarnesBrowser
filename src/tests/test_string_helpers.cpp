@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "helpers/string_helpers.h"
 
-#define TAG "[string_helpers_tests]"
+#define TAG "[test_string_helpers]"
 
 TEST_CASE("split() splits a string by the delimiter", TAG)
 {
