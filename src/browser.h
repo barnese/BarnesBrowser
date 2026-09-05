@@ -107,6 +107,8 @@ private:
     std::vector<std::unique_ptr<Command>> m_drawList;
     std::optional<std::string> m_focus;
     std::optional<std::unique_ptr<AccessibilityNode>> m_accessibilityTree;
+    std::vector<AccessibilityNode*> m_activeAlerts;
+    std::vector<AccessibilityNode*> m_spokenAlerts;
     Element* m_tabFocus;
     Element* m_lastTabFocus;
     AccessibilityNode* m_focusAllyNode;

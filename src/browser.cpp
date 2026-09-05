@@ -641,13 +641,46 @@ void Browser::updateAccessibility()
         m_hasSpokenDocument = true;
     }
 
+    std::vector<AccessibilityNode*> treeList;
+    treeToList(m_accessibilityTree->get(), treeList);
+
+    m_activeAlerts.clear();
+    for (const auto& node : treeList)
+    {
+        if (node->role == "alert")
+        {
+            m_activeAlerts.push_back(node);
+        }
+    }
+
+    for (const auto& alert : m_activeAlerts)
+    {
+        if (!std::ranges::contains(m_spokenAlerts, alert))
+        {
+            speakNode(alert, "New alert");
+            m_spokenAlerts.push_back(alert);
+        }
+    }
+
+    // We need to update spoken alerts to point to the latest
+    // accessibility tree.
+    std::vector<AccessibilityNode*> newSpokenAlerts;
+    for (const auto& oldAlert : m_spokenAlerts)
+    {
+        for (const auto& newNode : treeList)
+        {
+            if (newNode->getNode() == oldAlert->getNode() && newNode->role == "alert")
+            {
+                newSpokenAlerts.push_back(newNode);
+            }
+        }
+    }
+    m_spokenAlerts = newSpokenAlerts;
+
     // If the current tab's focus is not the last tab focus, we
     // know focus has moved and we need to speak the focused node.
     if (m_tabFocus && m_tabFocus != m_lastTabFocus)
     {
-        std::vector<AccessibilityNode*> treeList;
-        treeToList(m_accessibilityTree->get(), treeList);
-
         std::vector<AccessibilityNode*> nodes;
         for (const auto& node : treeList)
         {

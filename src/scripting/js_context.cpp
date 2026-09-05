@@ -45,6 +45,7 @@ JSContext::JSContext(BrowserTab* tab)
 
     dukglue_register_method(m_duk, &JSContext::querySelectorAll, "querySelectorAll");
     dukglue_register_method(m_duk, &JSContext::getAttribute, "getAttribute");
+    dukglue_register_method(m_duk, &JSContext::setAttribute, "setAttribute");
     dukglue_register_method(m_duk, &JSContext::setInnerHtml, "setInnerHtml");
     dukglue_register_method(m_duk, &JSContext::setStyle, "setStyle");
     dukglue_register_method(m_duk, &JSContext::sendXmlHttpRequest, "sendXmlHttpRequest");
@@ -95,6 +96,16 @@ std::string JSContext::getAttribute(int handle, std::string attrName)
         return attr;
     }
     return "";
+}
+
+void JSContext::setAttribute(int handle, std::string attrName, std::string value)
+{
+    auto node = getNode(handle);
+    if (auto element = dynamic_cast<Element*>(node)) 
+    {
+        element->attributes[attrName] = value;
+        m_tab->setNeedsRender();
+    }
 }
 
 void JSContext::setInnerHtml(int handle, std::string html)
@@ -292,7 +303,7 @@ int JSContext::dispatchEvent(std::string eventType, Node* node)
 
     duk_pop(m_duk);
 
-    return doDefault;
+    return !doDefault;
 }
 
 void JSContext::requestAnimationFrame()

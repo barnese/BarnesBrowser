@@ -22,6 +22,7 @@ public:
     // Functions to export to JavaScript.
     std::vector<int> querySelectorAll(std::string selectorText);
     std::string getAttribute(int handle, std::string attrName);
+    void setAttribute(int handle, std::string attrName, std::string value);
     void setInnerHtml(int handle, std::string html);
     void setStyle(int handle, std::string style);
     std::string sendXmlHttpRequest(int handle, std::string method, std::string url, std::string body, bool isAsync);

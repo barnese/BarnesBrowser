@@ -367,6 +367,8 @@ void BrowserTab::activateElement(Element* element)
     }
     else if (element->tag == "button")
     {
+        if (m_js->dispatchEvent("click", element)) return;
+
         Node* node = element;
 
         while (node)

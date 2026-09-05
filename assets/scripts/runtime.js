@@ -28,6 +28,10 @@ Node.prototype.getAttribute = function(attr) {
     return currentJSContext.getAttribute(this.handle, attr);
 }
 
+Node.prototype.setAttribute = function(attr, value) {
+    currentJSContext.setAttribute(this.handle, attr, value);
+}
+
 Node.prototype.addEventListener = function(type, listener) {
     if (!EVENT_LISTENERS[this.handle]) EVENT_LISTENERS[this.handle] = {};
     var dict = EVENT_LISTENERS[this.handle];
@@ -41,7 +45,7 @@ Node.prototype.dispatchEvent = function(event) {
     var handle = this.handle;
     var list = (EVENT_LISTENERS[handle] && EVENT_LISTENERS[handle][type]) || [];
     for (var i = 0; i < list.length; i++) {
-        list[i].call(this);
+        list[i].call(this, event);
     }
     return event.do_default;
 }
