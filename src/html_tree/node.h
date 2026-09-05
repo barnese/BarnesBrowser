@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+class Layout;
 class VisualEffect;
 
 /// Abstract base class that represents a node of a tree.
@@ -50,4 +51,5 @@ public:
     std::map<std::string, std::unique_ptr<CSSAnimation>> animations;
     bool isFocused;
     VisualEffect* blendOp = nullptr;
+    Layout* layoutObject;
 };

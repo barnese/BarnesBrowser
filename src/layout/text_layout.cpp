@@ -20,6 +20,7 @@ TextLayout::TextLayout(
     this->word = word;
     this->parent = parent;
     this->previous = previous;
+    this->node->layoutObject = this;
 }
 
 void TextLayout::layout()

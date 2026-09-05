@@ -23,6 +23,7 @@ BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previou
     this->node = node;
     this->parent = parent;
     this->previous = previous;
+    this->node->layoutObject = this;
     x = 0;
     y = 0;
     width = 0;

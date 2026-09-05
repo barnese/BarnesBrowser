@@ -3,12 +3,15 @@
 #include "html_tree/node_helpers.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
+#include "layout/layout_helpers.h"
 
 #include <iostream>
 
 AccessibilityNode::AccessibilityNode(const Node* node)
     : m_node(node)
 {
+    bounds = computeBounds();
+
     if (dynamic_cast<const Text*>(node))
     {
         if (isFocusable(node->parent))
@@ -53,6 +56,46 @@ AccessibilityNode::AccessibilityNode(const Node* node)
             role = "none";
         }
     }
+}
+
+std::vector<QRect> AccessibilityNode::computeBounds()
+{
+    if (m_node->layoutObject)
+    {
+        return {absoluteBoundsForObj(m_node->layoutObject)};
+    }
+
+    // If there is no layout object, we need to walk up the tree
+    // to find the parent with a BlockLayout and union all text 
+    // nodes in all LineLayouts that are children of the current
+    // node. Text nodes don't have a layout object.
+    if (dynamic_cast<const Text*>(m_node))
+    {
+        return {};
+    }
+
+    auto inLine = m_node->parent;
+    std::vector<QRect> bounds;
+    
+    while (!inLine->layoutObject)
+    {
+        inLine = inLine->parent;
+    }
+
+    for (const auto& line : inLine->layoutObject->children)
+    {
+        QRect lineBounds;
+        for (const auto& child : line->children)
+        {
+            if (child->node->parent == m_node)
+            {
+                lineBounds |= child->getRect();
+            }
+        }
+        bounds.push_back(lineBounds);
+    }
+
+    return bounds;
 }
 
 void AccessibilityNode::build()
@@ -138,4 +181,38 @@ void AccessibilityNode::printTree(const AccessibilityNode* node, int depth)
 std::string AccessibilityNode::describe() const
 {
     return "role = " + role + " text=" + text;
+}
+
+bool AccessibilityNode::containsPoint(int x, int y)
+{
+    for (const auto& bound : bounds)
+    {
+        if (bound.contains(x, y))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+AccessibilityNode* AccessibilityNode::hitTest(int x, int y)
+{
+    AccessibilityNode* node = nullptr;
+
+    if (this->containsPoint(x, y))
+    {
+        node = this;
+    }
+
+    for (const auto& child : children)
+    {
+        auto result = child->hitTest(x, y);
+        if (result)
+        {
+            node = result;
+        }
+    }
+
+    return node;
 }

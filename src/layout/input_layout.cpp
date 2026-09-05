@@ -25,6 +25,7 @@ InputLayout::InputLayout(
     this->node = node;
     this->parent = parent;
     this->previous = previous;
+    this->node->layoutObject = this;
 }
 
 void InputLayout::layout()

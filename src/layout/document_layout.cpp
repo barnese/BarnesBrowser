@@ -10,6 +10,7 @@
 DocumentLayout::DocumentLayout(Node* node, int parentWidth)
 {
     this->node = node;
+    this->node->layoutObject = this;
     x = 0;
     y = 0;
     width = 0;

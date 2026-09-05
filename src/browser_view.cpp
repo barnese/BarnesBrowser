@@ -122,6 +122,13 @@ void BrowserView::darkModeToggleEvent()
     setDarkMode(m_darkMode);
 }
 
+void BrowserView::mouseMoveEvent(QMouseEvent* event)
+{
+    auto point = Point(event->pos().x(), event->pos().y());
+    mouseHover(point);
+    QOpenGLWidget::mouseMoveEvent(event);
+}
+
 void BrowserView::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)

@@ -51,6 +51,7 @@ private:
     void setActiveTab(BrowserTab* tab);
     void clearData();
     void handleClick(Point point);
+    void handleMouseHover(Point point);
     void handleKeyPress(std::string text);
     void handleResize(int width, int height);
     void handleScrollDown();
@@ -86,6 +87,9 @@ private:
     Chrome* m_chrome;
     QTimer m_timer;
     QTimer* m_animationTimer;
+    std::optional<Point> m_pendingHover;
+    AccessibilityNode* m_hoveredAccessibilityNode;
+    bool m_needsSpeakHoveredNode;
     bool m_needsAnimationFrame;
     bool m_needsComposite;
     bool m_needsRaster;
@@ -111,5 +115,5 @@ private:
     std::vector<AccessibilityNode*> m_spokenAlerts;
     Element* m_tabFocus;
     Element* m_lastTabFocus;
-    AccessibilityNode* m_focusAllyNode;
+    AccessibilityNode* m_focusAccessibilityNode;
 };

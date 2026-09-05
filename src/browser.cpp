@@ -2,6 +2,7 @@
 
 #include "commands/blend.h"
 #include "commands/draw_composited_layer.h"
+#include "commands/draw_outline.h"
 #include "commands/paint_command.h"
 #include "constants.h"
 #include "helpers/thread_registry.h"
@@ -32,6 +33,7 @@ Browser::Browser(QWidget* parent)
     
     connect(m_view, &BrowserView::paintRequested, this, &Browser::handlePaintRequest);
     connect(m_view, &BrowserView::click, this, &Browser::handleClick);
+    connect(m_view, &BrowserView::mouseHover, this, &Browser::handleMouseHover);
     connect(m_view, &BrowserView::keyPress, this, &Browser::handleKeyPress);
     connect(m_view, &BrowserView::resize, this, &Browser::handleResize);
     connect(m_view, &BrowserView::scrollDown, this, &Browser::handleScrollDown);
@@ -65,6 +67,9 @@ Browser::Browser(QWidget* parent)
     m_hasSpokenDocument = false;
     m_tabFocus = nullptr;
     m_lastTabFocus = nullptr;
+    m_pendingHover = std::nullopt;
+    m_needsSpeakHoveredNode = false;
+    m_hoveredAccessibilityNode = nullptr;
 }
 
 Browser::~Browser()
@@ -360,6 +365,34 @@ void Browser::paintDrawList()
             m_drawList.push_back(std::move(current));
         }
     }
+
+    // Determine if there is a hovered accessibility item.
+    if (m_pendingHover.has_value() && m_accessibilityTree.has_value())
+    {
+        auto [x, y] = m_pendingHover.value();
+        m_pendingHover = std::nullopt;
+        y += m_activeTabScroll;
+        auto accessibilityNode = (*m_accessibilityTree)->hitTest(x, y);
+        if (accessibilityNode != nullptr)
+        {
+            if (!m_hoveredAccessibilityNode || accessibilityNode->getNode() != m_hoveredAccessibilityNode->getNode())
+            {
+                m_needsSpeakHoveredNode = true;
+            }
+            m_hoveredAccessibilityNode = accessibilityNode;
+        }
+    }
+
+    // Draw the accessibility hover, if needed.
+    if (m_hoveredAccessibilityNode)
+    {
+        for (const auto& bound : m_hoveredAccessibilityNode->bounds)
+        {
+            auto color = m_darkMode ? "white" : "black";
+            auto outline = std::make_unique<DrawOutline>(bound, color, 2);
+            m_drawList.push_back(std::move(outline));
+        }
+    }
 }
 
 void Browser::scheduleLoad(URL url)
@@ -536,6 +569,13 @@ void Browser::cycleTabs()
     setActiveTab(m_tabs[newIndex].get());
 }
 
+void Browser::handleMouseHover(Point point)
+{
+    if (!m_accessibilityEnabled || !m_accessibilityTree || m_pendingHover.has_value()) return;
+    m_pendingHover = point;
+    setNeedsAccessibility();
+}
+
 void Browser::handleClick(Point point)
 {
     std::lock_guard lock(m_mutex);
@@ -628,6 +668,11 @@ void Browser::handleAccessibilityToggle()
 {
     std::lock_guard lock(m_mutex);
     m_accessibilityEnabled = !m_accessibilityEnabled;
+
+    // Mouse move events are normally only sent when a mouse button is
+    // held down. To get motion events regardless, enable mouse tracking.
+    m_view->setMouseTracking(m_accessibilityEnabled);
+
     setNeedsAccessibility();
 }
 
@@ -657,7 +702,7 @@ void Browser::updateAccessibility()
     {
         if (!std::ranges::contains(m_spokenAlerts, alert))
         {
-            speakNode(alert, "New alert");
+            speakNode(alert, "New alert ");
             m_spokenAlerts.push_back(alert);
         }
     }
@@ -692,12 +737,18 @@ void Browser::updateAccessibility()
 
         if (!nodes.empty())
         {
-            m_focusAllyNode = nodes[0];
-            speakNode(m_focusAllyNode, "element focused ");
+            m_focusAccessibilityNode = nodes[0];
+            speakNode(m_focusAccessibilityNode, "element focused ");
         }
 
         m_lastTabFocus = m_tabFocus;
     }
+
+    if (m_needsSpeakHoveredNode)
+    {
+        speakNode(m_hoveredAccessibilityNode, "Hit test ");
+    }
+    m_needsSpeakHoveredNode = false;
 }
 
 void Browser::speakNode(const AccessibilityNode* node, const std::string& text)

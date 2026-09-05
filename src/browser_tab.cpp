@@ -2,7 +2,6 @@
 
 #include "browser.h"
 #include "commit_data.h"
-#include "commands/transform.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
@@ -12,6 +11,7 @@
 #include "html_tree/node_helpers.h"
 #include "layout/document_layout.h"
 #include "layout/layout.h"
+#include "layout/layout_helpers.h"
 #include "scripting/js_context.h"
 #include "styles/numeric_animation.h"
 
@@ -742,23 +742,6 @@ void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Com
         std::make_move_iterator(commands.begin()),
         std::make_move_iterator(commands.end())
     );
-}
-
-/// Finds the absolute bounds for a layout object in
-/// coordinates of what the user sees including the translation
-/// offset by walking up the node tree and mapping through 
-/// each translation found.
-QRect absoluteBoundsForObj(Layout* layout)
-{
-    QRect rect(layout->x, layout->y, layout->width, layout->height);
-    auto current = layout->node;
-    while (current)
-    {
-        auto translation = parseTransform(current->findStyle("transform", ""));
-        rect = mapTranslation(rect, translation, false);
-        current = current->parent;
-    }
-    return rect;
 }
 
 void BrowserTab::click(Point point)

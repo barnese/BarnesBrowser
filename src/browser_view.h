@@ -21,6 +21,7 @@ public:
 signals:
     void paintRequested(PaintContext& context);
     void click(Point point);
+    void mouseHover(Point point);
     void keyPress(std::string text);
     void resize(int width, int height);
     void scrollDown();
@@ -43,6 +44,7 @@ protected:
 private:
     void resizeEvent(QResizeEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     void darkModeToggleEvent();
