@@ -4,8 +4,10 @@
 #include "helpers/ssl_helper.h"
 
 #include <map>
+#include <span>
 #include <string>
 #include <optional>
+#include <vector>
 
 struct UrlComponents 
 {
@@ -28,7 +30,12 @@ struct URLResponse
     std::map<std::string, std::string, CaseInsensitiveLess> headers;
     std::string statusCode;
     std::optional<std::string> errorMessage;
-    std::string body;
+    std::vector<std::byte> body;
+
+    std::string bodyString()
+    {
+        return std::string(reinterpret_cast<const char*>(body.data()), body.size());
+    }
 };
 
 class URL
@@ -58,7 +65,17 @@ class URL
     
     private:
         void sendRequest(SSLHelper* ssl, int sock, std::string request) const;
-        std::string receiveResponse(SSLHelper* ssl, int sock) const;
+        
+        /// Receives the response from a URL request.
+        /// @returns binary response data
+        std::vector<std::byte> receiveResponse(SSLHelper* ssl, int sock) const;
+
+        /// Reads the headers from a span that points to some binary data.
+        /// @param pos - reference to a position variable which helps
+        /// determine where the headers end and the body begins
+        /// @returns headers as a string
+        std::string readHeaders(std::span<const std::byte> data, size_t& pos) const;
+
         void addCookieToRequest(std::optional<URL> referrer, std::ostringstream& out);
 
         UrlComponents m_urlComponents;

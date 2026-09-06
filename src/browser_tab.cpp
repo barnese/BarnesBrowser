@@ -54,7 +54,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         m_logger.info("loading: " + url.describe());
         m_history.push_back(url);
         auto response = url.request(m_url, payload);
-        std::string body = response.errorMessage.has_value() ? response.errorMessage.value() : response.body;
+        std::string body = response.errorMessage.has_value() ? response.errorMessage.value() : response.bodyString();
         m_url = url;
         auto resultNodes = HTMLParser(body).parse();
         m_node = std::move(resultNodes);
@@ -545,7 +545,7 @@ void BrowserTab::loadScripts()
         }
         try
         {
-            auto body = scriptUrl.request(m_url).body;
+            auto body = scriptUrl.request(m_url).bodyString();
 
             // Rather than run the script right away, schedule it to be processed later.
             auto task = std::make_unique<Task<JSContext*, std::string, std::string>>(
@@ -597,7 +597,7 @@ void BrowserTab::loadStyles()
                 continue;
             }
 
-            auto linkBody = linkUrl.request(m_url).body;
+            auto linkBody = linkUrl.request(m_url).bodyString();
             auto linkResults = CSSParser(trim(linkBody)).parse();
 
             // The map merge doesn't replace existing values,

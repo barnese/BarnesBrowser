@@ -143,7 +143,7 @@ std::string JSContext::runLoad(int handle, URL tabUrl, URL fullUrl, std::string 
     {
         payload = body;
     }
-    auto response = fullUrl.request(tabUrl, payload).body;
+    auto response = fullUrl.request(tabUrl, payload).bodyString();
 
     // Schedule a task to send the response back to JavaScript.
     auto task = std::make_unique<Task<JSContext*, int, std::string>>(

@@ -151,22 +151,27 @@ void URL::sendRequest(SSLHelper* ssl, int sock, std::string request) const
     }
 }
 
-/// Receives the response from a URL request.
-std::string URL::receiveResponse(SSLHelper* ssl, int sock) const
+std::vector<std::byte> URL::receiveResponse(SSLHelper* ssl, int sock) const
 {
-    std::string response;
-    char buffer[4096];
+    std::vector<std::byte> response;
+    std::array<std::byte, 4096> buffer;
+
     while (true)
     {
         ssize_t received;
+
         if (m_urlComponents.scheme == "https")
-            received = ssl->read(buffer, sizeof(buffer));
+        {
+            received = ssl->read(buffer.data(), buffer.size());
+        }
         else
-            received = recv(sock, buffer, sizeof(buffer), 0);
+        {
+            received = recv(sock, buffer.data(), buffer.size(), 0);
+        }
 
         if (received > 0)
         {
-            response.append(buffer, received);
+            response.insert(response.end(), buffer.begin(), buffer.begin() + received);
         }
         else if (received == 0)
         {
@@ -291,7 +296,7 @@ URLResponse URL::request(std::optional<URL> referrer, std::optional<std::string>
 
         sendRequest(&ssl, sock, request);
 
-        std::string responseString = receiveResponse(&ssl, sock);
+        auto binaryResponse = receiveResponse(&ssl, sock);
 
         if (urlComponents.scheme == "https")
         {
@@ -300,11 +305,15 @@ URLResponse URL::request(std::optional<URL> referrer, std::optional<std::string>
         close(sock);
 
         // Get the header and body text from the response.
-        size_t headerEnd = responseString.find(Constants::HTML_HEADER_SEPARATOR);
-        std::string header = responseString.substr(0, headerEnd);
-        response.body = responseString.substr(headerEnd + Constants::HTML_HEADER_SEPARATOR.size());
+        size_t pos = 0;
+        auto header = readHeaders(binaryResponse, pos);
+        std::span<const std::byte> binaryBody{binaryResponse.data() + pos, binaryResponse.size() - pos};
+        std::vector<std::byte> body(binaryBody.begin(), binaryBody.end());
+
+        // Fill out the URL response struct.
         response.statusCode = getStatusCode(header);
         response.headers = parseHeaders(header);
+        response.body = body;
 
         if (response.headers.contains("set-cookie"))
         {
@@ -326,6 +335,33 @@ URLResponse URL::request(std::optional<URL> referrer, std::optional<std::string>
 
     response.errorMessage = "Too many redirects!";
     return response;
+}
+
+std::string URL::readHeaders(std::span<const std::byte> data, size_t& pos) const
+{
+    const size_t start = pos;
+
+    while (pos + 3 < data.size())
+    {
+        // If we find the header terminator (\r\n\r\n) return the 
+        // headers and advance pos to the beginning of the body.
+        if (data[pos] == std::byte{'\r'} && 
+            data[pos + 1] == std::byte{'\n'} &&
+            data[pos + 2] == std::byte{'\r'} && 
+            data[pos + 3] == std::byte{'\n'})
+        {
+           std::string headers(reinterpret_cast<const char*>(data.data() + start), pos - start); 
+
+           pos += 4;
+
+           return headers;
+        }
+
+        ++pos;
+    }
+
+    // The header terminator wasn't found.
+    return {};
 }
 
 URL URL::resolve(std::string url) const
