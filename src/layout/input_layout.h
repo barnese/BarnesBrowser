@@ -5,8 +5,6 @@
 #include "layout.h"
 
 #include <memory>
-#include <QFont>
-#include <QString>
 #include <vector>
 
 /// Layout object representing an HTML input area.
@@ -23,10 +21,4 @@ public:
     bool shouldPaint() const override;
     std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const override;
     std::string describe() const override;
-
-private:
-    QFont getFont(QString family, int size, int weight, int style);
-
-    // Font cache indexed by family, size, weight, style.
-    std::map<std::tuple<QString, int, int, int>, QFont> m_fonts;
 };

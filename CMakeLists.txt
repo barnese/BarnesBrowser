@@ -65,6 +65,7 @@ add_executable(main
     src/html_tree/text.cpp
     src/layout/block_layout.cpp
     src/layout/document_layout.cpp
+    src/layout/embed_layout.cpp
     src/layout/input_layout.cpp
     src/layout/layout_effects_helpers.cpp
     src/layout/layout_helpers.cpp

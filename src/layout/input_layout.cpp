@@ -9,7 +9,6 @@
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout/layout_effects_helpers.h"
-#include "layout/layout_helpers.h"
 
 #include <QFontMetrics>
 #include <memory>
@@ -32,13 +31,7 @@ void InputLayout::layout()
 {
     zoom = parent->zoom;
     width = Constants::INPUT_WIDTH_PX;
-
-    auto family = QString::fromStdString(node->findStyle("font-family", "Helvetica"));
-    auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
-    auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));
-    auto sizePx = pixelsToFloat(node->findStyle("font-size", "14px"));
-    auto size = dpx(sizePx * 0.75, zoom);
-    font = getFont(family, size, weight, style);
+    font = getFont(node, zoom);
     QFontMetrics metrics(font);
 
     if (previous)
@@ -115,17 +108,6 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
     }
     
     return commands;
-}
-
-QFont InputLayout::getFont(QString family, int size, int weight, int style) 
-{
-    std::tuple<QString, int, int, int> key{family, size, weight, style};
-    if (!m_fonts.contains(key))
-    {
-        QFont font(family, size, weight, style);
-        m_fonts[key] = font;
-    }
-    return m_fonts[key];
 }
 
 std::vector<std::unique_ptr<Command>> InputLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const

@@ -10,3 +10,6 @@ QFont::Weight cssFontWeightToQt(const std::string& input);
 QFont::Style cssFontStyleToQt(const std::string& style);
 void replaceHTMLCharacterEntities(QString& word);
 int overrideSizeWithStyle(const Node* node, int size, std::string styleName);
+
+/// Parses font styles on the given node and returns a font.
+QFont getFont(const Node* node, double zoom);

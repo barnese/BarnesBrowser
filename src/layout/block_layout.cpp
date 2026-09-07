@@ -2,6 +2,7 @@
 
 #include "commands/draw_rounded_rect.h"
 #include "constants.h"
+#include "helpers/font_cache.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
@@ -174,20 +175,7 @@ void BlockLayout::processInput(Node* node)
     auto input = std::make_unique<InputLayout>(node, line, previousWord);
     line->children.push_back(std::move(input));
 
-    const auto familyString = node->findStyle("font-family", "Helvetica");
-    const auto family = QString::fromStdString(familyString);
-
-    const auto weightString = node->findStyle("font-weight", "normal");
-    const auto weight = cssFontWeightToQt(weightString);
-
-    const auto styleString = node->findStyle("font-style", "normal");
-    const auto style = cssFontStyleToQt(styleString);
-
-    const auto sizeString = node->findStyle("font-size", "14px");
-    const auto sizePx = pixelsToFloat(sizeString);
-    const auto size = dpx(sizePx * 0.75, zoom);
-
-    const QFont font = getFont(family, size, weight, style);
+    const QFont font = getFont(node, zoom);
     const QFontMetrics metrics(font);
     const auto spaceWidth = metrics.horizontalAdvance(" ");
 
@@ -201,25 +189,12 @@ void BlockLayout::processWord(Node* node, QString& word)
     
     replaceHTMLCharacterEntities(word);
 
-    const auto familyString = node->findStyle("font-family", "Helvetica");
-    const auto family = QString::fromStdString(familyString);
-    
-    auto weightString = node->findStyle("font-weight", "normal");
-    auto weight = cssFontWeightToQt(weightString);
+    //auto colorString = node->findStyle("color", "black");
+    //QString color = QString::fromStdString(colorString);
 
-    auto styleString = node->findStyle("font-style", "normal");
-    auto style = cssFontStyleToQt(styleString);
-
-    auto sizeString = node->findStyle("font-size", "14px");
-    auto sizePx = pixelsToFloat(sizeString);
-    auto size = dpx(sizePx * 0.75, zoom);
-
-    auto colorString = node->findStyle("color", "black");
-    QString color = QString::fromStdString(colorString);
-
-    QFont font = getFont(family, size, weight, style);
-    QFontMetrics metrics(font);
-    auto wordWidth = metrics.horizontalAdvance(word);
+    const QFont font = getFont(node, zoom);
+    const QFontMetrics metrics(font);
+    const auto wordWidth = metrics.horizontalAdvance(word);
 
     if (m_cursorX + wordWidth > width)
     {
@@ -294,17 +269,6 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std:
     auto cmds = paintVisualEffects(node, std::move(commands), rect);
     paintOutline(node, cmds, rect, zoom);
     return cmds;
-}
-
-QFont BlockLayout::getFont(QString family, int size, int weight, int style) 
-{
-    std::tuple<QString, int, int, int> key{family, size, weight, style};
-    if (!m_fonts.contains(key))
-    {
-        QFont font(family, size, weight, style);
-        m_fonts[key] = font;
-    }
-    return m_fonts[key];
 }
 
 std::string BlockLayout::describe() const
