@@ -62,6 +62,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         loadContentSecurityPolicy(response.headers);
         loadScripts();
         loadStyles();
+        loadImages();
         setNeedsRender();
         m_scroll = 0;
         m_scrollChangedInTab = true;
@@ -612,6 +613,34 @@ void BrowserTab::loadStyles()
         catch (...)
         {
             m_logger.error("failed to load style: " + link);
+        }
+    }
+}
+
+void BrowserTab::loadImages()
+{
+    auto images = treeToElementList(m_node.get(), "img");
+    for (const auto& image : images)
+    {
+        auto src = image->findAttribute("src");
+        if (src.has_value())
+        {
+            auto imageUrl = m_url.resolve(src.value());
+            if (!allowRequest(imageUrl))
+            {
+                m_logger.error("blocked image due to CSP: " + imageUrl.describe());
+                continue;
+            }
+            auto response = imageUrl.request(m_url);
+            QImage img;
+            if (img.loadFromData(response.body))
+            {
+                image->image = std::make_unique<QImage>(img);
+            }
+            else 
+            {
+                image->image = std::make_unique<QImage>(":/assets/assets/images/broken_image.png");
+            }
         }
     }
 }

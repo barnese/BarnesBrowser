@@ -1,11 +1,19 @@
 #pragma once
 
 #include "node.h"
+#include "element.h"
+
+#include <optional>
+#include <string>
+#include <vector>
 
 int getTabIndex(const Node* node);
 bool isFocusable(const Node* node);
 
 /// Converts a tree to a vector.
+/// @param node the root node of the tree
+/// @param list reference to the list to populate
+/// @returns vector of nodes in the tree
 template<typename Tree>
 void treeToList(Tree* node, std::vector<Tree*>& list)
 {
@@ -14,6 +22,7 @@ void treeToList(Tree* node, std::vector<Tree*>& list)
         treeToList(child.get(), list);
 }
 
+/// Convenience helper
 template<typename Tree>
 std::vector<Tree*> treeToList(Tree* node)
 {
@@ -21,3 +30,13 @@ std::vector<Tree*> treeToList(Tree* node)
     treeToList(node, list);
     return list;
 }
+
+/// Converts a tree to a vector of elements.
+/// @param node the root node of the tree
+/// @param list reference to the list to populate
+/// @param filterByTag optional - only add nodes with this tag name
+/// @returns vector of elements in the tree
+void treeToElementList(Node* node, std::vector<Element*>& list, std::optional<std::string> filterByTag = std::nullopt);
+
+/// Convenience helper
+std::vector<Element*> treeToElementList(Node* node, std::optional<std::string> filterByTag = std::nullopt);

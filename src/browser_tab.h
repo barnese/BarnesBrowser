@@ -68,6 +68,7 @@ private:
     void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
     void loadScripts();
     void loadStyles();
+    void loadImages();
     void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);
     void submitForm(Element* element);
     void activateElement(Element* element);

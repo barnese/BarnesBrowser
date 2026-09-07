@@ -31,3 +31,33 @@ bool isFocusable(const Node* node)
 
     return false;
 }
+
+void treeToElementList(Node* node, std::vector<Element*>& list, std::optional<std::string> filterByTag)
+{
+    if (const auto& element = dynamic_cast<Element*>(node))
+    {
+        if (filterByTag.has_value())
+        {
+            if (element->tag == filterByTag)
+            {
+                list.push_back(element);
+            }
+        }
+        else 
+        {
+            list.push_back(element);
+        }
+    }
+
+    for (const auto& child : node->children)
+    {
+        treeToElementList(child.get(), list, filterByTag);
+    }
+}
+
+std::vector<Element*> treeToElementList(Node* node, std::optional<std::string> filterByTag)
+{
+    std::vector<Element*> list;
+    treeToElementList(node, list, filterByTag);
+    return list;
+}

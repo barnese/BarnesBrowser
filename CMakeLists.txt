@@ -49,6 +49,7 @@ add_executable(main
     src/commands/blend.cpp
     src/commands/composited_layer.cpp
     src/commands/draw_composited_layer.cpp
+    src/commands/draw_image.cpp
     src/commands/draw_line.cpp
     src/commands/draw_outline.cpp
     src/commands/draw_rounded_rect.cpp
@@ -123,6 +124,12 @@ target_link_libraries(main PRIVATE
 
 # Copy the assets folder into the build folder.
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+
+qt_add_resources(main "images"
+    PREFIX "/assets/images"
+    FILES
+        assets/images/broken_image.png
+)
 
 add_executable(tests
     src/tests/test_css_parser.cpp
