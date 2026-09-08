@@ -189,9 +189,6 @@ void BlockLayout::processWord(Node* node, QString& word)
     
     replaceHTMLCharacterEntities(word);
 
-    //auto colorString = node->findStyle("color", "black");
-    //QString color = QString::fromStdString(colorString);
-
     const QFont font = getFont(node, zoom);
     const QFontMetrics metrics(font);
     const auto wordWidth = metrics.horizontalAdvance(word);

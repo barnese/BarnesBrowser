@@ -46,6 +46,7 @@ BrowserTab::~BrowserTab() = default;
 
 void BrowserTab::load(URL url, std::optional<std::string> payload)
 {
+    browser->measure.start("load");
     try
     {
         m_loaded = false;
@@ -72,6 +73,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     {
         m_logger.error("failed to load the browser!");
     }
+    browser->measure.stop("load");
 }
 
 void BrowserTab::setNeedsRender()
@@ -524,6 +526,7 @@ void BrowserTab::scrollTo(Element* element)
 
 void BrowserTab::loadScripts()
 {
+    browser->measure.start("loadScripts");
     // If we are loading a new page and we already have an existing
     // JSContext, we need to set a discarded flag so that any pending
     // timeouts are discarded.
@@ -563,6 +566,7 @@ void BrowserTab::loadScripts()
             m_logger.error("failed to load script: " + script);
         }
     }
+    browser->measure.stop("loadScripts");
 }
 
 CSSRules BrowserTab::getDefaultStyleSheet()
@@ -582,6 +586,7 @@ CSSRules BrowserTab::getDefaultStyleSheet()
 
 void BrowserTab::loadStyles()
 {
+    browser->measure.start("loadStyles");
     m_rules = getDefaultStyleSheet();
     auto links = getStyleSheetLinks(m_node.get());
     for (const auto& link : links)
@@ -615,10 +620,12 @@ void BrowserTab::loadStyles()
             m_logger.error("failed to load style: " + link);
         }
     }
+    browser->measure.stop("loadStyles");
 }
 
 void BrowserTab::loadImages()
 {
+    browser->measure.start("loadImages");
     auto images = treeToElementList(m_node.get(), "img");
     for (const auto& image : images)
     {
@@ -643,6 +650,7 @@ void BrowserTab::loadImages()
             }
         }
     }
+    browser->measure.stop("loadImages");
 }
 
 bool BrowserTab::allowRequest(const URL& url)

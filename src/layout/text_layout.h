@@ -5,7 +5,6 @@
 #include "layout.h"
 
 #include <memory>
-#include <QFont>
 #include <QString>
 #include <vector>
 
@@ -25,10 +24,5 @@ public:
     std::string describe() const override;
 
 private:
-    QFont getFont(QString family, int size, int weight, int style);
-
     QString word;
-
-    // Font cache indexed by family, size, weight, style.
-    std::map<std::tuple<QString, int, int, int>, QFont> m_fonts;
 };
