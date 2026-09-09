@@ -35,6 +35,10 @@ AccessibilityNode::AccessibilityNode(const Node* node)
         {
             role = "link";
         }
+        else if (element->tag == "img")
+        {
+            role = "image";
+        }
         else if (element->tag == "input")
         {
             role = "textbox";
@@ -134,6 +138,21 @@ void AccessibilityNode::build()
     }
     else if (role == "button")
         text = "Button";
+    else if (role == "image")
+    {
+        if (const auto element = dynamic_cast<const Element*>(m_node)) 
+        {
+            auto attr = element->findAttribute("alt");
+            if (attr.has_value())
+            {
+                text = "Image: " + attr.value();
+            }
+            else
+            {
+                text = "Image";
+            }
+        }
+    }
     else if (role == "link")
         text = "Link";
     else if (role == "alert")

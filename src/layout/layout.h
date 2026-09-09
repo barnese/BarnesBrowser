@@ -43,4 +43,6 @@ public:
     int height;
     QFont font;
     double zoom;
+    int ascent;
+    int descent;
 };

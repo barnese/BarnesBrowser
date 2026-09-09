@@ -3,12 +3,13 @@
 #include "commands/command.h"
 #include "html_tree/node.h"
 #include "layout.h"
+#include "layout/embed_layout.h"
 
 #include <memory>
 #include <vector>
 
 /// Layout object representing an HTML input area.
-class InputLayout : public Layout
+class InputLayout : public EmbedLayout
 {
 public: 
     InputLayout(

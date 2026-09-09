@@ -3,6 +3,7 @@
 #include "commands/draw_text.h"
 #include "styles/style_helpers.h"
 #include "helpers/string_helpers.h"
+#include "html_tree/element.h"
 
 #include <QFont>
 #include <QFontMetrics>
@@ -26,7 +27,22 @@ TextLayout::TextLayout(
 void TextLayout::layout()
 {
     zoom = parent->zoom;
-    font = getFont(parent->node, zoom);    
+
+    // Handle <big> and <small> tags by adjusting the font size, if found.
+    int adjustSize = 0;
+    if (const auto& element = dynamic_cast<const Element*>(node->parent))
+    {
+        if (element->tag == "small")
+        {
+            adjustSize = -2;
+        }
+        else if (element->tag == "big")
+        {
+            adjustSize = 4;
+        }
+    }
+
+    font = getFont(parent->node, zoom, adjustSize);    
     QFontMetrics metrics(font);
     width = metrics.horizontalAdvance(word);
 
@@ -42,6 +58,8 @@ void TextLayout::layout()
     }
 
     height = metrics.lineSpacing();
+    ascent = metrics.ascent() * 1.25;
+    descent = metrics.descent() * 1.25;
 }
 
 bool TextLayout::shouldPaint() const 

@@ -3,7 +3,7 @@
 #include <QPainter>
 #include <sstream>
 
-DrawImage::DrawImage(QRect r, QImage image, std::string quality)
+DrawImage::DrawImage(QImage* image, QRect r, std::string quality)
     : m_image(image),
       m_quality(quality)
 {
@@ -22,7 +22,7 @@ void DrawImage::execute(PaintContext& context)
     else
         painter.setRenderHint(QPainter::SmoothPixmapTransform, false);   
     
-    painter.drawImage(rect, m_image);
+    painter.drawImage(rect, *m_image);
 
     // Restore the painter's original state.
     painter.restore();

@@ -2,11 +2,11 @@
 
 #include "commands/draw_rounded_rect.h"
 #include "constants.h"
-#include "helpers/font_cache.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout.h"
+#include "layout/image_layout.h"
 #include "layout/input_layout.h"
 #include "layout/line_layout.h"
 #include "layout/layout_effects_helpers.h"
@@ -49,19 +49,19 @@ void BlockLayout::layout()
     else 
         layoutText();
 
-    for (const auto& child : children)
-        child->layout();
-
     height = 0;
     for (const auto& child : children)
+    {
+        child->layout();
         height += child->height;
+    }
 
     height = overrideSizeWithStyle(node, height, "height");
 }
 
 void BlockLayout::layoutBlock()
 {
-    previous = nullptr;
+    Layout* prev = nullptr;
     for (const auto& child : node->getChildren())
     {
         // Skip laying out the head and style tags.
@@ -73,15 +73,14 @@ void BlockLayout::layoutBlock()
             }
         }
 
-        auto next = std::make_unique<BlockLayout>(child.get(), this, previous);
-        previous = next.get();
+        auto next = std::make_unique<BlockLayout>(child.get(), this, prev);
+        prev = next.get();
         children.push_back(std::move(next));
     }
 }
 
 void BlockLayout::layoutText() 
 {
-    m_cursorX = 0;
     newLine();
     recurse(node);
 }
@@ -110,17 +109,13 @@ BlockLayoutMode BlockLayout::getLayoutMode() const
     {
         return INLINE;
     }
-    else if (areAnyChildBlockElements()) 
-    {
-        return BLOCK;
-    }
-    else if (!node->getChildren().empty())
+    else if (!node->children.empty() && !areAnyChildBlockElements())
     {
         return INLINE;
     }
     else if (auto element = dynamic_cast<const Element*>(node))
     {
-        if (element->tag == "input") 
+        if (element->tag == "input" || element->tag == "img")
         {
             return INLINE;
         }
@@ -139,7 +134,11 @@ void BlockLayout::recurse(Node* node)
         }
         else if (element->tag == "input" || element->tag == "button")
         {
-            processInput(node);
+            input(node);
+        }
+        else if (element->tag == "img")
+        {
+            image(node);
         }
         else 
         {
@@ -154,63 +153,43 @@ void BlockLayout::recurse(Node* node)
         QString content(text->getText().c_str());
         auto words = content.split(' ');
 
-        for (auto& word : words)
+        for (auto& w : words)
         {
-            processWord(node, word);
+            word(node, w);
         }
     }
 }
 
-void BlockLayout::processInput(Node* node)
+void BlockLayout::image(Node* node)
 {
-    const auto inputWidth = Constants::INPUT_WIDTH_PX;
-    width = dpx(inputWidth, zoom);
-    if (m_cursorX + inputWidth > width)
+    if (auto element = dynamic_cast<const Element*>(node))
     {
-        newLine();
+        auto w = dpx(element->image->width(), zoom);
+        addInlineChild<ImageLayout>(node, w);
     }
-
-    auto line = children.back().get();
-    auto previousWord = (line->children.empty()) ? nullptr : line->children.back().get();
-    auto input = std::make_unique<InputLayout>(node, line, previousWord);
-    line->children.push_back(std::move(input));
-
-    const QFont font = getFont(node, zoom);
-    const QFontMetrics metrics(font);
-    const auto spaceWidth = metrics.horizontalAdvance(" ");
-
-    m_cursorX += inputWidth + spaceWidth;
 }
 
-void BlockLayout::processWord(Node* node, QString& word)
+void BlockLayout::input(Node* node)
 {
-    if (word.isEmpty())
-        return;
-    
+    auto w = dpx(Constants::INPUT_WIDTH_PX, zoom);
+    addInlineChild<InputLayout>(node, w);
+}
+
+void BlockLayout::word(Node* node, QString& word)
+{
     replaceHTMLCharacterEntities(word);
 
     const QFont font = getFont(node, zoom);
     const QFontMetrics metrics(font);
     const auto wordWidth = metrics.horizontalAdvance(word);
-
-    if (m_cursorX + wordWidth > width)
-    {
-        newLine();
-    }
-
-    // Add the word as a TextLayout to the end of the current line.
-    auto line = children.back().get();
-    auto previousWord = (line->children.empty()) ? nullptr : line->children.back().get();
-    auto text = std::make_unique<TextLayout>(node, word, line, previousWord);
-    line->children.push_back(std::move(text));
-
-    m_cursorX += wordWidth + metrics.horizontalAdvance(' '); 
+    
+    addInlineChild<TextLayout>(node, wordWidth, word);
 }
 
 /// Creates a new line layout and reset some fields.
 void BlockLayout::newLine()
 {
-    m_cursorX = 0;
+    m_cursorX = x;
     auto lastLine = (children.empty()) ? nullptr : children.back().get();
     auto newLine = std::make_unique<LineLayout>(node, this, lastLine);
     children.push_back(std::move(newLine));
@@ -225,7 +204,7 @@ bool BlockLayout::shouldPaint() const
 
     if (auto element = dynamic_cast<const Element*>(node))
     {
-        if (element->tag != "input" && element->tag != "button")
+        if (element->tag != "input" && element->tag != "button" && element->tag != "img")
         {
             return true;
         }

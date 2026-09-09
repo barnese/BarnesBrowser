@@ -9,6 +9,7 @@
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout/layout_effects_helpers.h"
+#include "layout_helpers.h"
 
 #include <QFontMetrics>
 #include <memory>
@@ -19,33 +20,20 @@ InputLayout::InputLayout(
     Node* node, 
     const Layout* parent, 
     const Layout* previous
-)
+) : EmbedLayout(node, parent, previous)
 {
-    this->node = node;
-    this->parent = parent;
-    this->previous = previous;
-    this->node->layoutObject = this;
 }
 
 void InputLayout::layout()
 {
-    zoom = parent->zoom;
-    width = Constants::INPUT_WIDTH_PX;
+    EmbedLayout::layout();
+
+    width = dpx(Constants::INPUT_WIDTH_PX, zoom);
     font = getFont(node, zoom);
     QFontMetrics metrics(font);
-
-    if (previous)
-    {
-        QFontMetrics previousMetrics(previous->font);
-        auto space = previousMetrics.horizontalAdvance(" ");
-        x = previous->x + space + previous->width;
-    }
-    else 
-    {
-        x = parent->x;
-    }
-
     height = metrics.lineSpacing();
+    ascent = height;
+    descent = 0;
 }
 
 bool InputLayout::shouldPaint() const

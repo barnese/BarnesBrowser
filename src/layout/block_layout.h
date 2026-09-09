@@ -2,6 +2,7 @@
 
 #include "layout.h"
 #include "html_tree/node.h"
+#include "styles/style_helpers.h"
 
 #include <memory>
 #include <QString>
@@ -33,9 +34,42 @@ private:
     void layoutText();
     bool areAnyChildBlockElements() const;
     void recurse(Node* node);
-    void processInput(Node* node);
-    void processWord(Node* node, QString& word);
+    void image(Node* node);
+    void input(Node* node);
+    void word(Node* node, QString& word);
     void newLine();
+    
+    template<typename T>
+    void addInlineChild(Node* node, int wordWidth, std::optional<QString> word = std::nullopt)
+    {
+        if (m_cursorX + wordWidth > x + width)
+            newLine();
+
+        auto line = children.back().get();
+        auto previousWord = (line->children.empty()) ? nullptr : line->children.back().get();
+        std::unique_ptr<Layout> child = nullptr;
+
+        if (word.has_value())
+        { 
+            if constexpr (std::constructible_from<T, Node*, QString, Layout*, Layout*>) {
+                child = std::make_unique<T>(node, *word, line, previousWord);
+            }
+        }
+        else 
+        {
+            if constexpr (std::constructible_from<T, Node*, Layout*, Layout*>) {
+                child = std::make_unique<T>(node, line, previousWord);
+            }        
+        }
+
+        if (child)
+            line->children.push_back(std::move(child));
+
+        const QFont font = getFont(node, zoom);
+        const QFontMetrics metrics(font);
+        const auto spaceWidth = metrics.horizontalAdvance(" ");
+        m_cursorX += wordWidth + spaceWidth;
+    }
 
     int m_cursorX;
 };

@@ -12,4 +12,4 @@ void replaceHTMLCharacterEntities(QString& word);
 int overrideSizeWithStyle(const Node* node, int size, std::string styleName);
 
 /// Parses font styles on the given node and returns a font.
-QFont getFont(const Node* node, double zoom);
+QFont getFont(const Node* node, double zoom, int adjustSize = 0);

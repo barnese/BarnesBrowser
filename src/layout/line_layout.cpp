@@ -1,7 +1,9 @@
 #include "line_layout.h"
 
 #include "layout/layout_effects_helpers.h"
+#include "layout/text_layout.h"
 
+#include <algorithm>
 #include <QFontMetrics>
 #include <sstream>
 
@@ -24,41 +26,54 @@ void LineLayout::layout()
     x = parent->x;
 
     if (previous)
-    {
         y = previous->y + previous->height;
-    }
     else 
-    {
         y = parent->y;
-    }
 
-    int maxAscent = 0;
-    int maxDescent = 0;
-
-    for (const auto& word : children)
+    for (const auto& child : children)
     {
-        word->layout();
-        
-        QFontMetrics metrics(word->font);   
-        if (metrics.ascent() > maxAscent)
-        {
-            maxAscent = metrics.ascent();
-        }
-        if (metrics.descent() > maxDescent)
-        {
-            maxDescent = metrics.descent();
-        }
+        child->layout();
     }
 
-    int baseline = y + 1.25 * maxAscent;
-
-    for (auto& word : children)
+    if (children.empty())
     {
-        QFontMetrics metrics(word->font);   
-        word->y = baseline - metrics.ascent();
+        height = 0;
+        return;
     }
 
-    height = 1.25 * (maxAscent + maxDescent);
+    // Note: in Qt, the ascent is the positive distance from the baseline
+    // upward, and the descent is the positive distance downward. Hence:
+    //     y-above-baseline = baseline - ascent
+    //     y-below-baseline = baseline + descent
+    // This differs from Skia, so the signs here are different.
+
+    int maxAscent = children.front()->ascent;
+    for (const auto& child : children)
+    {
+        maxAscent = std::max(maxAscent, child->ascent);
+    }
+
+    int baseline = y + maxAscent;
+
+    for (const auto& child : children)
+    {
+        if (const auto& text = dynamic_cast<TextLayout*>(child.get()))
+        {
+            child->y = baseline - child->ascent / 1.25;
+        }
+        else 
+        {
+            child->y = baseline - child->ascent;
+        }
+    }
+
+    int maxDescent = children.front()->descent;
+    for (const auto& child : children)
+    {
+        maxDescent = std::max(maxDescent, child->descent);
+    }
+
+    height = maxAscent + maxDescent;
 }
 
 bool LineLayout::shouldPaint() const 
