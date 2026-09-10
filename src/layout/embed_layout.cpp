@@ -40,9 +40,9 @@ std::vector<std::unique_ptr<Command>> EmbedLayout::paint() const
     return {};
 }
 
-std::vector<std::unique_ptr<Command>> EmbedLayout::paintEffects(std::vector<std::unique_ptr<Command>>) const
+std::vector<std::unique_ptr<Command>> EmbedLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
-    return {};
+    return commands;
 }
 
 std::string EmbedLayout::describe() const
