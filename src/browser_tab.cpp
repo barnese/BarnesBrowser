@@ -646,7 +646,7 @@ void BrowserTab::loadImages()
             }
             else 
             {
-                image->image = std::make_unique<QImage>(":/assets/assets/images/broken_image.png");
+                image->image = std::make_unique<QImage>(":/assets/images/broken_image.png");
             }
         }
     }

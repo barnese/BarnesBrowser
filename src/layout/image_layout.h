@@ -22,5 +22,5 @@ public:
     std::string describe() const override;
 
 private:
-    int imageHeight;
+    double imageHeight;
 };

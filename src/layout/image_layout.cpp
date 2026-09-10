@@ -5,7 +5,7 @@
 #include "html_tree/element.h"
 #include "layout_helpers.h"
 
-#include <QFontMetrics>
+#include <QFontMetricsF>
 #include <QRect>
 #include <memory>
 #include <iostream>
@@ -24,11 +24,36 @@ void ImageLayout::layout()
     EmbedLayout::layout();
 
     if (auto const& element = dynamic_cast<Element*>(node))
-    {        
-        width = dpx(element->image->width(), zoom);
-        imageHeight = dpx(element->image->height(), zoom);
+    {   
+        auto widthAttr = element->findAttribute("width");
+        auto heightAttr = element->findAttribute("height");
+        double imgWidth = element->image->width();
+        double imgHeight = element->image->height();
+        double aspectRatio = imgWidth / imgHeight;
+
+        if (widthAttr.has_value() && heightAttr.has_value())
+        {
+            width = dpx(std::stod(widthAttr.value()), zoom);
+            imageHeight = dpx(std::stod(heightAttr.value()), zoom);
+        }
+        else if (widthAttr.has_value())
+        {
+            width = dpx(std::stod(widthAttr.value()), zoom);
+            imageHeight = width / aspectRatio;
+        }
+        else if (heightAttr.has_value())
+        {
+            imageHeight = dpx(std::stod(heightAttr.value()), zoom);
+            width = imageHeight * aspectRatio;
+        }
+        else 
+        {    
+            width = dpx(imgWidth, zoom);
+            imageHeight = dpx(imgHeight, zoom);
+        }
+
         font = getFont(node, zoom);
-        QFontMetrics metrics(font);
+        QFontMetricsF metrics(font);
         height = std::max(imageHeight, metrics.lineSpacing());
         ascent = height;
         descent = 0;
@@ -41,7 +66,7 @@ std::vector<std::unique_ptr<Command>> ImageLayout::paint() const
 
     if (auto const& element = dynamic_cast<Element*>(node))
     {
-        QRect rect(x, y + height - imageHeight, x + width, y + height);
+        QRect rect(x, y + height - imageHeight, width, height);
         auto quality = node->findStyle("image-rendering", "auto");
         commands.push_back(
             std::make_unique<DrawImage>(element->image.get(), rect, quality)

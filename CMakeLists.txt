@@ -128,7 +128,7 @@ target_link_libraries(main PRIVATE
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
 qt_add_resources(main "images"
-    PREFIX "/assets/images"
+    PREFIX "/"
     FILES
         assets/images/broken_image.png
 )

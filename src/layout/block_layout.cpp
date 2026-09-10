@@ -164,7 +164,12 @@ void BlockLayout::image(Node* node)
 {
     if (auto element = dynamic_cast<const Element*>(node))
     {
-        auto w = dpx(element->image->width(), zoom);
+        int w = 0;
+        auto widthAttr = element->findAttribute("width");
+        if (widthAttr.has_value())
+            w = dpx(std::stoi(widthAttr.value()), zoom);
+        else
+            w = dpx(element->image->width(), zoom);
         addInlineChild<ImageLayout>(node, w);
     }
 }

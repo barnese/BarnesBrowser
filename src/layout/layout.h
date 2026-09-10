@@ -39,8 +39,8 @@ public:
     // Size and position of layout objects.
     int x;
     int y;
-    int width;
-    int height;
+    double width;
+    double height;
     QFont font;
     double zoom;
     int ascent;
