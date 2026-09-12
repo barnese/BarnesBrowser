@@ -59,6 +59,7 @@ public:
     void setNeedsAccessibility(bool value) { m_needsAccessibility = value; }
     std::unique_ptr<JSContext> getJs(URL url);
     bool isDarkMode() { return m_darkMode; }
+    double getZoom() { return m_zoom; }
 
     /// Checks to see if the url is allowed by the Content Security Policy.
     /// If no allowed origins are defined, then the URL is allowed.

@@ -82,7 +82,6 @@ private:
     std::unique_ptr<JSContext> m_js;
     bool m_loaded;
     int m_windowId;
-    double m_zoom;
     
     /// Dirty flags to indicate when something needs to be re-rendered.
     bool m_needsStyle;

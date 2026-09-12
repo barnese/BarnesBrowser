@@ -236,10 +236,7 @@ void BrowserTab::resize(int width, int height)
 
 void BrowserTab::zoom(bool increment)
 {
-    std::string direction = increment ? "in" : "out";
-    m_logger.info("zoomed " + direction);
-
-    if (increment)
+    if (increment > 0)
     {
         m_zoom *= 1.1;
         m_scroll *= 1.1;
@@ -249,6 +246,8 @@ void BrowserTab::zoom(bool increment)
         m_zoom /= 1.1;
         m_scroll /= 1.1;
     }
+
+    m_logger.info("zoom set to " + std::to_string(m_zoom));
 
     m_scrollChangedInTab = true;
     setNeedsRenderAllFrames();
