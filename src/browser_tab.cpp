@@ -58,6 +58,8 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
 
 void BrowserTab::runAnimationFrame(const int scroll)
 {
+    if (!m_rootFrame) return;
+
     if (!m_rootFrame->scrollChangedInFrame)
     {
         m_rootFrame->scroll = scroll;
