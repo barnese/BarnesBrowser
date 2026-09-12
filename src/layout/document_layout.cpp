@@ -28,7 +28,7 @@ void DocumentLayout::layout()
 void DocumentLayout::layout(double zoom)
 {
     this->zoom = zoom;
-    auto child = std::make_unique<BlockLayout>(node, this);
+    auto child = std::make_unique<BlockLayout>(node, this, nullptr, nullptr);
     auto* childPtr = child.get();
     children.push_back(std::move(child));
    

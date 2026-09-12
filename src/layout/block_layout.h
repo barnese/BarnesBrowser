@@ -5,8 +5,8 @@
 #include "styles/style_helpers.h"
 
 #include <memory>
+#include <QRect>
 #include <QString>
-#include <QGraphicsScene>
 
 enum BlockLayoutMode {
     INLINE,
@@ -21,7 +21,7 @@ enum BlockLayoutMode {
 class BlockLayout : public Layout
 {
 public:
-    BlockLayout(Node* node, const Layout* parent, const Layout* previous = nullptr);
+    BlockLayout(Node* node, const Layout* parent, const Layout* previous, Frame* frame);
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;
@@ -34,13 +34,14 @@ private:
     void layoutText();
     bool areAnyChildBlockElements() const;
     void recurse(Node* node);
+    void iframe(Node* node);
     void image(Node* node);
     void input(Node* node);
     void word(Node* node, QString& word);
     void newLine();
     
     template<typename T>
-    void addInlineChild(Node* node, int wordWidth, std::optional<QString> word = std::nullopt)
+    void addInlineChild(Node* node, int wordWidth, Frame* frame, std::optional<QString> word = std::nullopt)
     {
         if (m_cursorX + wordWidth > x + width)
             newLine();
@@ -58,12 +59,14 @@ private:
         else 
         {
             if constexpr (std::constructible_from<T, Node*, Layout*, Layout*>) {
-                child = std::make_unique<T>(node, line, previousWord);
+                child = std::make_unique<T>(node, line, previousWord, frame);
             }        
         }
 
         if (child)
+        {
             line->children.push_back(std::move(child));
+        }
 
         const QFont font = getFont(node, zoom);
         const QFontMetrics metrics(font);

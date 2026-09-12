@@ -462,8 +462,8 @@ void Browser::changeTab(size_t index)
 
     std::lock_guard lock(m_mutex);
     auto task = std::make_unique<Task<BrowserTab*>>(
-        "BrowserTab::setNeedsRender",
-        &BrowserTab::setNeedsRender,
+        "BrowserTab::setNeedsRenderAllFrames",
+        &BrowserTab::setNeedsRenderAllFrames,
         m_activeTab
     );
     m_activeTab->taskRunner.scheduleTask(std::move(task));

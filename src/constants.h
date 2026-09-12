@@ -11,6 +11,8 @@ namespace Constants
     const std::string HTML_HEADER_SEPARATOR = "\r\n\r\n";
     const int SCROLL_STEP = 100;
     const int INPUT_WIDTH_PX = 200;
+    const int IFRAME_WIDTH_PX = 300;
+    const int IFRAME_HEIGHT_PX = 150;
 
     /// Prefix added to tag selectors for media dark styles.
     /// The initial character is the Chinese Han which is sorted

@@ -4,6 +4,7 @@
 #include "html_tree/node.h"
 #include "layout.h"
 #include "layout/embed_layout.h"
+#include "frame.h"
 
 #include <memory>
 #include <vector>
@@ -15,7 +16,8 @@ public:
     InputLayout(
         Node* node, 
         const Layout* parent, 
-        const Layout* previous = nullptr
+        const Layout* previous,
+        Frame* frame
     );
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;

@@ -6,7 +6,6 @@
 #include "layout_helpers.h"
 
 #include <QFontMetricsF>
-#include <QRect>
 #include <memory>
 #include <iostream>
 #include <sstream>
@@ -14,8 +13,9 @@
 ImageLayout::ImageLayout(
     Node* node, 
     const Layout* parent, 
-    const Layout* previous
-) : EmbedLayout(node, parent, previous)
+    const Layout* previous,
+    Frame* frame
+) : EmbedLayout(node, parent, previous, frame)
 {
 }
 

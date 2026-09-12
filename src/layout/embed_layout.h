@@ -2,8 +2,10 @@
 
 #include "html_tree/node.h"
 #include "layout.h"
+#include "frame.h"
 
 #include <QFont>
+#include <QRect>
 #include <QString>
 
 /// Layout object representing an HTML embeddable element, 
@@ -14,7 +16,8 @@ public:
     EmbedLayout(
         Node* node, 
         const Layout* parent, 
-        const Layout* previous = nullptr
+        const Layout* previous,
+        Frame* frame
     );
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;

@@ -9,6 +9,8 @@
 #include "constants.h"
 
 #include <algorithm>
+#include <iostream>
+#include <sstream>
 
 CSSParser::CSSParser(std::string text)
     : m_text(text),
@@ -329,4 +331,23 @@ std::optional<QPointF> parseTransform(const std::string& transformString)
     auto x = pixelsToFloat(values[0]);
     auto y = pixelsToFloat(values[1]);
     return QPointF(x, y);
+}
+
+void printStyles(const CSSRules& rules)
+{
+    std::stringstream s;
+    s << "Styles:" << std::endl;
+
+    for (const auto& rule : rules)
+    {
+        s << rule.first << ": {";
+        std::string seprator = "";
+        for (const auto& style : rule.second.styles)
+        {
+            s << seprator << style.first << ": " << style.second;
+            seprator = ", ";
+        }
+        s << "}" << std::endl;
+    }
+    std::cout << s.str();
 }

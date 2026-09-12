@@ -1,6 +1,7 @@
 #pragma once
 
 #include "node.h"
+#include "frame.h"
 
 #include <map>
 #include <optional>
@@ -17,6 +18,8 @@ public:
     std::string tag;
 
     std::unique_ptr<QImage> image;
+
+    std::unique_ptr<Frame> frame;
 
     std::map<std::string, std::string> attributes;
 

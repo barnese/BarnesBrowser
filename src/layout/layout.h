@@ -9,6 +9,8 @@
 #include <QRect>
 #include <vector>
 
+class Frame;
+
 /// Abstract base class that represents a layout.
 class Layout
 {
@@ -34,6 +36,7 @@ public:
     Node* node;
     const Layout* parent;
     const Layout* previous;
+    Frame* frame;
     std::vector<std::unique_ptr<Layout>> children;
 
     // Size and position of layout objects.

@@ -66,6 +66,7 @@ add_executable(main
     src/layout/block_layout.cpp
     src/layout/document_layout.cpp
     src/layout/embed_layout.cpp
+    src/layout/iframe_layout.cpp
     src/layout/image_layout.cpp
     src/layout/input_layout.cpp
     src/layout/layout_effects_helpers.cpp
@@ -85,6 +86,7 @@ add_executable(main
     src/browser_view.cpp
     src/main.cpp
     src/url.cpp
+    src/frame.cpp
 )
 
 # Enable automatic Meta-Object compiler support (used by Qt).

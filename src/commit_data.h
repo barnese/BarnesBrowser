@@ -18,6 +18,7 @@ public:
     CommitData(
         URL url, 
         std::optional<int> scroll, 
+        bool rootFrameFocused,
         int height, 
         std::optional<std::vector<std::unique_ptr<Command>>> displayList,
         std::map<Node*, VisualEffect*> compositedUpdates,
@@ -25,6 +26,7 @@ public:
         Element* focus
     ) : url(url),
         scroll(scroll),
+        rootFrameFocused(rootFrameFocused),
         height(height),
         displayList(std::move(displayList)),
         compositedUpdates(compositedUpdates),
@@ -34,6 +36,7 @@ public:
 
     URL url;
     std::optional<int> scroll;
+    bool rootFrameFocused;
     int height;
     std::optional<std::vector<std::unique_ptr<Command>>> displayList;
     std::map<Node*, VisualEffect*> compositedUpdates;

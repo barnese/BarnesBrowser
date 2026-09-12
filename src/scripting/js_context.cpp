@@ -6,6 +6,7 @@
 #include "js_context_exception.h"
 #include "styles/css_parser.h"
 #include "browser.h"
+#include "frame.h"
 
 #include "duktape.h"
 #include <dukglue/dukglue.h>
@@ -72,9 +73,10 @@ JSContext::~JSContext()
 
 std::vector<int> JSContext::querySelectorAll(std::string selectorText)
 {
+    auto frame = m_tab->windowIdToFrame.at(0).second; // TODO: FIXME
     std::vector<int> nodeHandles;
     auto selector = CSSParser(selectorText).selector();
-    auto nodeList = treeToList<Node>(m_tab->getNode());
+    auto nodeList = treeToList<Node>(frame->getNode());
     
     for (auto& node : nodeList) 
     {    
@@ -104,7 +106,7 @@ void JSContext::setAttribute(int handle, std::string attrName, std::string value
     if (auto element = dynamic_cast<Element*>(node)) 
     {
         element->attributes[attrName] = value;
-        m_tab->setNeedsRender();
+        m_tab->setNeedsRenderAllFrames();
     }
 }
 
@@ -122,7 +124,7 @@ void JSContext::setInnerHtml(int handle, std::string html)
     {
         child->parent = node;
     }
-    m_tab->setNeedsRender();
+    m_tab->setNeedsRenderAllFrames();
 }
 
 void JSContext::setStyle(int handle, std::string style)
@@ -131,7 +133,7 @@ void JSContext::setStyle(int handle, std::string style)
     if (auto element = dynamic_cast<Element*>(node))
     {
         element->attributes["style"] = style;
-        m_tab->setNeedsRender();
+        m_tab->setNeedsRenderAllFrames();
     }    
 }
 
@@ -279,6 +281,13 @@ int JSContext::run(std::string scriptName, std::string code)
     return result;
 }
 
+void JSContext::dispatchRAF(int windowId)
+{
+    duk_push_object(m_duk);
+    duk_peval_string(m_duk, "window.__runRAFHandlers()");
+    duk_pop(m_duk);
+}
+
 /// @brief Injects event data into a global JavaScript object 
 /// to dispatch that event so event listeners can be executed.
 /// @param eventType type of event, such as "click" or "keydown".
@@ -309,11 +318,4 @@ int JSContext::dispatchEvent(std::string eventType, Node* node)
 void JSContext::requestAnimationFrame()
 {
     m_tab->browser->setNeedsAnimationFrame(m_tab);
-}
-
-void JSContext::dispatchRunRAFHandlers()
-{
-    duk_push_object(m_duk);
-    duk_peval_string(m_duk, "__runRAFHandlers()");
-    duk_pop(m_duk);
 }

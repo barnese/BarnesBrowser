@@ -31,6 +31,8 @@ StringTupleMap diffStyles(StringMap& oldStyle, StringMap& newStyle);
 
 std::optional<QPointF> parseTransform(const std::string& transformString);
 
+void printStyles(const CSSRules& rules);
+
 /// Defines a parser for parsing CSS. This class uses parsing
 /// functions to parse the property-value format of stylesheets.
 class CSSParser

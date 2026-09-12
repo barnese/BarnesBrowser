@@ -12,3 +12,5 @@ double dpx(double cssPx, double zoom);
 /// offset by walking up the node tree and mapping through 
 /// each translation found.
 QRect absoluteBoundsForObj(Layout* layout);
+
+void printLayoutTree(const Layout* layout, int depth = 0);

@@ -5,12 +5,14 @@
 EmbedLayout::EmbedLayout(
     Node* node, 
     const Layout* parent, 
-    const Layout* previous
+    const Layout* previous,
+    Frame* frame
 )
 {
     this->node = node;
     this->parent = parent;
     this->previous = previous;
+    this->frame = frame;
     this->node->layoutObject = this;
 }
 

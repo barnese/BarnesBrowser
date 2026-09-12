@@ -6,6 +6,7 @@
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout.h"
+#include "layout/iframe_layout.h"
 #include "layout/image_layout.h"
 #include "layout/input_layout.h"
 #include "layout/line_layout.h"
@@ -15,16 +16,16 @@
 #include "text_layout.h"
 
 #include <QFontMetrics>
-#include <QRect>
 #include <memory>
 #include <sstream>
 
-BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previous)
+BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previous, Frame* frame)
 {
     this->node = node;
     this->parent = parent;
     this->previous = previous;
     this->node->layoutObject = this;
+    this->frame = frame;
     x = 0;
     y = 0;
     width = 0;
@@ -73,7 +74,7 @@ void BlockLayout::layoutBlock()
             }
         }
 
-        auto next = std::make_unique<BlockLayout>(child.get(), this, prev);
+        auto next = std::make_unique<BlockLayout>(child.get(), this, prev, frame);
         prev = next.get();
         children.push_back(std::move(next));
     }
@@ -115,7 +116,7 @@ BlockLayoutMode BlockLayout::getLayoutMode() const
     }
     else if (auto element = dynamic_cast<const Element*>(node))
     {
-        if (element->tag == "input" || element->tag == "img")
+        if (element->tag == "input" || element->tag == "img" || element->tag == "iframe")
         {
             return INLINE;
         }
@@ -140,6 +141,10 @@ void BlockLayout::recurse(Node* node)
         {
             image(node);
         }
+        else if (element->tag == "iframe" && element->attributes.contains("src"))
+        {
+            iframe(node);
+        }
         else 
         {
             for (const auto& child : element->getChildren())
@@ -160,6 +165,24 @@ void BlockLayout::recurse(Node* node)
     }
 }
 
+void BlockLayout::iframe(Node* node)
+{
+    if (const auto& element = dynamic_cast<const Element*>(node))
+    {
+        int w = 0;
+        auto width = element->findAttribute("width");
+        if (width.has_value())
+        {
+            w = dpx(std::stoi(width.value()), zoom);
+        }
+        else 
+        {
+            w = Constants::IFRAME_WIDTH_PX + dpx(2, zoom);
+        }
+        addInlineChild<IFrameLayout>(node, w, frame);
+    } 
+}
+
 void BlockLayout::image(Node* node)
 {
     if (auto element = dynamic_cast<const Element*>(node))
@@ -170,14 +193,14 @@ void BlockLayout::image(Node* node)
             w = dpx(std::stoi(widthAttr.value()), zoom);
         else
             w = dpx(element->image->width(), zoom);
-        addInlineChild<ImageLayout>(node, w);
+        addInlineChild<ImageLayout>(node, w, frame);
     }
 }
 
 void BlockLayout::input(Node* node)
 {
     auto w = dpx(Constants::INPUT_WIDTH_PX, zoom);
-    addInlineChild<InputLayout>(node, w);
+    addInlineChild<InputLayout>(node, w, frame);
 }
 
 void BlockLayout::word(Node* node, QString& word)
@@ -188,7 +211,7 @@ void BlockLayout::word(Node* node, QString& word)
     const QFontMetrics metrics(font);
     const auto wordWidth = metrics.horizontalAdvance(word);
     
-    addInlineChild<TextLayout>(node, wordWidth, word);
+    addInlineChild<TextLayout>(node, wordWidth, frame, word);
 }
 
 /// Creates a new line layout and reset some fields.
@@ -209,7 +232,9 @@ bool BlockLayout::shouldPaint() const
 
     if (auto element = dynamic_cast<const Element*>(node))
     {
-        if (element->tag != "input" && element->tag != "button" && element->tag != "img")
+        const std::array tags = {"input", "button", "img", "iframe"};
+
+        if (!std::ranges::contains(tags, element->tag))
         {
             return true;
         }

@@ -17,6 +17,7 @@ public:
     JSContext(BrowserTab* tab);
     ~JSContext();
     int run(std::string scriptName, std::string code);
+    void dispatchRAF(int windowId);
     int dispatchEvent(std::string eventType, Node* node);
     
     // Functions to export to JavaScript.
@@ -31,7 +32,6 @@ public:
     void dispatchSetTimeout(int handle);
     void setTimeout(int handle, long time);
     void requestAnimationFrame();
-    void dispatchRunRAFHandlers();
 
     // Flag to discard setTimeout callbacks from running.
     bool discarded;

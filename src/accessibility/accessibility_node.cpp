@@ -4,6 +4,7 @@
 #include "html_tree/element.h"
 #include "html_tree/text.h"
 #include "layout/layout_helpers.h"
+#include "frame.h"
 
 #include <iostream>
 
@@ -34,6 +35,10 @@ AccessibilityNode::AccessibilityNode(const Node* node)
         else if (element->tag == "a")
         {
             role = "link";
+        }
+        else if (element->tag == "iframe")
+        {
+            role = "iframe";
         }
         else if (element->tag == "img")
         {
@@ -166,7 +171,24 @@ void AccessibilityNode::build()
 
 void AccessibilityNode::buildInternal(const Node* node)
 {
-    auto child = std::make_unique<AccessibilityNode>(node);
+    std::unique_ptr<AccessibilityNode> child;
+
+    if (const auto element = dynamic_cast<const Element*>(node))
+    {
+        if (element->tag == "iframe" && element->frame && element->frame->isLoaded())
+        {
+            child = std::make_unique<AccessibilityNode>(element->frame->getNode());
+        }
+        else
+        {
+            child = std::make_unique<AccessibilityNode>(node);
+        }
+    }
+    else 
+    {
+        child = std::make_unique<AccessibilityNode>(node);
+    }
+
     if (child->role != "none")
     {
         auto childPtr = child.get();
