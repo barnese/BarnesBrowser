@@ -57,6 +57,8 @@ void Frame::load(URL url, std::optional<std::string> payload)
 
 void Frame::render()
 {
+    m_logger.info("rendering");
+
     if (m_needsStyle)
     {
         //printStyles(m_rules);

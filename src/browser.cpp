@@ -489,8 +489,8 @@ void Browser::setActiveTab(BrowserTab* tab)
     );
     m_activeTab->taskRunner.scheduleTask(
         std::make_unique<Task<BrowserTab*>>(
-            "BrowserTab::setNeedsPaints()",
-            &BrowserTab::setNeedsPaint,
+            "BrowserTab::setNeedsRenderAllFrames()",
+            &BrowserTab::setNeedsRenderAllFrames,
             m_activeTab
         )
     );

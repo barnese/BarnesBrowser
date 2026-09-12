@@ -56,12 +56,6 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     browser->measure.stop("load");
 }
 
-void BrowserTab::setNeedsPaint()
-{
-    m_needsPaint = true;
-    browser->setNeedsAnimationFrame(this);
-}
-
 void BrowserTab::runAnimationFrame(const int scroll)
 {
     if (!m_rootFrame->scrollChangedInFrame)
@@ -74,6 +68,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
     for (const auto& [windowId, frame] : windowIdToFrame)
     {
         if (!frame->isLoaded()) continue;
+
         browser->measure.start("script-runRAFHandlers");
         frame->dispatchRAF(windowId);
         browser->measure.stop("script-runRAFHandlers");
@@ -134,7 +129,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
     }
     m_compositedUpdates.clear();
 
-    bool rootFrameFocused = m_focusedFrame || m_focusedFrame == m_rootFrame.get();
+    bool rootFrameFocused = !(m_focusedFrame || m_focusedFrame == m_rootFrame.get());
 
     CommitData commitData(
         m_url, 
@@ -150,6 +145,12 @@ void BrowserTab::runAnimationFrame(const int scroll)
     m_rootFrame->scrollChangedInFrame = false;
     m_accessibilityTree = nullptr;
     browser->commit(this, commitData);
+}
+
+void BrowserTab::setNeedsPaint()
+{
+    m_needsPaint = true;
+    browser->setNeedsAnimationFrame(this);
 }
 
 void BrowserTab::setNeedsRenderAllFrames()

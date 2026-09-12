@@ -58,7 +58,7 @@ private:
         }
         else 
         {
-            if constexpr (std::constructible_from<T, Node*, Layout*, Layout*>) {
+            if constexpr (std::constructible_from<T, Node*, Layout*, Layout*, Frame*>) {
                 child = std::make_unique<T>(node, line, previousWord, frame);
             }        
         }
