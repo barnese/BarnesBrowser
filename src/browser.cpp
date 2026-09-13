@@ -469,7 +469,7 @@ void Browser::changeTab(size_t index)
     m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
-void Browser::setTabTitle(std::string title)
+void Browser::setTabTitle(const std::string& title)
 {
     std::lock_guard lock(m_mutex);
     auto activeIndex = getActiveTabIndex();

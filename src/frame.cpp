@@ -3,6 +3,7 @@
 #include "helpers/string_helpers.h"
 #include "html_tree/html_parser.h"
 #include "html_tree/node_helpers.h"
+#include "html_tree/text.h"
 #include "layout/layout_helpers.h"
 #include "styles/numeric_animation.h"
 #include "browser.h"
@@ -44,6 +45,11 @@ void Frame::load(URL url, std::optional<std::string> payload)
     auto body = response.errorMessage.has_value() ? response.errorMessage.value() : response.bodyString();
     m_url = url;
 
+    if (!m_parentFrame)
+    {
+        m_tab->addHistory(m_url);
+    }
+
     loadContentSecurityPolicy(response.headers);
     parseHtml(body);
     loadScripts();
@@ -51,6 +57,7 @@ void Frame::load(URL url, std::optional<std::string> payload)
     loadImages();
     loadIFrames();
     setNeedsRender();
+    m_tab->setTabTitle(getTitle(m_node.get()));
     m_loaded = true;
 }
 
@@ -429,6 +436,28 @@ std::vector<std::string> Frame::getScriptLinks(Node* tree)
     }
 
     return links;
+}
+
+std::string Frame::getTitle(Node* tree)
+{
+    auto nodeList = treeToList<Node>(tree);
+
+    for (const auto& node : nodeList)
+    {
+        if (auto element = dynamic_cast<const Element*>(node))
+        {
+            if (element->tag == "title" && element->children.size() == 1)
+            {
+                if (auto text = dynamic_cast<const Text*>(element->children.front().get()))
+                {
+                    return text->getText();
+                }
+            }
+        }
+    }
+
+    // We couldn't find a title so use the URL instead.
+    return m_url.describe(false);
 }
 
 void Frame::dispatchRAF(int windowId)

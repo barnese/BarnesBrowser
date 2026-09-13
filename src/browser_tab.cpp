@@ -1,7 +1,6 @@
 #include "browser_tab.h"
 
 #include "html_tree/node_helpers.h"
-#include "html_tree/text.h"
 #include "layout/layout.h"
 #include "layout/iframe_layout.h"
 #include "scripting/js_context.h"
@@ -41,12 +40,10 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     {
         m_loaded = false;
         m_logger.info("loading: " + url.describe());
-        m_history.push_back(url);
         taskRunner.clearPendingTasks();
         m_rootFrame = std::make_unique<Frame>(this, nullptr, nullptr);
         m_rootFrame->load(url, payload);
         m_rootFrame->setFrameSize(m_width, m_height);
-        setTabTitle();
         m_loaded = true;
     }
     catch (...)
@@ -302,32 +299,8 @@ bool BrowserTab::allowRequest(const URL& url)
     return m_allowedOrigins.empty() || containsUrl;
 }
 
-std::string BrowserTab::getTitle(Node* tree)
-{
-    auto nodeList = treeToList<Node>(tree);
-
-    for (const auto& node : nodeList)
-    {
-        if (auto element = dynamic_cast<const Element*>(node))
-        {
-            if (element->tag == "title" && element->children.size() == 1)
-            {
-                if (auto text = dynamic_cast<const Text*>(element->children.front().get()))
-                {
-                    return text->getText();
-                }
-            }
-        }
-    }
-
-    // We couldn't find a title so use the URL instead.
-    return m_url.describe(false);
-}
-
-void BrowserTab::setTabTitle()
-{
-    auto node = m_rootFrame->getNode();
-    auto title = getTitle(node);
+void BrowserTab::setTabTitle(const std::string& title)
+{    
     browser->setTabTitle(title);
 }
 

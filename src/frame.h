@@ -66,6 +66,7 @@ private:
     CSSRules getDefaultStyleSheet();
     std::vector<std::string> getStyleSheetLinks(Node* tree);
     std::vector<std::string> getScriptLinks(Node* tree);
+    std::string getTitle(Node* tree);
     void focusElement(Element* element);
 
     /// Finds all the input elements, encodes their values 

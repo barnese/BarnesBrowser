@@ -60,6 +60,8 @@ public:
     std::unique_ptr<JSContext> getJs(URL url);
     bool isDarkMode() { return m_darkMode; }
     double getZoom() { return m_zoom; }
+    void setTabTitle(const std::string& title);
+    void addHistory(URL url) { m_history.push_back(url); }
 
     /// Checks to see if the url is allowed by the Content Security Policy.
     /// If no allowed origins are defined, then the URL is allowed.
@@ -79,11 +81,7 @@ private:
     /// Recursively paints all layout objects, combining the 
     /// results into the provided display commands reference.
     void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
-
     void activateElement(Element* element);
-
-    std::string getTitle(Node* tree);
-    void setTabTitle();
 
     std::unique_ptr<Frame> m_rootFrame;
     std::optional<std::vector<std::unique_ptr<Command>>> m_displayList;    

@@ -31,7 +31,7 @@ public:
     void newTab(std::optional<URL> url = std::nullopt);
     void createNewTab();
     void changeTab(size_t index);
-    void setTabTitle(std::string title);
+    void setTabTitle(const std::string& title);
     void changeAddress(QString newAddress);
     void focusAddressBar();
     void goBack();
