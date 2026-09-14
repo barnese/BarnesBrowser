@@ -13,6 +13,7 @@
 
 class IFrameLayout : public EmbedLayout
 {
+public:
     IFrameLayout(
         Node* node, 
         const Layout* parent, 
@@ -21,5 +22,6 @@ class IFrameLayout : public EmbedLayout
     );
     void layout() override;
     std::string describe() const override;
+    std::vector<std::unique_ptr<Command>> paint() const override;
     std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const override;
 };

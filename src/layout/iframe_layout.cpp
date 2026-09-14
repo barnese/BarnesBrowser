@@ -3,6 +3,7 @@
 #include "commands/blend.h"
 #include "commands/draw_rounded_rect.h"
 #include "commands/transform.h"
+#include "helpers/string_helpers.h"
 #include "html_tree/element.h"
 #include "layout_helpers.h"
 #include "layout_effects_helpers.h"
@@ -55,30 +56,70 @@ void IFrameLayout::layout()
         descent = 0;
     }
 }
+std::vector<std::unique_ptr<Command>> IFrameLayout::paint() const
+{
+    std::vector<std::unique_ptr<Command>> commands;
+
+    if (auto const& element = dynamic_cast<Element*>(node))
+    {
+        QRect rect(x, y, width, height);
+        auto bgColor = node->findStyle("background-color", "transparent");
+        if (bgColor != "transparent")
+        {
+            auto borderRadius = element->findStyle("border-radius", "0px");
+            auto radius = pixelsToFloat(borderRadius);
+            auto color = QString::fromStdString(bgColor);
+            
+            commands.push_back(
+                std::make_unique<DrawRoundedRect>(rect, color, radius)
+            );
+        }
+    }
+
+    return commands;
+}
 
 std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
-    QRect rect(x, y, width, height);
     auto diff = dpx(1, zoom);
     QPointF offset(x + diff, y + diff);
+    QRect rect(x, y, width, height);
+
+    {
+        std::vector<std::unique_ptr<Command>> transformed;
+        transformed.push_back(
+            std::make_unique<Transform>(offset, rect, node, std::move(commands))
+        );
+        commands = std::move(transformed);
+    }
+
+    QRect innerRect(
+        x + diff, 
+        y + diff, 
+        width - 2 * diff, 
+        height - 2 * diff
+    );
     
-    commands.push_back(
-        std::make_unique<Transform>(offset, rect, node, std::move(commands))
-    );
+    {
+        std::vector<std::unique_ptr<Command>> masked;
+        masked.push_back(
+            std::make_unique<DrawRoundedRect>(innerRect, "white", 0)
+        );
 
-    QRect innerRect(x + diff, y + diff, width - diff, height - diff);
-    
-    std::vector<std::unique_ptr<Command>> internalCommands = std::move(commands);
+        commands.push_back(
+            std::make_unique<Blend>("destination-in", 1, nullptr, std::move(masked))
+        );
+    }
 
-    internalCommands.push_back(
-        std::make_unique<Blend>("destination-in", 1, nullptr, 
-            commandList(std::make_unique<DrawRoundedRect>(innerRect, "white", 0))
-        )
-    );
+    {
+        std::vector<std::unique_ptr<Command>> blended;
+        blended.push_back(
+            std::make_unique<Blend>("source-over", 1, node, std::move(commands))
+        );
+        commands = std::move(blended);
+    }
 
-    commands.push_back(
-        std::make_unique<Blend>("source-over", 1, node, std::move(internalCommands))
-    );
+    paintOutline(node, commands, rect, zoom);
 
     commands = paintVisualEffects(node, std::move(commands), rect);
 
@@ -87,5 +128,9 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std
 
 std::string IFrameLayout::describe() const
 {
-    return "IFrameLayout";
+    std::stringstream s; 
+    s << "IFrameLayout(rect: {"
+      << x << ", " << y << ", " << width << ", " << height
+      << "}, node: " << node->describe() << ")";
+    return s.str();
 }

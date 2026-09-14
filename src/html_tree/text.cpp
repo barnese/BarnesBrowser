@@ -13,5 +13,5 @@ std::string Text::getText() const
 
 std::string Text::describe() const
 {
-    return text;
+    return "\"" + text + "\"";
 }
