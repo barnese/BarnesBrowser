@@ -44,6 +44,7 @@ public:
     bool needsStyle() { return m_needsStyle; }
     bool needsLayout() { return m_needsLayout; }
     Node* getNode() { return m_node.get(); }
+    Frame* getTabRootFrame();
 
     /// Prevents scroll from going past top or bottom of the page.
     int clampScroll(const int scroll);

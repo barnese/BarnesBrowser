@@ -181,6 +181,7 @@ void Browser::compositeRasterAndDraw()
     {
         measure.start("draw");
         paintDrawList();
+        //printDrawList();
         draw();
         measure.stop("draw");
     }

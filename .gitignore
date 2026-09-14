@@ -2,6 +2,7 @@ __pycache__/
 /.vscode/tasks
 /.vscode/tasks.dSYM/
 /.DS_Store
+/assets/.DS_Store
 /src/.DS_Store
 /src/build/
 /src/.cache/

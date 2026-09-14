@@ -62,6 +62,7 @@ public:
     double getZoom() { return m_zoom; }
     void setTabTitle(const std::string& title);
     void addHistory(URL url) { m_history.push_back(url); }
+    Frame* getRootFrame() { return m_rootFrame.get(); }
 
     /// Checks to see if the url is allowed by the Content Security Policy.
     /// If no allowed origins are defined, then the URL is allowed.

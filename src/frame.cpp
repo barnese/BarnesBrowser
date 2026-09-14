@@ -77,7 +77,7 @@ void Frame::render()
     {
         document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
         document->layout(m_tab->getZoom());
-        //printLayoutTree(m_document.get());
+        //printLayoutTree(document.get());
         m_tab->setNeedsAccessibility(true);
         m_needsPaint = true;
         m_needsLayout = false;
@@ -107,7 +107,9 @@ void Frame::setNeedsLayout()
 
 void Frame::parseHtml(const std::string& body)
 {
-    auto resultNodes = HTMLParser(body).parse();
+    auto parser = HTMLParser(body);
+    auto resultNodes = parser.parse();
+    //parser.printTree(resultNodes.get());
     m_node = std::move(resultNodes);
 }
 
@@ -693,4 +695,9 @@ int Frame::clampScroll(const int scroll)
     int height = ceil(document->height + 2 * Constants::VSTEP);
     int maxScroll = height - m_height;
     return std::max(0, std::min(scroll, maxScroll));
+}
+
+Frame* Frame::getTabRootFrame()
+{
+    return m_tab->getRootFrame();
 }

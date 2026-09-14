@@ -1,8 +1,10 @@
 #include "document_layout.h"
 
+#include "commands/transform.h"
 #include "block_layout.h"
 #include "constants.h"
 #include "layout_helpers.h"
+#include "frame.h"
 
 #include <sstream>
 #include <iostream>
@@ -52,6 +54,14 @@ std::vector<std::unique_ptr<Command>> DocumentLayout::paint() const
 
 std::vector<std::unique_ptr<Command>> DocumentLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
+    if (frame && frame != frame->getTabRootFrame() && frame->scroll != 0)
+    {
+        QRect rect(x, y, width, height);
+        QPointF translation(0, -frame->scroll);
+        auto transform = std::make_unique<Transform>(translation, rect, node, std::move(commands));
+        commands = commandList(std::move(transform));
+    }
+    
     return commands;
 }
 

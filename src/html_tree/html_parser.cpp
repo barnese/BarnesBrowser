@@ -241,18 +241,12 @@ std::unique_ptr<Node> HTMLParser::finish()
     return node;
 }
 
-void HTMLParser::printTree(Node* node, int indent)
+void HTMLParser::printTree(Node* node, int depth)
 {
-    std::string spaces;
-    for (int i = 0; i < indent; ++i) 
-    {
-        spaces += " ";
-    }
-
-    std::cout << spaces << node->describe() << "\n";
-
+    std::string indent(depth * 2, ' ');
+    std::cout << indent << node->describe() << std::endl;;
     for (const auto& node : node->getChildren())
     {
-        printTree(node.get(), indent + 2);
+        printTree(node.get(), depth + 1);
     }
 }

@@ -13,5 +13,12 @@ std::string Text::getText() const
 
 std::string Text::describe() const
 {
-    return "\"" + text + "\"";
+    std::string s;
+
+    if (text.size() > 50)
+        s = text.substr(0, 50) + "...";
+    else
+        s = text;
+
+    return "\"" + s + "\"";
 }
