@@ -23,6 +23,8 @@ Blend::Blend(
     {
         rect = rect.united(child->rect);
     }
+
+    m_rect = rect;
 }
 
 QPainter::CompositionMode parseBlendMode(const std::string& blendMode)
@@ -64,15 +66,19 @@ void Blend::execute(PaintContext& context)
     auto* glContext = QOpenGLContext::currentContext();
     auto* gl = glContext->functions();
 
-    // Save the framebuffer we are currently drawing into.
+    context.painter.beginNativePainting();
+
+    // Save the framebuffer and viewport we are currently drawing into.
     GLint previousFbo = 0;
+    GLint previousViewport[4];
     gl->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFbo);
+    gl->glGetIntegerv(GL_VIEWPORT, previousViewport);
 
     // Create an offscreen FBO.
     QOpenGLFramebufferObjectFormat format;
     format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
     format.setSamples(0);
-    auto fbo = QOpenGLFramebufferObject(rect.size(), format);
+    auto fbo = QOpenGLFramebufferObject(m_rect.size(), format);
 
     if (!fbo.isValid())
     {
@@ -87,19 +93,19 @@ void Blend::execute(PaintContext& context)
     }
 
     {
-        QOpenGLPaintDevice device(rect.size());
+        QOpenGLPaintDevice device(m_rect.size());
         QPainter layerPainter(&device);
         layerPainter.setCompositionMode(QPainter::CompositionMode_Source);
         layerPainter.fillRect(QRect(QPoint(0, 0), rect.size()), Qt::transparent);
         layerPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
         
         // Make child coordinates remain in the parent's coordinates.
-        layerPainter.translate(-rect.left(), -rect.top());
+        layerPainter.translate(-m_rect.left(), -m_rect.top());
 
         PaintContext blendContext { 
             layerPainter, 
             context.blitter, 
-            rect.size() 
+            m_rect.size() 
         };
         
         for (const auto& item : children)
@@ -108,24 +114,33 @@ void Blend::execute(PaintContext& context)
         }
     } // layerPainter is destroyed here; FBO is still bound.
     
-    // Restore the destination framebuffer and composite
+    QImage image = fbo.toImage();
+
+    // Restore the destination framebuffer/viewport and composite
     // the completed FBO with the desired blend mode.
     gl->glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
-    
+    gl->glViewport(
+        previousViewport[0],
+        previousViewport[1],
+        previousViewport[2],
+        previousViewport[3]
+    );
+
+    context.painter.endNativePainting();
     context.painter.save();
     context.painter.setOpacity(m_opacity);
 
     if (m_blendMode.has_value())
     {
-        context.painter.setCompositionMode(parseBlendMode(m_blendMode.value()));
+        context.painter.setCompositionMode(parseBlendMode(*m_blendMode));
     }
 
     // The code below drawImage attempts to move everything to the
     // GPU, and it mostly works, but it doesn't support all blending
     // modes. To do that, I think I need to use shaders. That's a
     // project for another day, so I'll keep the drawImage for now,
-    // even though it uses the CPU.
-    context.painter.drawImage(rect.topLeft(), fbo.toImage());
+    // even though it uses the CPU.    
+    context.painter.drawImage(m_rect.topLeft(), image);
     context.painter.restore();
 }
 
@@ -298,4 +313,3 @@ QRect Blend::map(QRect rect) const
 
     return rect;
 }
-

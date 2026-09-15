@@ -19,10 +19,12 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
     auto transformStyle = node->findStyle("transform", "");
     auto translation = parseTransform(transformStyle);
 
-    // Apply overflow clipping by creating a new layer, draw the clip 
-    // mask into it, then blend it in using "destination-in compositing".
+    Blend* overflowMask = nullptr;
+
     if (overflow == "clip")
     {
+        // Apply overflow clipping by creating a new layer, draw the clip 
+        // mask into it, then blend it in using "destination-in compositing".
         if (!blendMode.has_value())
         {
             blendMode = "source-over";
@@ -30,16 +32,27 @@ std::vector<std::unique_ptr<Command>> paintVisualEffects(
         
         auto borderRadius = pixelsToFloat(node->findStyle("border-radius", "0px"));
 
-        commands.push_back(
-            std::make_unique<Blend>("destination-in", opacity, nullptr, commandList(
-                std::make_unique<DrawRoundedRect>(rect, "white", borderRadius) 
-            ))
-        );
+        auto mask = std::make_unique<Blend>("destination-in", 1.0, nullptr, commandList(
+            std::make_unique<DrawRoundedRect>(rect, "white", borderRadius) 
+        ));
+
+        overflowMask = mask.get();
+        commands.push_back(std::move(mask));
     }
 
     // Apply the blend and opacity effects to each of the given commands. 
-    auto blendOp = std::make_unique<Blend>(blendMode, opacity, node, std::move(commands));
+    auto blendOp = std::make_unique<Blend>(
+        blendMode, opacity, node, std::move(commands)
+    );
+    
     node->blendOp = blendOp.get();
+
+    if (overflowMask)
+    {
+        // Override the overflow mask's rect with the outer blend, which has the
+        // union of all content bounds. This is required to get clipping behavior.
+        overflowMask->setBlendRect(blendOp->rect);
+    }
 
     auto transform = std::make_unique<Transform>(translation, rect, node, commandList(std::move(blendOp)));
     return commandList(std::move(transform));

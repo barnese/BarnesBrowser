@@ -23,8 +23,10 @@ public:
     std::unique_ptr<Command> clone(std::unique_ptr<Command> child) override;
     QRect map(QRect rect) const override;
     std::optional<std::string> getBlendMode() const { return m_blendMode; }
+    void setBlendRect(QRect r) { m_rect = r; };
 
 private:
     std::optional<std::string> m_blendMode;
     double m_opacity;
+    QRect m_rect;
 };
