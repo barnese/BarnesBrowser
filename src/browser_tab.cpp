@@ -55,7 +55,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
 
 void BrowserTab::runAnimationFrame(const int scroll)
 {
-    if (!m_rootFrame) return;
+    if (!m_rootFrame || !m_loaded) return;
 
     if (!m_rootFrame->scrollChangedInFrame)
     {
@@ -174,6 +174,7 @@ void BrowserTab::render()
     if (m_needsAccessibility)
     {
         auto node = m_rootFrame->getNode();
+        if (!node) return;
         m_accessibilityTree = std::make_unique<AccessibilityNode>(node);
         m_accessibilityTree->build();
         //m_accessibilityTree->printTree();
@@ -202,7 +203,7 @@ void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Com
         {
             if (element->frame && element->frame->isLoaded())
             {
-                paintTree(*element->frame->document.get(), displayList);
+                paintTree(*element->frame->document.get(), commands);
             }
         }
     }

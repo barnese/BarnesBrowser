@@ -654,6 +654,15 @@ void Frame::click(Point point)
                 setNeedsRender();
                 return;
             }
+            else if (element->tag == "iframe")
+            {
+                auto absBounds = absoluteBoundsForObj(element->layoutObject);
+                auto border = dpx(1, element->layoutObject->zoom);
+                auto newX = x - absBounds.left() - border;
+                auto newY = y - absBounds.top() - border;
+                element->frame->click(Point(newX, newY));
+                return;
+            }
         }
         elt = elt->parent;
     }

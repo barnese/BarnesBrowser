@@ -1,6 +1,5 @@
 #include "iframe_layout.h"
 
-#include "commands/blend.h"
 #include "commands/draw_rounded_rect.h"
 #include "commands/transform.h"
 #include "helpers/string_helpers.h"
@@ -27,11 +26,17 @@ void IFrameLayout::layout()
     if (const auto& element = dynamic_cast<Element*>(node))
     {   
         auto widthAttr = element->findAttribute("width");
+        auto widthStyle = element->findStyle("width");
         auto heightAttr = element->findAttribute("height");
+        auto heightStyle = element->findStyle("height");
 
         if (widthAttr.has_value())
         {
             width = dpx(std::stod(*widthAttr) + 2, zoom);
+        }
+        else if (widthStyle.has_value())
+        {
+            width = dpx(std::stod(*widthStyle) + 2, zoom);
         }
         else 
         {
@@ -41,6 +46,10 @@ void IFrameLayout::layout()
         if (heightAttr.has_value())
         {
             height = dpx(std::stod(*heightAttr) + 2, zoom);
+        }
+        else if (heightStyle.has_value())
+        {
+            height = dpx(std::stod(*heightStyle) + 2, zoom);
         }
         else 
         {    
@@ -83,11 +92,15 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std
 {
     auto diff = dpx(1, zoom);
     QRect rect(x, y, width, height);
+    QPointF offset(x + diff, y + diff);
 
     // Simpler way for now. Let paintVisualEffects handle the clipping.
     node->styles["overflow"] = "clip";
+    
+    // Translate the iframe's contents
+    commands = commandList(std::make_unique<Transform>(offset, rect, node, std::move(commands)));
 
-    QRect outlineRect(x + diff, y + diff, width - 2 * diff, height - 2 * diff);
+    QRect outlineRect(x + diff, y + diff, width - 2 * diff - 2, height - 2 * diff - 2);
     paintOutline(node, commands, outlineRect, zoom);
 
     commands = paintVisualEffects(node, std::move(commands), rect);
