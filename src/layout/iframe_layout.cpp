@@ -82,44 +82,13 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paint() const
 std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     auto diff = dpx(1, zoom);
-    QPointF offset(x + diff, y + diff);
     QRect rect(x, y, width, height);
 
-    {
-        std::vector<std::unique_ptr<Command>> transformed;
-        transformed.push_back(
-            std::make_unique<Transform>(offset, rect, node, std::move(commands))
-        );
-        commands = std::move(transformed);
-    }
+    // Simpler way for now. Let paintVisualEffects handle the clipping.
+    node->styles["overflow"] = "clip";
 
-    QRect innerRect(
-        x + diff, 
-        y + diff, 
-        width - 2 * diff, 
-        height - 2 * diff
-    );
-    
-    {
-        std::vector<std::unique_ptr<Command>> masked;
-        masked.push_back(
-            std::make_unique<DrawRoundedRect>(innerRect, "white", 0)
-        );
-
-        commands.push_back(
-            std::make_unique<Blend>("destination-in", 1, nullptr, std::move(masked))
-        );
-    }
-
-    {
-        std::vector<std::unique_ptr<Command>> blended;
-        blended.push_back(
-            std::make_unique<Blend>("source-over", 1, node, std::move(commands))
-        );
-        commands = std::move(blended);
-    }
-
-    paintOutline(node, commands, rect, zoom);
+    QRect outlineRect(x + diff, y + diff, width - 2 * diff, height - 2 * diff);
+    paintOutline(node, commands, outlineRect, zoom);
 
     commands = paintVisualEffects(node, std::move(commands), rect);
 
