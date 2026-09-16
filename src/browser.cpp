@@ -70,6 +70,7 @@ Browser::Browser(QWidget* parent)
     m_pendingHover = std::nullopt;
     m_needsSpeakHoveredNode = false;
     m_hoveredAccessibilityNode = nullptr;
+    m_rootFrameFocused = false;
 }
 
 Browser::~Browser()
@@ -105,6 +106,7 @@ void Browser::commit(BrowserTab* tab, CommitData& commitData)
         m_activeTabUrl = commitData.url;
         if (commitData.scroll.has_value())
             m_activeTabScroll = commitData.scroll.value();
+        m_rootFrameFocused = commitData.rootFrameFocused;
         m_activeTabHeight = commitData.height;
         if (commitData.displayList.has_value())
         {
@@ -624,10 +626,21 @@ int Browser::clampScroll(const int scroll)
 void Browser::handleScrollDown()
 {
     std::lock_guard lock(m_mutex);
-    if (!m_activeTabHeight) return;
-    m_activeTabScroll = clampScroll(m_activeTabScroll + Constants::SCROLL_STEP);
+    if (m_rootFrameFocused)
+    {
+        if (!m_activeTabHeight) return;
+        m_activeTabScroll = clampScroll(m_activeTabScroll + Constants::SCROLL_STEP);
+        setNeedsDraw();
+        m_needsAnimationFrame = true;
+        return;
+    }
+    auto task = std::make_unique<Task<BrowserTab*>>(
+        "BrowserTab::scrollDown",
+        &BrowserTab::scrollDown,
+        m_activeTab
+    );
+    m_activeTab->taskRunner.scheduleTask(std::move(task));
     setNeedsRaster();
-    m_needsAnimationFrame = true;
 }
 
 void Browser::handleScrollUp()

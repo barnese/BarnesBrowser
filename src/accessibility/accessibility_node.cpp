@@ -5,11 +5,13 @@
 #include "html_tree/text.h"
 #include "layout/layout_helpers.h"
 #include "frame.h"
+#include "frame_accessibility_node.h"
 
 #include <iostream>
 
-AccessibilityNode::AccessibilityNode(const Node* node)
-    : m_node(node)
+AccessibilityNode::AccessibilityNode(const Node* node, AccessibilityNode* parent)
+    : m_node(node),
+      m_parent(parent)
 {
     bounds = computeBounds();
 
@@ -177,11 +179,11 @@ void AccessibilityNode::buildInternal(const Node* node)
     {
         if (element->tag == "iframe" && element->frame && element->frame->isLoaded())
         {
-            child = std::make_unique<AccessibilityNode>(element->frame->getNode());
+            child = std::make_unique<FrameAccessibilityNode>(node, this);
         }
         else
         {
-            child = std::make_unique<AccessibilityNode>(node);
+            child = std::make_unique<AccessibilityNode>(node, this);
         }
     }
     else 
@@ -256,4 +258,35 @@ AccessibilityNode* AccessibilityNode::hitTest(int x, int y)
     }
 
     return node;
+}
+
+std::vector<QRect> AccessibilityNode::absoluteBounds()
+{
+    std::vector<QRect> absBounds;
+
+    for (const auto& bound : this->bounds)
+    {
+        AccessibilityNode* obj;
+        auto absBound = bound.translated(0, 0);
+        if (dynamic_cast<FrameAccessibilityNode*>(this))
+        {
+            obj = m_parent;
+        }
+        else 
+        {
+            obj = this;
+        }
+        while (obj)
+        {
+            obj->mapToParent(absBound);
+            obj = obj->getParent();
+        }
+    }
+
+    return absBounds;
+}
+
+void AccessibilityNode::mapToParent(QRect&)
+{
+    // Nothing to do.
 }

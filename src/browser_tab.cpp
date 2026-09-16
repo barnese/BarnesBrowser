@@ -103,6 +103,8 @@ void BrowserTab::runAnimationFrame(const int scroll)
 
     for (const auto& [windowId, frame] : windowIdToFrame)
     {
+        // If a frame other than the root frame is scrolled, 
+        // set needs composite so the browser has to re-raster.
         if (frame == m_rootFrame.get()) continue;
         if (frame->scrollChangedInFrame)
         {
@@ -128,7 +130,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
     }
     m_compositedUpdates.clear();
 
-    bool rootFrameFocused = !(m_focusedFrame || m_focusedFrame == m_rootFrame.get());
+    bool rootFrameFocused = !m_focusedFrame || m_focusedFrame == m_rootFrame.get();
 
     CommitData commitData(
         m_url, 
@@ -277,6 +279,13 @@ void BrowserTab::enter()
     if (!m_focus) return;
     auto frame = m_focusedFrame ? m_focusedFrame : m_rootFrame.get();
     frame->activateElement(m_focus);
+}
+
+void BrowserTab::scrollDown()
+{
+    auto frame = m_focusedFrame ? m_focusedFrame : m_rootFrame.get();
+    frame->scrollDown();
+    setNeedsPaint();
 }
 
 void BrowserTab::keyPress(std::string text)

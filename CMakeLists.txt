@@ -45,6 +45,7 @@ target_include_directories(dukglue SYSTEM INTERFACE ${dukglue_src_SOURCE_DIR}/in
 
 add_executable(main
     src/accessibility/accessibility_node.cpp
+    src/accessibility/frame_accessibility_node.cpp
     src/chrome/chrome.cpp
     src/commands/blend.cpp
     src/commands/composited_layer.cpp

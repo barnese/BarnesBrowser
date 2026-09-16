@@ -7,17 +7,26 @@
 #include <QRect>
 #include <vector>
 
-/// Defines a node for an accessibility tree.
-class AccessibilityNode
+class IAccessibilityNode
 {
 public:
-    AccessibilityNode(const Node* node);
+    virtual ~IAccessibilityNode() = default;
+};
+
+/// Defines a node for an accessibility tree.
+class AccessibilityNode : public IAccessibilityNode
+{
+public:
+    AccessibilityNode(const Node* node, AccessibilityNode* parent = nullptr);
     void build();
     std::string describe() const;
     void printTree();
     const Node* getNode() { return m_node; }
+    AccessibilityNode* getParent() { return m_parent; }
     bool containsPoint(int x, int y);
     AccessibilityNode* hitTest(int x, int y);
+    std::vector<QRect> absoluteBounds();
+    void mapToParent(QRect& rect);
 
     std::string role;
     std::string text;
@@ -30,4 +39,5 @@ private:
     void buildInternal(const Node* node);
 
     const Node* m_node;
+    AccessibilityNode* m_parent;
 };

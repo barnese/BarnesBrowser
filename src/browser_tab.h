@@ -49,11 +49,13 @@ public:
     void setDarkMode(bool darkMode);
     void advanceTab();
     void enter();
+    void scrollDown();
 
     // Public Getters/Setters
     URL getLoadedUrl() { return m_url; }
     Element* getFocus() { return m_focus; }
     void setFocus(Element* element) { m_focus = element; }
+    Frame* getFocusedFrame() { return m_focusedFrame; }
     void setFocusedFrame(Frame* frame) { m_focusedFrame = frame; }
     bool isLoaded() { return m_loaded; }
     void setNeedsAccessibility(bool value) { m_needsAccessibility = value; }

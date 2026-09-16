@@ -98,6 +98,7 @@ private:
     bool m_needsAccessibility;
     bool m_accessibilityEnabled;
     bool m_hasSpokenDocument;
+    bool m_rootFrameFocused;
     
     // Tab-specific members    
     std::vector<std::unique_ptr<BrowserTab>> m_tabs;

@@ -38,6 +38,7 @@ public:
     void keyPress(std::string text);
     void click(Point point);
     void activateElement(Element* element);
+    void scrollDown();
 
     void scrollTo(Element* element);
     bool isLoaded() { return m_loaded; }

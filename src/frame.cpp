@@ -519,10 +519,14 @@ void Frame::focusElement(Element* element)
         needsFocusScroll = true;
     if (focus)
         focus->isFocused = false;
+    auto focusedFrame = m_tab->getFocusedFrame();
+    if (focusedFrame && focusedFrame != this)
+        focusedFrame->setNeedsRender();
     m_tab->setFocus(element);
     m_tab->setFocusedFrame(this);
     if (element)
         element->isFocused = true;
+    setNeedsRender();
 }
 
 void Frame::activateElement(Element* element)
@@ -559,6 +563,12 @@ void Frame::activateElement(Element* element)
             node = node->parent;
         }
     }
+}
+
+void Frame::scrollDown()
+{
+    scroll = clampScroll(scroll + Constants::SCROLL_STEP);
+    scrollChangedInFrame = true;
 }
 
 void Frame::submitForm(Element* element)
