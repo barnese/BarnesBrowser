@@ -1,6 +1,6 @@
 # Barnes Browser
 
-This is a simple, experimental web browser written to explore browser concepts for educational purposes. It is a work in progress. Use at your own risk!
+This is a simple, experimental web browser written to explore browser concepts for educational purposes. It is a work in progress. For now, only simple HTML pages will work correctly. Use at your own risk!
 
 It is based on the book [Web Browser Engineering](https://browser.engineering/) by Pavel Panchekha & Chris Harrelson.
 
