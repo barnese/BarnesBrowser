@@ -41,7 +41,9 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         m_loaded = false;
         m_logger.info("loading: " + url.describe());
         taskRunner.clearPendingTasks();
-        m_rootFrame = std::make_unique<Frame>(this, nullptr, nullptr);
+        windowIdToFrame.clear();
+        m_focusedFrame = nullptr;
+        m_rootFrame = std::make_unique<Frame>(this, nullptr);
         m_rootFrame->load(url, payload);
         m_rootFrame->setFrameSize(m_width, m_height);
         m_loaded = true;
@@ -69,7 +71,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
         if (!frame->isLoaded()) continue;
 
         browser->measure.start("script-runRAFHandlers");
-        frame->dispatchRAF(windowId);
+        frame->dispatchRAF(frame->windowId);
         browser->measure.stop("script-runRAFHandlers");
 
         // Run any CSS transition animations.
@@ -95,7 +97,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
 
     render();
    
-    if (m_focus && m_focusedFrame->needsFocusScroll)
+    if (m_focus && m_focusedFrame && m_focusedFrame->needsFocusScroll)
     {
         m_focusedFrame->scrollTo(m_focus);
         m_focusedFrame->needsFocusScroll = false;
@@ -294,12 +296,15 @@ void BrowserTab::keyPress(std::string text)
     frame->keyPress(text);
 }
 
-std::unique_ptr<JSContext> BrowserTab::getJs(URL url)
+JSContext* BrowserTab::getJs(URL url)
 {
-    // TODO: This needs to get rewritten.
-    return std::make_unique<JSContext>(this);
+    auto origin = url.origin();
+    if (!m_originToJs.contains(origin))
+    {
+        m_originToJs[origin] = std::make_unique<JSContext>(this, origin);
+    }
+    return m_originToJs[origin].get();
 }
-
 
 bool BrowserTab::allowRequest(const URL& url)
 {
@@ -320,16 +325,28 @@ void BrowserTab::click(Point point)
     m_rootFrame->click(point);
 }
 
-std::optional<URL> BrowserTab::goBack()
+void BrowserTab::goBack()
 {
     if (m_history.size() <= 1)
-    {
-        return std::nullopt;
-    }
+        return;
 
     m_history.pop_back();
     auto url = m_history.back();
     m_history.pop_back();
     load(url);
-    return url;
+}
+
+Frame* BrowserTab::getFrameByWindowId(int windowId)
+{
+    auto it = std::find_if(windowIdToFrame.begin(), windowIdToFrame.end(),
+        [windowId](const auto& pair) {
+            return pair.first == windowId;
+        });
+    return it != windowIdToFrame.end() ? it->second : nullptr;
+}
+
+void BrowserTab::postMessage(std::string message, int targetWindowId)
+{
+    auto frame = getFrameByWindowId(targetWindowId);
+    frame->js->dispatchPostMessage(message, targetWindowId);
 }

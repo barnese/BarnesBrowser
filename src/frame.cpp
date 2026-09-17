@@ -12,10 +12,9 @@
 
 #include <fstream>
 
-Frame::Frame(BrowserTab* tab, Frame* parentFrame, Element* frameElement)
+Frame::Frame(BrowserTab* tab, Frame* parentFrame)
     : m_tab(tab),
       m_parentFrame(parentFrame),
-      m_frameElement(frameElement),
       m_url(""),
       m_logger(Logger("Frame"))
 {
@@ -30,8 +29,8 @@ Frame::Frame(BrowserTab* tab, Frame* parentFrame, Element* frameElement)
     needsFocusScroll = false;
 
     // Give this frame an identifier, a "window ID".
-    m_windowId = m_tab->windowIdToFrame.size();
-    m_tab->windowIdToFrame.emplace_back(m_windowId, this);
+    windowId = m_tab->windowIdToFrame.size();
+    m_tab->windowIdToFrame.emplace_back(windowId, this);
 }
 
 void Frame::load(URL url, std::optional<std::string> payload)
@@ -94,15 +93,21 @@ void Frame::render()
 void Frame::setNeedsRender()
 {
     m_needsStyle = true;
-    m_tab->setNeedsAccessibility(true);
-    m_tab->setNeedsPaint();
+    if (m_tab)
+    {
+        m_tab->setNeedsAccessibility(true);
+        m_tab->setNeedsPaint();
+    }
 }
 
 void Frame::setNeedsLayout()
 {
     m_needsLayout = true;
-    m_tab->setNeedsAccessibility(true);
-    m_tab->setNeedsPaint();
+    if (m_tab)
+    {
+        m_tab->setNeedsAccessibility(true);
+        m_tab->setNeedsPaint();
+    }
 }
 
 void Frame::parseHtml(const std::string& body)
@@ -148,12 +153,16 @@ void Frame::loadScripts()
     // If we are loading a new page and we already have an existing
     // JSContext, we need to set a discarded flag so that any pending
     // timeouts are discarded.
-    if (m_js) 
+    if (js) 
     {
-        m_js->discarded = true;
+        js->discarded = true;
     }
    
-    m_js = m_tab->getJs(m_url);
+    js = nullptr;
+    js = m_tab->getJs(m_url);
+    if (!js)
+        m_logger.error("failed to get JSContext!");
+    js->addWindow(this);
     
     auto scripts = getScriptLinks(m_node.get());
     for (const auto& script : scripts)
@@ -172,12 +181,13 @@ void Frame::loadScripts()
             auto body = scriptUrl.request(m_url).bodyString();
 
             // Rather than run the script right away, schedule it to be processed later.
-            auto task = std::make_unique<Task<JSContext*, std::string, std::string>>(
+            auto task = std::make_unique<Task<JSContext*, std::string, std::string, int>>(
                 "JSContext::run(\"" + script + "\")", 
                 &JSContext::run, 
-                m_js.get(), 
+                js, 
                 script, 
-                body
+                body,
+                windowId
             );
             taskRunner.scheduleTask(std::move(task));
         }
@@ -268,7 +278,7 @@ void Frame::loadIFrames()
             iframe->frame = nullptr;
             continue;
         }
-        iframe->frame = std::make_unique<Frame>(m_tab, this, iframe);
+        iframe->frame = std::make_unique<Frame>(m_tab, this);
 
         // Since iframes can be slow to load, load them asynchronously.
         auto task = std::make_unique<Task<Frame*, URL, std::optional<std::string>>>(
@@ -464,11 +474,12 @@ std::string Frame::getTitle(Node* tree)
 
 void Frame::dispatchRAF(int windowId)
 {
-    m_js->dispatchRAF(windowId);
+    js->dispatchRAF(windowId);
 }
 
 void Frame::advanceTab()
 {
+    if (!m_node) return;
       // Get all the focusable elements.
     std::vector<Element*> focusableElements;
     auto nodes = treeToList(m_node.get());
@@ -547,7 +558,7 @@ void Frame::activateElement(Element* element)
     }
     else if (element->tag == "button")
     {
-        if (m_js->dispatchEvent("click", element)) return;
+        if (js->dispatchEvent("click", element, windowId)) return;
 
         Node* node = element;
 
@@ -565,15 +576,9 @@ void Frame::activateElement(Element* element)
     }
 }
 
-void Frame::scrollDown()
-{
-    scroll = clampScroll(scroll + Constants::SCROLL_STEP);
-    scrollChangedInFrame = true;
-}
-
 void Frame::submitForm(Element* element)
 {
-    if (m_js->dispatchEvent("submit", element)) return;
+    if (js->dispatchEvent("submit", element, windowId)) return;
 
     std::vector<const Element*> inputs;
     auto nodeList = treeToList<Node>(element);
@@ -610,6 +615,12 @@ void Frame::submitForm(Element* element)
     load(url, body);
 }
 
+void Frame::scrollDown()
+{
+    scroll = clampScroll(scroll + Constants::SCROLL_STEP);
+    scrollChangedInFrame = true;
+}
+
 void Frame::keyPress(std::string text)
 {
     auto focus = m_tab->getFocus();
@@ -618,7 +629,7 @@ void Frame::keyPress(std::string text)
         if (!focus->attributes.contains("value"))
             activateElement(focus);
 
-        if (m_js->dispatchEvent("keydown", focus)) return;
+        if (js->dispatchEvent("keydown", focus, windowId)) return;
         if (text == "\U0000007f")
         {
             // Handle backspace by removing the last character.
@@ -637,7 +648,7 @@ void Frame::click(Point point)
     focusElement(nullptr);
 
     auto x = point.x;
-    auto y = point.y + scroll;    
+    auto y = point.y + scroll;
 
     auto list = treeToList<Layout>(document.get());
     auto locRect = QRect(x, y, 1, 1);
@@ -657,20 +668,20 @@ void Frame::click(Point point)
     {
         if (auto element = dynamic_cast<Element*>(elt))
         {
-            if (isFocusable(element))
-            {
-                focusElement(element);
-                activateElement(element);
-                setNeedsRender();
-                return;
-            }
-            else if (element->tag == "iframe")
+            if (element->tag == "iframe")
             {
                 auto absBounds = absoluteBoundsForObj(element->layoutObject);
                 auto border = dpx(1, element->layoutObject->zoom);
                 auto newX = x - absBounds.left() - border;
                 auto newY = y - absBounds.top() - border;
                 element->frame->click(Point(newX, newY));
+                return;
+            }
+            else if (isFocusable(element))
+            {
+                focusElement(element);
+                activateElement(element);
+                setNeedsRender();
                 return;
             }
         }

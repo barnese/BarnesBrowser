@@ -5,7 +5,7 @@ var count = 0;
 function callback() {
     // Simulate slowness
     //for (var i = 0; i < 5e6; i++);
-    var output = document.querySelectorAll("div")[1];
+    var output = window.document.querySelectorAll("div")[1];
     output.innerHTML = "count: " + (count++);
     if (count < 100) {
         requestAnimationFrame(callback);

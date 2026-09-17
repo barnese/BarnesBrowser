@@ -34,8 +34,9 @@ std::string getJavaScriptRuntime()
     return "";
 }
 
-JSContext::JSContext(BrowserTab* tab)
-    : m_tab(tab)
+JSContext::JSContext(BrowserTab* tab, std::string urlOrigin)
+    : m_tab(tab),
+      m_urlOrigin(urlOrigin)
 {
     discarded = false;
 
@@ -56,11 +57,8 @@ JSContext::JSContext(BrowserTab* tab)
     // Export the instance of this class to allow the above methods to work.
     dukglue_register_global(m_duk, this, "currentJSContext");
 
-    auto jsRuntime = getJavaScriptRuntime();
-
-    m_tab->browser->measure.start("script-runtime");
-    duk_peval_string(m_duk, jsRuntime.c_str());
-    m_tab->browser->measure.stop("script-runtime");
+    duk_peval_string(m_duk, "function Window(id) { this._id = id };");
+    duk_peval_string(m_duk, "WINDOWS = {}");
 }
 
 JSContext::~JSContext()
@@ -71,9 +69,68 @@ JSContext::~JSContext()
     }
 }
 
-std::vector<int> JSContext::querySelectorAll(std::string selectorText)
+void JSContext::addWindow(Frame* frame)
 {
-    auto frame = m_tab->windowIdToFrame.at(0).second; // TODO: FIXME
+    auto id = frame->windowId;
+    std::stringstream code;
+    code << "var window_" << id << " = new Window(" << id << ");";
+    duk_peval_string(m_duk, code.str().c_str());
+
+    auto jsRuntime = getJavaScriptRuntime();
+    auto wrappedRuntime = wrap(jsRuntime, id);
+    m_tab->browser->measure.start("script-runtime");
+    duk_peval_string(m_duk, wrappedRuntime.c_str());
+    m_tab->browser->measure.stop("script-runtime");
+
+    std::stringstream mapCode;
+    mapCode << "WINDOWS[" << id << "] = window_" << id << ";";
+    duk_peval_string(m_duk, mapCode.str().c_str());
+}
+
+std::string JSContext::wrap(std::string script, int windowId)
+{
+    std::stringstream code;
+    code << "window = window_" << windowId << "; ";
+    code << script;
+    return code.str();
+}
+
+void JSContext::throwIfCrossOrigin(Frame* frame)
+{
+    if (frame->getURL().origin() != m_urlOrigin)
+    {
+        throw JSContextException("Cross-origin access disallowed from script");
+    }
+}
+
+std::optional<int> JSContext::parent(int windowId)
+{
+    auto parentFrame = m_tab->getFrameByWindowId(windowId)->getParentFrame();
+    if (!parentFrame)
+        return std::nullopt;
+    return parentFrame->windowId;
+}
+
+int JSContext::run(std::string scriptName, std::string code, int windowId)
+{
+    m_tab->browser->measure.start("script-load");
+    code = wrap(code, windowId);
+    auto result = duk_peval_string(m_duk, code.c_str());
+    if (result != 0)
+    {
+        printf("[JSContext] '%s' run crashed: %s\n", 
+            scriptName.c_str(), 
+            duk_safe_to_string(m_duk, -1));
+    }
+    duk_pop(m_duk);
+    m_tab->browser->measure.stop("script-load");
+    return result;
+}
+
+std::vector<int> JSContext::querySelectorAll(std::string selectorText, int windowId)
+{
+    auto frame = m_tab->getFrameByWindowId(windowId);
+    throwIfCrossOrigin(frame);
     std::vector<int> nodeHandles;
     auto selector = CSSParser(selectorText).selector();
     auto nodeList = treeToList<Node>(frame->getNode());
@@ -89,8 +146,10 @@ std::vector<int> JSContext::querySelectorAll(std::string selectorText)
     return nodeHandles;
 }
 
-std::string JSContext::getAttribute(int handle, std::string attrName)
+std::string JSContext::getAttribute(int handle, std::string attrName, int windowId)
 {
+    auto frame = m_tab->getFrameByWindowId(windowId);
+    throwIfCrossOrigin(frame);
     auto node = getNode(handle);
     if (const auto& element = dynamic_cast<const Element*>(node)) 
     {
@@ -100,8 +159,10 @@ std::string JSContext::getAttribute(int handle, std::string attrName)
     return "";
 }
 
-void JSContext::setAttribute(int handle, std::string attrName, std::string value)
+void JSContext::setAttribute(int handle, std::string attrName, std::string value, int windowId)
 {
+    auto frame = m_tab->getFrameByWindowId(windowId);
+    throwIfCrossOrigin(frame);
     auto node = getNode(handle);
     if (auto element = dynamic_cast<Element*>(node)) 
     {
@@ -110,8 +171,11 @@ void JSContext::setAttribute(int handle, std::string attrName, std::string value
     }
 }
 
-void JSContext::setInnerHtml(int handle, std::string html)
+void JSContext::setInnerHtml(int handle, std::string html, int windowId)
 {
+    auto frame = m_tab->getFrameByWindowId(windowId);
+    throwIfCrossOrigin(frame);
+
     // Note: hack to get an HTML fragment to work in our parser.
     // Ideally we wouldn't need to wrap the fragment like this.
     html = "<html><body>" + html + "</body></html>";
@@ -124,43 +188,22 @@ void JSContext::setInnerHtml(int handle, std::string html)
     {
         child->parent = node;
     }
-    m_tab->setNeedsRenderAllFrames();
+    frame->setNeedsRender();
 }
 
-void JSContext::setStyle(int handle, std::string style)
+void JSContext::setStyle(int handle, std::string style, int windowId)
 {
+    auto frame = m_tab->getFrameByWindowId(windowId);
+    throwIfCrossOrigin(frame);
     auto node = getNode(handle);
     if (auto element = dynamic_cast<Element*>(node))
     {
         element->attributes["style"] = style;
-        m_tab->setNeedsRenderAllFrames();
+        frame->setNeedsRender();
     }    
 }
 
-std::string JSContext::runLoad(int handle, URL tabUrl, URL fullUrl, std::string body)
-{
-    // Make the URL request.
-    std::optional<std::string> payload;
-    if (!body.empty())
-    {
-        payload = body;
-    }
-    auto response = fullUrl.request(tabUrl, payload).bodyString();
-
-    // Schedule a task to send the response back to JavaScript.
-    auto task = std::make_unique<Task<JSContext*, int, std::string>>(
-        "JSContext::dispatchXhrOnload", 
-        &JSContext::dispatchXhrOnload, 
-        this,
-        handle,
-        response
-    );
-    m_tab->taskRunner.scheduleTask(std::move(task));
-
-    return response;
-}
-
-void JSContext::dispatchXhrOnload(int handle, std::string response)
+void JSContext::dispatchXhrOnload(int handle, std::string response, int windowId)
 {
     if (discarded) return;
     m_tab->browser->measure.start("script-xhr");
@@ -174,46 +217,76 @@ void JSContext::dispatchXhrOnload(int handle, std::string response)
     
     duk_put_global_string(m_duk, "js");
     
-    duk_peval_string(m_duk, "__runXhrOnload(js.handle, js.body)");
+    std::string code = wrap("window.__runXhrOnload(js.handle, js.body)", windowId);
+    auto result = duk_peval_string(m_duk, code.c_str());
+
+    if (result != 0)
+        showEvalError("dispatch XHR onload error");
 
     duk_pop(m_duk);
     m_tab->browser->measure.stop("script-xhr");
 }
 
-std::string JSContext::sendXmlHttpRequest(int handle, std::string method, std::string url, std::string body, bool isAsync)
+std::string JSContext::sendXmlHttpRequest(int handle, std::string method, std::string url, std::string body, bool isAsync, int windowId)
 {
     (void)method; // Silence unused parameter warning.
+    
+    auto frame = m_tab->getFrameByWindowId(windowId);
 
-    auto tabUrl = m_tab->getLoadedUrl();
-    auto fullUrl = tabUrl.resolve(url);
+    auto frameUrl = frame->getURL();
+    auto fullUrl = frameUrl.resolve(url);
 
     // Make sure this URL is allowed by the Content Security Policy.
     // If there are no allowed origins defined, this allow the style.
-    if (!m_tab->allowRequest(fullUrl))
+    if (!frame->allowRequest(fullUrl))
     {
         throw JSContextException("Cross-origin XHR blocked by CSP");
     }
 
-    if (fullUrl.origin() != tabUrl)
+    if (fullUrl.origin() != frameUrl.origin())
     {
         throw JSContextException("Cross-origin XHR not allowed");
     }
 
     if (!isAsync)
     {
-        return runLoad(handle, tabUrl, fullUrl, body);
+        return runLoad(handle, frame->getURL(), fullUrl, body, windowId);
     }
     else 
     {
-        QThreadPool::globalInstance()->start([this, handle, tabUrl, fullUrl, body] {
-            runLoad(handle, tabUrl, fullUrl, body);
+        QThreadPool::globalInstance()->start([this, handle, frameUrl, fullUrl, body, windowId] {
+            runLoad(handle, frameUrl, fullUrl, body, windowId);
         });
 
         return "";
     }
 }
 
-void JSContext::dispatchSetTimeout(int handle)
+std::string JSContext::runLoad(int handle, URL frameUrl, URL fullUrl, std::string body, int windowId)
+{
+    // Make the URL request.
+    std::optional<std::string> payload;
+    if (!body.empty())
+    {
+        payload = body;
+    }
+    auto response = fullUrl.request(frameUrl, payload).bodyString();
+
+    // Schedule a task to send the response back to JavaScript.
+    auto task = std::make_unique<Task<JSContext*, int, std::string, int>>(
+        "JSContext::dispatchXhrOnload", 
+        &JSContext::dispatchXhrOnload, 
+        this,
+        handle,
+        response,
+        windowId
+    );
+    m_tab->taskRunner.scheduleTask(std::move(task));
+
+    return response;
+}
+
+void JSContext::dispatchSetTimeout(int handle, int windowId)
 {
     if (discarded) return;
     m_tab->browser->measure.start("script-settimeout");
@@ -221,19 +294,23 @@ void JSContext::dispatchSetTimeout(int handle)
     duk_push_int(m_duk, handle);
     duk_put_prop_string(m_duk, -2, "handle");
     duk_put_global_string(m_duk, "jsContext");
-    duk_peval_string(m_duk, "__runSetTimeout(jsContext.handle)");
+    auto code = wrap("window.__runSetTimeout(jsContext.handle)", windowId);
+    auto result = duk_peval_string(m_duk, code.c_str());
+    if (result != 0)
+        showEvalError("dispatch set timeout error");
     duk_pop(m_duk);
     m_tab->browser->measure.stop("script-settimeout");
 }
 
-void JSContext::setTimeout(int handle, long time)
+void JSContext::setTimeout(int handle, long time, int windowId)
 {
-    QTimer::singleShot(time, this, [this, handle]() {
-        auto task = std::make_unique<Task<JSContext*, int>>(
+    QTimer::singleShot(time, this, [this, handle, windowId]() {
+        auto task = std::make_unique<Task<JSContext*, int, int>>(
             "JSContext::dispatchSetTimeout", 
             &JSContext::dispatchSetTimeout, 
             this,
-            handle
+            handle,
+            windowId
         );
         m_tab->taskRunner.scheduleTask(std::move(task));
     });
@@ -262,29 +339,13 @@ Node* JSContext::getNode(int handle)
     return (it != m_handleToNode.end()) ? it->second : nullptr;
 }
 
-/// @brief Runs the given JavaScript code.
-/// @param scriptName the filename of the script
-/// @param code the JavaScript code to be executed
-/// @return 0 if successful, non-zero otherwise
-int JSContext::run(std::string scriptName, std::string code)
-{
-    m_tab->browser->measure.start("script-load");
-    auto result = duk_peval_string(m_duk, code.c_str());
-    if (result != 0)
-    {
-        printf("[JSContext] '%s' crashed: %s\n", 
-            scriptName.c_str(), 
-            duk_safe_to_string(m_duk, -1));
-    }
-    duk_pop(m_duk);
-    m_tab->browser->measure.stop("script-load");
-    return result;
-}
-
 void JSContext::dispatchRAF(int windowId)
 {
     duk_push_object(m_duk);
-    duk_peval_string(m_duk, "window.__runRAFHandlers()");
+    std::string code = wrap("window.__runRAFHandlers()", windowId);
+    auto result = duk_peval_string(m_duk, code.c_str());
+    if (result != 0)
+        showEvalError("dispatch RAF error");
     duk_pop(m_duk);
 }
 
@@ -293,7 +354,7 @@ void JSContext::dispatchRAF(int windowId)
 /// @param eventType type of event, such as "click" or "keydown".
 /// @param node the node related to this event, such as a button element.
 /// @returns int indicating whether the event should be cancelled.
-int JSContext::dispatchEvent(std::string eventType, Node* node)
+int JSContext::dispatchEvent(std::string eventType, Node* node, int windowId)
 {
     auto handle = getHandle(node);
     
@@ -307,15 +368,54 @@ int JSContext::dispatchEvent(std::string eventType, Node* node)
 
     duk_put_global_string(m_duk, "jsContext");
 
-    auto doDefault = duk_peval_string(m_duk,
-         "new Node(jsContext.handle).dispatchEvent(new Event(jsContext.type))");
+    std::string code = "new window.Node(jsContext.handle).dispatchEvent(new window.Event(jsContext.type))";
+    code = wrap(code, windowId);
+    auto result = duk_peval_string(m_duk, code.c_str());
+
+    if (result != 0)
+        showEvalError("dispatch event error");
 
     duk_pop(m_duk);
 
-    return !doDefault;
+    return !result;
 }
 
 void JSContext::requestAnimationFrame()
 {
     m_tab->browser->setNeedsAnimationFrame(m_tab);
+}
+
+void JSContext::postMessage(int targetWindowId, std::string message)
+{    
+    auto task = std::make_unique<Task<BrowserTab*, std::string, int>>(
+        "BrowserTab::postMessage(" + message + ")", 
+        &BrowserTab::postMessage, 
+        m_tab,
+        message,
+        targetWindowId
+    );
+    m_tab->taskRunner.scheduleTask(std::move(task)); 
+}
+
+void JSContext::dispatchPostMessage(std::string message, int windowId)
+{
+    duk_push_object(m_duk);
+    duk_push_string(m_duk, message.c_str());
+    duk_put_prop_string(m_duk, -2, "message");
+    duk_put_global_string(m_duk, "jsContext");
+
+    std::string code = "window.dispatchEvent(new window.MessageEvent(jsContext.message))";
+    code = wrap(code, windowId);
+    auto result = duk_peval_string(m_duk, code.c_str());
+    if (result != 0)
+        showEvalError("dispatch post message error");
+    duk_pop(m_duk);
+}
+
+void JSContext::showEvalError(std::string message)
+{
+    std::cerr << "[JSContext] "
+              << message << ": " 
+              << duk_safe_to_string(m_duk, -1)
+              << std::endl;
 }

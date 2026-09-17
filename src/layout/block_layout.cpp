@@ -273,12 +273,12 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std:
 {
     QRect rect(x, y, width, height);
     auto cmds = paintVisualEffects(node, std::move(commands), rect);
-    if (auto element = dynamic_cast<const Element*>(node))
-    {
-        if (element->tag == "iframe") 
-            return cmds;
-    }
-    paintOutline(node, cmds, rect, zoom);
+//    if (auto element = dynamic_cast<const Element*>(node))
+//    {
+//        if (element->tag == "iframe") 
+//            return cmds;
+//    }
+//    paintOutline(node, cmds, rect, zoom);
     return cmds;
 }
 

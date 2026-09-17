@@ -4,6 +4,7 @@
 #include "commands/command.h"
 #include "html_tree/element.h"
 #include "html_tree/node.h"
+#include "scripting/js_context.h"
 #include "tasks/task_runner.h"
 #include "logger.h"
 #include "point.h"
@@ -34,7 +35,7 @@ public:
 
     // Loading and Navigation
     void load(URL url, std::optional<std::string> payload=std::nullopt);
-    std::optional<URL> goBack();
+    void goBack();
     void render();
     void setNeedsRenderAllFrames();
     void setNeedsPaint();
@@ -50,6 +51,7 @@ public:
     void advanceTab();
     void enter();
     void scrollDown();
+    void postMessage(std::string message, int targetWindowId);
 
     // Public Getters/Setters
     URL getLoadedUrl() { return m_url; }
@@ -59,12 +61,13 @@ public:
     void setFocusedFrame(Frame* frame) { m_focusedFrame = frame; }
     bool isLoaded() { return m_loaded; }
     void setNeedsAccessibility(bool value) { m_needsAccessibility = value; }
-    std::unique_ptr<JSContext> getJs(URL url);
+    JSContext* getJs(URL url);
     bool isDarkMode() { return m_darkMode; }
     double getZoom() { return m_zoom; }
     void setTabTitle(const std::string& title);
     void addHistory(URL url) { m_history.push_back(url); }
     Frame* getRootFrame() { return m_rootFrame.get(); }
+    Frame* getFrameByWindowId(int windowID);
 
     /// Checks to see if the url is allowed by the Content Security Policy.
     /// If no allowed origins are defined, then the URL is allowed.
@@ -95,6 +98,7 @@ private:
     Element* m_focus;
     Frame* m_focusedFrame;
     std::vector<URL> m_allowedOrigins;
+    std::map<std::string, std::unique_ptr<JSContext>> m_originToJs;
 
     bool m_loaded;
     int m_scroll;

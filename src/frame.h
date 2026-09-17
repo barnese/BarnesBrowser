@@ -21,7 +21,7 @@ class Element;
 class Frame
 {
 public:
-    Frame(BrowserTab* tab, Frame* parentFrame, Element* frameElement);
+    Frame(BrowserTab* tab, Frame* parentFrame);
 
     void load(URL url, std::optional<std::string> payload=std::nullopt);
     void render();
@@ -46,6 +46,8 @@ public:
     bool needsLayout() { return m_needsLayout; }
     Node* getNode() { return m_node.get(); }
     Frame* getTabRootFrame();
+    Frame* getParentFrame() { return m_parentFrame; }
+    URL getURL() { return m_url; }
 
     /// Prevents scroll from going past top or bottom of the page.
     int clampScroll(const int scroll);
@@ -56,6 +58,8 @@ public:
     bool needsFocusScroll;
     bool scrollChangedInFrame;
     int scroll;
+    int windowId;
+    JSContext* js;
 
 private:
     void loadContentSecurityPolicy(std::map<std::string, std::string, CaseInsensitiveLess> headers);
@@ -77,14 +81,11 @@ private:
 
     BrowserTab* m_tab;
     Frame* m_parentFrame;
-    Element* m_frameElement;
     std::unique_ptr<Node> m_node;
     std::vector<URL> m_allowedOrigins;
     URL m_url;
     CSSRules m_rules;
-    std::unique_ptr<JSContext> m_js;
     bool m_loaded;
-    int m_windowId;
     
     /// Dirty flags to indicate when something needs to be re-rendered.
     bool m_needsStyle;
