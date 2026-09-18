@@ -1,4 +1,4 @@
-console.log("[eventloop.js] Hello!");
+window.console.log("[eventloop.js] Hello!");
 
 // Simple counter using requestAnimationFrame 
 var count = 0;

@@ -568,7 +568,8 @@ void Frame::activateElement(Element* element)
             {
                 if (e->tag == "form" && e->attributes.contains("action"))
                 {
-                    submitForm(element);
+                    submitForm(e);
+                    return;
                 }
             }
             node = node->parent;

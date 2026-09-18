@@ -377,7 +377,7 @@ int JSContext::dispatchEvent(std::string eventType, Node* node, int windowId)
 
     duk_pop(m_duk);
 
-    return !result;
+    return result;
 }
 
 void JSContext::requestAnimationFrame()
@@ -414,8 +414,8 @@ void JSContext::dispatchPostMessage(std::string message, int windowId)
 
 void JSContext::showEvalError(std::string message)
 {
-    std::cerr << "[JSContext] "
-              << message << ": " 
-              << duk_safe_to_string(m_duk, -1)
-              << std::endl;
+    // Print the error message and stack trace.
+    duk_get_prop_string(m_duk, -1, "stack");
+    if (duk_is_string(m_duk, -1))
+        std::cerr << "[JSContext] " << message << duk_get_string(m_duk, -1) << std::endl;
 }

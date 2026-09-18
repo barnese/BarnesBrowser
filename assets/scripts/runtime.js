@@ -5,6 +5,7 @@ window.EVENT_LISTENERS = {};
 window.SET_TIMEOUT_REQUESTS = {};
 window.XHR_REQUESTS = {};
 window.RAF_LISTENERS = [];
+window.WINDOW_LISTENERS = {};
 
 window.console = { log: function(x) { 
     printMessage(x); 
@@ -30,11 +31,11 @@ window.Node = function(handle) {
 }
 
 window.Node.prototype.getAttribute = function(attr) {
-    return currentJSContext.getAttribute(this.handle, attr);
+    return currentJSContext.getAttribute(this.handle, attr, window._id);
 }
 
 window.Node.prototype.setAttribute = function(attr, value) {
-    currentJSContext.setAttribute(this.handle, attr, value);
+    currentJSContext.setAttribute(this.handle, attr, value, window._id);
 }
 
 window.Node.prototype.addEventListener = function(type, listener) {
@@ -47,9 +48,9 @@ window.Node.prototype.addEventListener = function(type, listener) {
 }
 
 window.Node.prototype.dispatchEvent = function(event) {
-    window.console.log("[runtime.js] dispatching event " + event.type);
     var type = event.type;
     var handle = this.handle;
+    window.console.log("[runtime.js] dispatching event " + type + ", handle: " + handle);
     var list = (window.EVENT_LISTENERS[handle] && 
         window.EVENT_LISTENERS[handle][type]) || [];
     for (var i = 0; i < list.length; i++) {
@@ -92,7 +93,7 @@ window.XMLHttpRequest.prototype.send = function(body) {
 
 window.__runXhrOnload = function(handle, body) {
     var obj = window.XHR_REQUESTS[handle];
-    var evt = new Event('load');
+    var evt = new window.Event('load');
     obj.responseText = body;
     if (obj.onload)
         obj.onload(evt);
@@ -101,7 +102,7 @@ window.__runXhrOnload = function(handle, body) {
 window.setTimeout = function(callback, timeDelta) {
     var handle = Object.keys(window.SET_TIMEOUT_REQUESTS).length;
     window.SET_TIMEOUT_REQUESTS[handle] = callback;
-    currentJSContext.setTimeout(handle, timeDelta);
+    currentJSContext.setTimeout(handle, timeDelta, window._id);
 }
 
 window.__runSetTimeout = function(handle) {
@@ -124,7 +125,6 @@ window.__runRAFHandlers = function() {
 
 // To allow cross-origin iframes to communicate, the following 
 // implements message passing.
-window.WINDOW_LISTENERS = {}
 
 window.MessageEvent = function(data) {
     this.type = "message";
