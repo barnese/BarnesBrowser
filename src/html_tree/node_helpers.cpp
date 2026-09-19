@@ -24,7 +24,11 @@ bool isFocusable(const Node* node)
     
     if (auto element = dynamic_cast<const Element*>(node))
     {
-        if (element->attributes.contains("tabindex")) return true;
+        if (element->attributes.contains("tabindex")) 
+            return true;
+        else if (element->attributes.contains("contenteditable"))
+            return true;
+
         std::vector<std::string> focusableElements = { "input", "button", "a" };
         return std::ranges::contains(focusableElements, element->tag);
     }

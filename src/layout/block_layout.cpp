@@ -1,9 +1,11 @@
 #include "block_layout.h"
 
+#include "commands/draw_line.h"
 #include "commands/draw_rounded_rect.h"
 #include "constants.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
+#include "html_tree/node_helpers.h"
 #include "html_tree/text.h"
 #include "layout.h"
 #include "layout/iframe_layout.h"
@@ -243,6 +245,13 @@ bool BlockLayout::shouldPaint() const
     return false;
 }
 
+std::unique_ptr<DrawLine> drawCursor(Layout* layout, int offset)
+{
+    auto x = layout->x + offset;
+    auto y = layout->y;
+    return std::make_unique<DrawLine>(x, y, x, y + layout->height, "red", 1);
+}
+
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 {
     std::vector<std::unique_ptr<Command>> commands;
@@ -264,6 +273,29 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
             auto command = std::make_unique<DrawRoundedRect>(x, y, width, height, color, radius);
             commands.push_back(std::move(command));
         }
+
+        if (element->isFocused && element->attributes.contains("contenteditable"))        
+        {
+            auto list = treeToList<Layout>((Layout*)this);
+            std::vector<TextLayout*> textLayouts;
+            for (const auto& layout : list)
+            {
+                if (auto* text = dynamic_cast<TextLayout*>(layout))
+                {
+                    textLayouts.push_back(text);
+                }
+            }
+
+            if (!textLayouts.empty())
+            {
+                auto layout = textLayouts.back();
+                commands.push_back(drawCursor(layout, layout->width));
+            }
+            else 
+            {
+                commands.push_back(drawCursor((Layout*)this, 0));
+            }
+        }
     }
 
     return commands;
@@ -273,12 +305,7 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std:
 {
     QRect rect(x, y, width, height);
     auto cmds = paintVisualEffects(node, std::move(commands), rect);
-//    if (auto element = dynamic_cast<const Element*>(node))
-//    {
-//        if (element->tag == "iframe") 
-//            return cmds;
-//    }
-//    paintOutline(node, cmds, rect, zoom);
+    paintOutline(node, cmds, rect, zoom);
     return cmds;
 }
 

@@ -625,12 +625,16 @@ void Frame::scrollDown()
 void Frame::keyPress(std::string text)
 {
     auto focus = m_tab->getFocus();
-    if (focus && focus->tag == "input")
+    if (!focus) return;
+
+    if (focus->tag == "input")
     {
         if (!focus->attributes.contains("value"))
             activateElement(focus);
 
-        if (js->dispatchEvent("keydown", focus, windowId)) return;
+        if (js->dispatchEvent("keydown", focus, windowId)) 
+            return;
+
         if (text == "\U0000007f")
         {
             // Handle backspace by removing the last character.
@@ -640,6 +644,34 @@ void Frame::keyPress(std::string text)
         {
             focus->attributes["value"] += text;
         }
+        setNeedsRender();
+    }
+    else if (focus->attributes.contains("contenteditable"))
+    {
+        auto list = treeToList<Node>(focus);
+        std::vector<Text*> textNodes;
+        for (const auto& item : list)
+        {
+            if (auto* text = dynamic_cast<Text*>(item))
+            {
+                textNodes.push_back(text);
+            }
+        }
+
+        Text* lastText;
+
+        if (!textNodes.empty())
+        {
+            lastText = textNodes.back();
+        }
+        else 
+        {
+            auto text = std::make_unique<Text>("", focus);
+            lastText = text.get();
+            focus->children.push_back(std::move(text));
+        }
+
+        lastText->appendText(text);
         setNeedsRender();
     }
 }

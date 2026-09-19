@@ -7,8 +7,9 @@
 class Text : public Node
 {
 public:
-    Text(const std::string& text);
+    Text(const std::string& text, Node* parent = nullptr);
     std::string getText() const;
+    void appendText(std::string text);
     std::string describe() const override;
 
 private:
