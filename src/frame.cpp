@@ -55,6 +55,7 @@ void Frame::load(URL url, std::optional<std::string> payload)
     loadStyles();
     loadImages();
     loadIFrames();
+    document = std::make_unique<DocumentLayout>(m_node.get());
     setNeedsRender();
     m_tab->setTabTitle(getTitle(m_node.get()));
     m_loaded = true;
@@ -74,8 +75,7 @@ void Frame::render()
 
     if (m_needsLayout)
     {
-        document = std::make_unique<DocumentLayout>(m_node.get(), m_width);
-        document->layout(m_tab->getZoom());
+        document->layout(m_width, m_tab->getZoom());
         //printLayoutTree(document.get());
         m_tab->setNeedsAccessibility(true);
         m_needsPaint = true;

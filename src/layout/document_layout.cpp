@@ -9,7 +9,7 @@
 #include <sstream>
 #include <iostream>
 
-DocumentLayout::DocumentLayout(Node* node, int parentWidth)
+DocumentLayout::DocumentLayout(Node* node)
 {
     this->node = node;
     this->node->layoutObject = this;
@@ -18,17 +18,16 @@ DocumentLayout::DocumentLayout(Node* node, int parentWidth)
     width = 0;
     height = 0;
     zoom = 1;
-    m_parentWidth = parentWidth;
 }
 
 void DocumentLayout::layout()
 {
-    std::cout << "Warning, DocumentLayout::layout() called without zoom" << std::endl;
-    layout(zoom);
+    throw DocumentLayoutException("layout() called without parameters!");
 }
 
-void DocumentLayout::layout(double zoom)
+void DocumentLayout::layout(int parentWidth, double zoom)
 {
+    m_parentWidth = parentWidth;
     this->zoom = zoom;
     auto child = std::make_unique<BlockLayout>(node, this, nullptr, nullptr);
     auto* childPtr = child.get();
