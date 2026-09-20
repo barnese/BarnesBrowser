@@ -29,9 +29,18 @@ void DocumentLayout::layout(int parentWidth, double zoom)
 {
     m_parentWidth = parentWidth;
     this->zoom = zoom;
-    auto child = std::make_unique<BlockLayout>(node, this, nullptr, nullptr);
+    std::unique_ptr<Layout> child;
+    if (children.empty())
+        child = std::make_unique<BlockLayout>(node, this, nullptr, nullptr);
+    else
+        child = std::move(children[0]);
     auto* childPtr = child.get();
-    children.push_back(std::move(child));
+
+    // Ensure idempotency
+    if (children.empty())
+        children.push_back(std::move(child)); 
+    else
+        children[0] = std::move(child);
    
     width = m_parentWidth - 2 * dpx(Constants::HSTEP, zoom);
     x = dpx(Constants::HSTEP, zoom);

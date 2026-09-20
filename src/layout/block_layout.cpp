@@ -48,9 +48,16 @@ void BlockLayout::layout()
 
     auto mode = getLayoutMode();
     if (mode == BLOCK)
+    {
+        // Clear the children to ensure idempotency
+        children.clear();
         layoutBlock();
+    }
     else 
+    {
+        children.clear();
         layoutText();
+    }
 
     height = 0;
     for (const auto& child : children)
