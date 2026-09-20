@@ -12,8 +12,8 @@ class LineLayout : public Layout
 public: 
     LineLayout(
         Node* node, 
-        const Layout* parent, 
-        const Layout* previous = nullptr
+        Layout* parent, 
+        Layout* previous = nullptr
     );
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;

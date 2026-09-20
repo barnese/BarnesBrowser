@@ -4,6 +4,7 @@
 #include "html_tree/html_parser.h"
 #include "html_tree/node_helpers.h"
 #include "html_tree/text.h"
+#include "layout/block_layout.h"
 #include "layout/layout_helpers.h"
 #include "styles/numeric_animation.h"
 #include "browser.h"
@@ -673,6 +674,15 @@ void Frame::keyPress(std::string text)
 
         lastText->appendText(text);
         setNeedsRender();
+
+        // Any time an element's children are changed, we 
+        // need to set a dirty flag for the associated layout.
+        auto obj = focus->layoutObject;
+        while (!dynamic_cast<BlockLayout*>(obj))
+        {
+            obj = obj->parent;
+        }
+        obj->childrenDirty = true;
     }
 }
 

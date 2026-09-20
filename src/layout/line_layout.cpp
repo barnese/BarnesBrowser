@@ -9,8 +9,8 @@
 
 LineLayout::LineLayout(
     Node* node, 
-    const Layout* parent, 
-    const Layout* previous
+    Layout* parent, 
+    Layout* previous
 )
 {
     this->node = node;

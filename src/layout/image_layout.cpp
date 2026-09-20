@@ -12,8 +12,8 @@
 
 ImageLayout::ImageLayout(
     Node* node, 
-    const Layout* parent, 
-    const Layout* previous,
+    Layout* parent, 
+    Layout* previous,
     Frame* frame
 ) : EmbedLayout(node, parent, previous, frame)
 {

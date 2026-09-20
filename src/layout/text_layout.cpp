@@ -13,8 +13,8 @@
 TextLayout::TextLayout(
     Node* node, 
     QString word,
-    const Layout* parent, 
-    const Layout* previous
+    Layout* parent, 
+    Layout* previous
 )
 {
     this->node = node;

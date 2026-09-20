@@ -15,8 +15,8 @@ class InputLayout : public EmbedLayout
 public: 
     InputLayout(
         Node* node, 
-        const Layout* parent, 
-        const Layout* previous,
+        Layout* parent, 
+        Layout* previous,
         Frame* frame
     );
     void layout() override;

@@ -34,10 +34,13 @@ public:
     }
 
     Node* node;
-    const Layout* parent;
-    const Layout* previous;
+    Layout* parent;
+    Layout* previous;
     Frame* frame;
     std::vector<std::unique_ptr<Layout>> children;
+
+    // Flag indicating whether the children have changed.
+    bool childrenDirty;
 
     // Size and position of layout objects.
     int x;

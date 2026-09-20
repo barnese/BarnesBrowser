@@ -21,7 +21,7 @@
 #include <memory>
 #include <sstream>
 
-BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previous, Frame* frame)
+BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* frame)
 {
     this->node = node;
     this->parent = parent;
@@ -32,6 +32,7 @@ BlockLayout::BlockLayout(Node* node, const Layout* parent, const Layout* previou
     y = 0;
     width = 0;
     height = 0;
+    childrenDirty = true;
 }
 
 /// Contructs the layout tree for the current tree node.
@@ -48,16 +49,12 @@ void BlockLayout::layout()
 
     auto mode = getLayoutMode();
     if (mode == BLOCK)
-    {
-        // Clear the children to ensure idempotency
-        children.clear();
         layoutBlock();
-    }
     else 
-    {
-        children.clear();
         layoutText();
-    }
+
+    // Defensively make sure the children aren't dirty.
+    assert(!childrenDirty);
 
     height = 0;
     for (const auto& child : children)
@@ -71,6 +68,11 @@ void BlockLayout::layout()
 
 void BlockLayout::layoutBlock()
 {
+    if (!childrenDirty) return;
+
+    // Clear the children to ensure idempotency
+    children.clear();
+
     Layout* prev = nullptr;
     for (const auto& child : node->getChildren())
     {
@@ -87,12 +89,19 @@ void BlockLayout::layoutBlock()
         prev = next.get();
         children.push_back(std::move(next));
     }
+
+    childrenDirty = false;
 }
 
 void BlockLayout::layoutText() 
 {
+    // Clear the children to ensure idempotency
+    children.clear();
+
     newLine();
     recurse(node);
+
+    childrenDirty = false;
 }
 
 /// Determines if any children contain block elements.
@@ -261,6 +270,9 @@ std::unique_ptr<DrawLine> drawCursor(Layout* layout, int offset)
 
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 {
+    // Defensively make sure the children aren't dirty.
+    assert(!childrenDirty);
+
     std::vector<std::unique_ptr<Command>> commands;
 
     if (auto element = dynamic_cast<const Element*>(node)) 

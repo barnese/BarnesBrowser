@@ -16,8 +16,8 @@ class IFrameLayout : public EmbedLayout
 public:
     IFrameLayout(
         Node* node, 
-        const Layout* parent, 
-        const Layout* previous,
+        Layout* parent, 
+        Layout* previous,
         Frame* parentFrame
     );
     void layout() override;

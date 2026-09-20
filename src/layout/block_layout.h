@@ -21,7 +21,7 @@ enum BlockLayoutMode {
 class BlockLayout : public Layout
 {
 public:
-    BlockLayout(Node* node, const Layout* parent, const Layout* previous, Frame* frame);
+    BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* frame);
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;

@@ -12,8 +12,8 @@
 
 IFrameLayout::IFrameLayout(
     Node* node, 
-    const Layout* parent, 
-    const Layout* previous,
+    Layout* parent, 
+    Layout* previous,
     Frame* parentFrame
 ) : EmbedLayout(node, parent, previous, parentFrame)
 {
