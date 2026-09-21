@@ -10,6 +10,8 @@ This project also includes a simple, test web server, written in Python, that he
 
 ## Building the Project
 
+The following instructions are for macOS. If you're building the project on Linux, see [README_LINUX](./README_LINUX.md).
+
 If you use Visual Studio Code to build and run this project, add the following extensions:
 
 1. CMake Tools - for extended CMake support
