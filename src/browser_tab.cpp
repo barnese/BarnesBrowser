@@ -213,7 +213,7 @@ void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Com
     }
     else 
     {
-        for (const auto& child : layout.children)
+        for (const auto& child : layout.children.getValue())
         {
             paintTree(*child, commands);
         }    

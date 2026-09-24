@@ -46,8 +46,7 @@ private:
         if (m_cursorX + wordWidth > x + width)
             newLine();
 
-        auto line = children.back().get();
-        auto previousWord = (line->children.empty()) ? nullptr : line->children.back().get();
+        auto line = tempChildren.back().get();
         std::unique_ptr<Layout> child = nullptr;
 
         if (word.has_value())
@@ -65,7 +64,8 @@ private:
 
         if (child)
         {
-            line->children.push_back(std::move(child));
+            previousWord = child.get();
+            line->children.getValue().push_back(std::move(child));
         }
 
         const QFont font = getFont(node, zoom);
@@ -75,4 +75,6 @@ private:
     }
 
     int m_cursorX;
+    std::vector<std::unique_ptr<Layout>> tempChildren;
+    Layout* previousWord;
 };

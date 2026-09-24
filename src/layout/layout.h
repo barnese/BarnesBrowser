@@ -2,6 +2,7 @@
 
 #include "commands/command.h"
 #include "html_tree/node.h"
+#include "protected_field.h"
 
 #include <memory>
 #include <QFont>
@@ -22,12 +23,6 @@ public:
     virtual std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const = 0;
     virtual std::string describe() const = 0;
 
-    void addChild(std::unique_ptr<Layout> child)
-    {
-        child->parent = this;
-        children.push_back(std::move(child));
-    }
-
     QRect getRect()
     {
         return QRect(x, y, width, height);
@@ -37,10 +32,11 @@ public:
     Layout* parent;
     Layout* previous;
     Frame* frame;
-    std::vector<std::unique_ptr<Layout>> children;
-
-    // Flag indicating whether the children have changed.
-    bool childrenDirty;
+    
+    // Children of this layout. This is a protected field,
+    // which means it holds the children value and whether 
+    // the value is dirty, i.e., has changed.
+    ProtectedField<std::vector<std::unique_ptr<Layout>>> children;
 
     // Size and position of layout objects.
     int x;

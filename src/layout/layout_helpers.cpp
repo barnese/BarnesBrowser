@@ -2,6 +2,7 @@
 
 #include "commands/transform.h"
 #include "styles/css_parser.h"
+#include "protected_field.h"
 
 #include <iostream>
 
@@ -29,6 +30,6 @@ void printLayoutTree(const Layout* layout, int depth)
         std::cout << "Tree Layout:" << std::endl;
     std::string indent(depth * 2, ' ');
     std::cout << indent << layout->describe() << std::endl;
-    for (const auto& child : layout->children)
+    for (const auto& child : layout->children.getValue())
         printLayoutTree(child.get(), depth + 1);
 }

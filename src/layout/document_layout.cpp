@@ -9,10 +9,11 @@
 #include <sstream>
 #include <iostream>
 
-DocumentLayout::DocumentLayout(Node* node)
+DocumentLayout::DocumentLayout(Node* node, Frame* frame)
 {
     this->node = node;
     this->node->layoutObject = this;
+    this->frame = frame;
     x = 0;
     y = 0;
     width = 0;
@@ -30,17 +31,17 @@ void DocumentLayout::layout(int parentWidth, double zoom)
     m_parentWidth = parentWidth;
     this->zoom = zoom;
     std::unique_ptr<Layout> child;
-    if (children.empty())
-        child = std::make_unique<BlockLayout>(node, this, nullptr, nullptr);
+    if (children.getValue().empty())
+        child = std::make_unique<BlockLayout>(node, this, nullptr, frame);
     else
-        child = std::move(children[0]);
+        child = std::move(children.getValue()[0]);
     auto* childPtr = child.get();
 
     // Ensure idempotency
-    if (children.empty())
-        children.push_back(std::move(child)); 
+    if (children.getValue().empty())
+        children.getValue().push_back(std::move(child)); 
     else
-        children[0] = std::move(child);
+        children.getValue()[0] = std::move(child);
    
     width = m_parentWidth - 2 * dpx(Constants::HSTEP, zoom);
     x = dpx(Constants::HSTEP, zoom);

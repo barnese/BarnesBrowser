@@ -30,12 +30,12 @@ void LineLayout::layout()
     else 
         y = parent->y;
 
-    for (const auto& child : children)
+    for (const auto& child : children.getValue())
     {
         child->layout();
     }
 
-    if (children.empty())
+    if (children.getValue().empty())
     {
         height = 0;
         return;
@@ -47,15 +47,15 @@ void LineLayout::layout()
     //     y-below-baseline = baseline + descent
     // This differs from Skia, so the signs here are different.
 
-    int maxAscent = children.front()->ascent;
-    for (const auto& child : children)
+    int maxAscent = children.getValue().front()->ascent;
+    for (const auto& child : children.getValue())
     {
         maxAscent = std::max(maxAscent, child->ascent);
     }
 
     int baseline = y + maxAscent;
 
-    for (const auto& child : children)
+    for (const auto& child : children.getValue())
     {
         if (const auto& text = dynamic_cast<TextLayout*>(child.get()))
         {
@@ -67,8 +67,8 @@ void LineLayout::layout()
         }
     }
 
-    int maxDescent = children.front()->descent;
-    for (const auto& child : children)
+    int maxDescent = children.getValue().front()->descent;
+    for (const auto& child : children.getValue())
     {
         maxDescent = std::max(maxDescent, child->descent);
     }
@@ -93,7 +93,7 @@ std::vector<std::unique_ptr<Command>> LineLayout::paintEffects(std::vector<std::
     QRect outlineRect;
     Node* outlineNode = nullptr;
 
-    for (const auto& child : children)
+    for (const auto& child : children.getValue())
     {
         auto outlineString = child->node->parent->findStyle("outline", "");
 

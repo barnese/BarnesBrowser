@@ -56,7 +56,7 @@ void Frame::load(URL url, std::optional<std::string> payload)
     loadStyles();
     loadImages();
     loadIFrames();
-    document = std::make_unique<DocumentLayout>(m_node.get());
+    document = std::make_unique<DocumentLayout>(m_node.get(), this);
     setNeedsRender();
     m_tab->setTabTitle(getTitle(m_node.get()));
     m_loaded = true;
@@ -682,7 +682,7 @@ void Frame::keyPress(std::string text)
         {
             obj = obj->parent;
         }
-        obj->childrenDirty = true;
+        obj->children.mark();
     }
 }
 

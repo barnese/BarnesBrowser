@@ -16,7 +16,7 @@ public:
 class DocumentLayout : public Layout
 {
 public:
-    DocumentLayout(Node* node);
+    DocumentLayout(Node* node, Frame* frame);
     void layout() override;
     void layout(int parentWidth, double zoom);
     std::vector<std::unique_ptr<Command>> paint() const override;

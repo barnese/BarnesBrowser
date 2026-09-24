@@ -198,7 +198,7 @@ void JSContext::setInnerHtml(int handle, std::string html, int windowId)
     {
         obj = obj->parent;
     }
-    obj->childrenDirty = true;
+    obj->children.mark();
 }
 
 void JSContext::setStyle(int handle, std::string style, int windowId)

@@ -32,7 +32,7 @@ BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* fr
     y = 0;
     width = 0;
     height = 0;
-    childrenDirty = true;
+    previousWord = nullptr;
 }
 
 /// Contructs the layout tree for the current tree node.
@@ -53,11 +53,8 @@ void BlockLayout::layout()
     else 
         layoutText();
 
-    // Defensively make sure the children aren't dirty.
-    assert(!childrenDirty);
-
     height = 0;
-    for (const auto& child : children)
+    for (const auto& child : children.get())
     {
         child->layout();
         height += child->height;
@@ -68,10 +65,12 @@ void BlockLayout::layout()
 
 void BlockLayout::layoutBlock()
 {
-    if (!childrenDirty) return;
+    if (!children.isDirty()) return;
 
-    // Clear the children to ensure idempotency
-    children.clear();
+    // Fill a temporary vector of children that can be set
+    // to the member variable at the end. Note: creating this
+    // vector also ensures idempotency.
+    std::vector<std::unique_ptr<Layout>> children;
 
     Layout* prev = nullptr;
     for (const auto& child : node->getChildren())
@@ -90,18 +89,20 @@ void BlockLayout::layoutBlock()
         children.push_back(std::move(next));
     }
 
-    childrenDirty = false;
+    this->children.set(std::move(children));
 }
 
 void BlockLayout::layoutText() 
 {
+    if (!children.isDirty()) return;
+
     // Clear the children to ensure idempotency
-    children.clear();
+    tempChildren.clear();
 
     newLine();
     recurse(node);
 
-    childrenDirty = false;
+    children.set(std::move(tempChildren));
 }
 
 /// Determines if any children contain block elements.
@@ -235,10 +236,11 @@ void BlockLayout::word(Node* node, QString& word)
 /// Creates a new line layout and reset some fields.
 void BlockLayout::newLine()
 {
+    previousWord = nullptr;
     m_cursorX = x;
-    auto lastLine = (children.empty()) ? nullptr : children.back().get();
+    auto lastLine = (tempChildren.empty()) ? nullptr : tempChildren.back().get();
     auto newLine = std::make_unique<LineLayout>(node, this, lastLine);
-    children.push_back(std::move(newLine));
+    tempChildren.push_back(std::move(newLine));
 }
 
 bool BlockLayout::shouldPaint() const
@@ -271,7 +273,7 @@ std::unique_ptr<DrawLine> drawCursor(Layout* layout, int offset)
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 {
     // Defensively make sure the children aren't dirty.
-    assert(!childrenDirty);
+    assert(!children.isDirty());
 
     std::vector<std::unique_ptr<Command>> commands;
 

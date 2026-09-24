@@ -18,8 +18,17 @@ template<typename Tree>
 void treeToList(Tree* node, std::vector<Tree*>& list)
 {
     list.push_back(node);
-    for (const auto& child : node->children)
-        treeToList(child.get(), list);
+
+    if constexpr (requires { node->children.getValue(); }) 
+    {
+        for (const auto& child : node->children.getValue())
+            treeToList(child.get(), list);
+    }
+    else 
+    {
+        for (const auto& child : node->children)
+            treeToList(child.get(), list);
+    }
 }
 
 /// Convenience helper

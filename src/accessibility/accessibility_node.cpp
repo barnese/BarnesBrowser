@@ -93,10 +93,10 @@ std::vector<QRect> AccessibilityNode::computeBounds()
         inLine = inLine->parent;
     }
 
-    for (const auto& line : inLine->layoutObject->children)
+    for (const auto& line : inLine->layoutObject->children.getValue())
     {
         QRect lineBounds;
-        for (const auto& child : line->children)
+        for (const auto& child : line->children.getValue())
         {
             if (child->node->parent == m_node)
             {
