@@ -18,8 +18,11 @@ EmbedLayout::EmbedLayout(
 
 void EmbedLayout::layout()
 {
-    zoom = parent->zoom;
-    font = getFont(node, zoom);
+    zoom.copy(&parent->zoom);
+    // TODO: change this to a read(&font);
+    auto zoomValue = zoom.get();
+
+    font = getFont(node, zoomValue);
     if (previous)
     {
         QFontMetrics previousMetrics(previous->font);

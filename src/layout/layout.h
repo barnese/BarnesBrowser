@@ -35,16 +35,18 @@ public:
     
     // Children of this layout. This is a protected field,
     // which means it holds the children value and whether 
-    // the value is dirty, i.e., has changed.
+    // the value has changed as a means of handling invalidation.
     ProtectedField<std::vector<std::unique_ptr<Layout>>> children;
+
+    ProtectedField<double> zoom;
 
     // Size and position of layout objects.
     int x;
     int y;
     double width;
     double height;
+
     QFont font;
-    double zoom;
     int ascent;
     int descent;
 };

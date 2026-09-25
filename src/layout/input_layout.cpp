@@ -29,6 +29,9 @@ void InputLayout::layout()
 {
     EmbedLayout::layout();
 
+    // TODO: replace this with a read(&width)
+    auto zoom = this->zoom.get();
+
     width = dpx(Constants::INPUT_WIDTH_PX, zoom);
     font = getFont(node, zoom);
     QFontMetrics metrics(font);
@@ -101,6 +104,7 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
 
 std::vector<std::unique_ptr<Command>> InputLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
+    auto zoom = this->zoom.get();
     QRect rect(x, y, width, height);
     auto cmds = paintVisualEffects(node, std::move(commands), rect);
     paintOutline(node, cmds, rect, zoom);

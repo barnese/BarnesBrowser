@@ -26,7 +26,7 @@ TextLayout::TextLayout(
 
 void TextLayout::layout()
 {
-    zoom = parent->zoom;
+    zoom.copy(&parent->zoom);
 
     // Handle <big> and <small> tags by adjusting the font size, if found.
     int adjustSize = 0;
@@ -41,6 +41,9 @@ void TextLayout::layout()
             adjustSize = 4;
         }
     }
+
+    // TODO: replace this with read(&font)
+    auto zoom = this->zoom.get();
 
     font = getFont(parent->node, zoom, adjustSize);    
     QFontMetrics metrics(font);

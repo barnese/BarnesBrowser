@@ -23,6 +23,9 @@ void ImageLayout::layout()
 {
     EmbedLayout::layout();
 
+    // TODO: replace this with a read(&width) and read(&height)
+    auto zoom = this->zoom.get();
+
     if (auto const& element = dynamic_cast<Element*>(node))
     {   
         auto widthAttr = element->findAttribute("width");

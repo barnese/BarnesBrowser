@@ -68,6 +68,7 @@ private:
             line->children.getValue().push_back(std::move(child));
         }
 
+        auto zoom = this->zoom.read(&children);
         const QFont font = getFont(node, zoom);
         const QFontMetrics metrics(font);
         const auto spaceWidth = metrics.horizontalAdvance(" ");

@@ -38,7 +38,8 @@ BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* fr
 /// Contructs the layout tree for the current tree node.
 void BlockLayout::layout()
 {
-    zoom = parent->zoom;
+    zoom.copy(&parent->zoom);
+
     x = parent->x;
     width = overrideSizeWithStyle(node, parent->width, "width");
 
@@ -58,6 +59,7 @@ void BlockLayout::layout()
     {
         child->layout();
         height += child->height;
+        child->zoom.mark();
     }
 
     height = overrideSizeWithStyle(node, height, "height");
@@ -186,6 +188,7 @@ void BlockLayout::recurse(Node* node)
 
 void BlockLayout::iframe(Node* node)
 {
+    auto zoom = this->zoom.read(&children);
     if (const auto& element = dynamic_cast<const Element*>(node))
     {
         int w = 0;
@@ -204,6 +207,7 @@ void BlockLayout::iframe(Node* node)
 
 void BlockLayout::image(Node* node)
 {
+    auto zoom = this->zoom.read(&children);
     if (auto element = dynamic_cast<const Element*>(node))
     {
         int w = 0;
@@ -218,6 +222,7 @@ void BlockLayout::image(Node* node)
 
 void BlockLayout::input(Node* node)
 {
+    auto zoom = this->zoom.read(&children);
     auto w = dpx(Constants::INPUT_WIDTH_PX, zoom);
     addInlineChild<InputLayout>(node, w, frame);
 }
@@ -226,6 +231,7 @@ void BlockLayout::word(Node* node, QString& word)
 {
     replaceHTMLCharacterEntities(word);
 
+    auto zoom = this->zoom.read(&children);
     const QFont font = getFont(node, zoom);
     const QFontMetrics metrics(font);
     const auto wordWidth = metrics.horizontalAdvance(word);
@@ -326,7 +332,7 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std:
 {
     QRect rect(x, y, width, height);
     auto cmds = paintVisualEffects(node, std::move(commands), rect);
-    paintOutline(node, cmds, rect, zoom);
+    //paintOutline(node, cmds, rect, zoom);
     return cmds;
 }
 

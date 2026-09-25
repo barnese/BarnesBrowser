@@ -9,7 +9,7 @@ FrameAccessibilityNode::FrameAccessibilityNode(const Node* node, AccessibilityNo
     if (const auto element = dynamic_cast<const Element*>(node))
     {
         scroll = element->frame->scroll;
-        zoom = element->layoutObject->zoom;
+        zoom = element->layoutObject->zoom.get();
     }
     else 
     {

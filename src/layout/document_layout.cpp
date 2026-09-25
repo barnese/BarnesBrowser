@@ -18,7 +18,6 @@ DocumentLayout::DocumentLayout(Node* node, Frame* frame)
     y = 0;
     width = 0;
     height = 0;
-    zoom = 1;
 }
 
 void DocumentLayout::layout()
@@ -29,13 +28,18 @@ void DocumentLayout::layout()
 void DocumentLayout::layout(int parentWidth, double zoom)
 {
     m_parentWidth = parentWidth;
-    this->zoom = zoom;
     std::unique_ptr<Layout> child;
     if (children.getValue().empty())
         child = std::make_unique<BlockLayout>(node, this, nullptr, frame);
     else
         child = std::move(children.getValue()[0]);
     auto* childPtr = child.get();
+
+    this->zoom.set(zoom);
+    
+    // Since a child's zoom depends on its parent's zoom, we need
+    // to mark all the children when the zoom field changes.
+    childPtr->zoom.mark();
 
     // Ensure idempotency
     if (children.getValue().empty())

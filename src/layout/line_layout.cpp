@@ -21,7 +21,8 @@ LineLayout::LineLayout(
 
 void LineLayout::layout()
 {
-    zoom = parent->zoom;
+    zoom.copy(&parent->zoom);
+
     width = parent->width;
     x = parent->x;
 
@@ -108,7 +109,7 @@ std::vector<std::unique_ptr<Command>> LineLayout::paintEffects(std::vector<std::
 
     if (outlineNode != nullptr)
     {
-        paintOutline(outlineNode, commands, outlineRect, zoom);
+        paintOutline(outlineNode, commands, outlineRect, zoom.get());
     }
 
     return commands;

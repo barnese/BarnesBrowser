@@ -22,6 +22,9 @@ IFrameLayout::IFrameLayout(
 void IFrameLayout::layout()
 {
     EmbedLayout::layout();
+    
+    // TODO: Fix this to be a read(&width);
+    auto zoom = this->zoom.get();
 
     if (const auto& element = dynamic_cast<Element*>(node))
     {   
@@ -90,6 +93,7 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paint() const
 
 std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
+    auto zoom = this->zoom.get();
     auto diff = dpx(1, zoom);
     QRect rect(x, y, width, height);
     QPointF offset(x + diff, y + diff);

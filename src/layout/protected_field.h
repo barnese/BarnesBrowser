@@ -1,40 +1,81 @@
 #pragma once
 
 #include <cassert>
+#include <memory>
 #include <utility>
+#include <vector>
 
-/// Associates a dirty flag with its value.
-template<typename ValueType>
-class ProtectedField
+/// Abstraction for fields whose current state can be marked as invalid.
+class Invalidatable
+{
+public:
+    virtual ~Invalidatable() = default;
+    virtual void mark() = 0;
+
+    std::weak_ptr<void> lifetime() const 
+    { 
+        return m_lifetime; 
+    }
+
+private:
+    /// A shared token whose purpose is to indicate whether 
+    /// this invalidatable field is still alive. The int is 
+    /// just a dummy value. When the InvalidationField is 
+    /// destroyed, this lifetime token will also be destroyed.
+    std::shared_ptr<void> m_lifetime = std::make_shared<int>(0);
+};
+
+/// Represents an invalidatable field that keeps track of 
+/// its own lifetime to prevent accessing a dangling pointer 
+/// to a invalidation field that has gone out of scope.
+struct InvalidationField
+{
+    Invalidatable* field;
+    std::weak_ptr<void> lifetime;
+};
+
+/// Represents a protected field along with its value and a dirty flag.
+template<typename T>
+class ProtectedField : public Invalidatable
 {
 public:
     /// Asserts the value is not dirty before returning it,
     /// which defensively helps you catch coding errors earlier.
-    const ValueType& get() const
+    const T& get() const
     {
         assert(!m_dirty);
         return m_value;
     }
 
-    ValueType& get() 
+    T& get() 
     {
         assert(!m_dirty);
         return m_value;
     }
 
+    /// TODO: Remove these later, this was just to get things running again.
     /// Returns raw value without dirty checks.
-    const ValueType& getValue() const { return m_value; }
-    ValueType& getValue() { return m_value; }
+    const T& getValue() const { return m_value; }
+    T& getValue() { return m_value; }
+
+    /// A variant of get that automatically handles maintaining
+    /// the list of invalidations.
+    T& read(Invalidatable* notify)
+    {
+        m_invalidations.push_back({notify, notify->lifetime()});
+        return get();
+    }
 
     /// Sets the value and resets the dirty flag.
-    void set(ValueType value)
+    void set(T value)
     {
+        notify();
         m_value = std::move(value);
         m_dirty = false;
     }
 
     /// Sets this protected field as dirty.
-    void mark() 
+    void mark() override
     {
         if (m_dirty) return;
         m_dirty = true;
@@ -45,7 +86,29 @@ public:
         return m_dirty;
     }
 
+    /// Copies the given field's value into this field.
+    void copy(ProtectedField<T>* field)
+    {
+        set(field->read(this));
+    }
+
 private:
-    ValueType m_value;
+    /// Marks each invalidation field as dirty, if the field is still alive.
+    void notify()
+    {
+        for (auto& invalidation : m_invalidations)
+        {
+            if (!invalidation.lifetime.expired())
+            {
+                invalidation.field->mark();
+            }
+        }
+    }
+
+    T m_value;
     bool m_dirty = true;
+
+    /// Used to track fields that depend on this protected field.
+    /// This can be any type, so we'll use a list of invalidatables.
+    std::vector<InvalidationField> m_invalidations;
 };
