@@ -5,6 +5,7 @@
 #include "html_tree/node_helpers.h"
 #include "js_context_exception.h"
 #include "layout/block_layout.h"
+#include "layout/layout_helpers.h"
 #include "styles/css_parser.h"
 #include "browser.h"
 #include "frame.h"
@@ -189,16 +190,17 @@ void JSContext::setInnerHtml(int handle, std::string html, int windowId)
     {
         child->parent = node;
     }
-    frame->setNeedsRender();
 
     // Any time an element's children are changed, we 
     // need to set a dirty flag for the associated layout.
     auto obj = node->layoutObject;
-    while (!dynamic_cast<BlockLayout*>(obj))
+    while (obj && !dynamic_cast<BlockLayout*>(obj))
     {
         obj = obj->parent;
     }
-    obj->children.mark();
+    markLayoutChildrenDirty(obj);
+
+    frame->setNeedsRender();
 }
 
 void JSContext::setStyle(int handle, std::string style, int windowId)
@@ -209,6 +211,8 @@ void JSContext::setStyle(int handle, std::string style, int windowId)
     if (auto element = dynamic_cast<Element*>(node))
     {
         element->attributes["style"] = style;
+        element->styles.mark();
+        dirtyStyle(element);
         frame->setNeedsRender();
     }    
 }

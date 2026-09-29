@@ -21,6 +21,7 @@ IFrameLayout::IFrameLayout(
 
 void IFrameLayout::layout()
 {
+    if (!layoutNeeded()) return;
     EmbedLayout::layout();
     
     // TODO: Fix this to be a read(&width);
@@ -35,15 +36,15 @@ void IFrameLayout::layout()
 
         if (widthAttr.has_value())
         {
-            width = dpx(std::stod(*widthAttr) + 2, zoom);
+            width.set(dpx(std::stod(*widthAttr) + 2, zoom));
         }
         else if (widthStyle.has_value())
         {
-            width = dpx(std::stod(*widthStyle) + 2, zoom);
+            width.set(dpx(std::stod(*widthStyle) + 2, zoom));
         }
         else 
         {
-            width = dpx(Constants::IFRAME_WIDTH_PX + 2, zoom);
+            width.set(dpx(Constants::IFRAME_WIDTH_PX + 2, zoom));
         }
 
         if (heightAttr.has_value())
@@ -61,20 +62,21 @@ void IFrameLayout::layout()
 
         if (element->frame && element->frame->isLoaded())
         {
-            element->frame->setFrameSize(width - dpx(2, zoom), height - dpx(2, zoom));
+            element->frame->setFrameSize(width.get() - dpx(2, zoom), height - dpx(2, zoom));
+            element->frame->document->width.mark();
         }
 
         ascent = height;
         descent = 0;
     }
 }
+
 std::vector<std::unique_ptr<Command>> IFrameLayout::paint() const
 {
     std::vector<std::unique_ptr<Command>> commands;
 
     if (auto const& element = dynamic_cast<Element*>(node))
     {
-        QRect rect(x, y, width, height);
         auto bgColor = node->findStyle("background-color", "transparent");
         if (bgColor != "transparent")
         {
@@ -83,7 +85,7 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paint() const
             auto color = QString::fromStdString(bgColor);
             
             commands.push_back(
-                std::make_unique<DrawRoundedRect>(rect, color, radius)
+                std::make_unique<DrawRoundedRect>(getRect(), color, radius)
             );
         }
     }
@@ -95,16 +97,18 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std
 {
     auto zoom = this->zoom.get();
     auto diff = dpx(1, zoom);
-    QRect rect(x, y, width, height);
+    auto rect = getRect();
     QPointF offset(x + diff, y + diff);
 
     // Simpler way for now. Let paintVisualEffects handle the clipping.
-    node->styles["overflow"] = "clip";
+    auto updatedStyles = node->styles.get();
+    updatedStyles["overflow"] = "clip";
+    node->styles.set(updatedStyles);
     
     // Translate the iframe's contents
     commands = commandList(std::make_unique<Transform>(offset, rect, node, std::move(commands)));
 
-    QRect outlineRect(x + diff, y + diff, width - 2 * diff - 2, height - 2 * diff - 2);
+    QRect outlineRect(x + diff, y + diff, width.get() - 2 * diff - 2, height - 2 * diff - 2);
     paintOutline(node, commands, outlineRect, zoom);
 
     commands = paintVisualEffects(node, std::move(commands), rect);
@@ -116,7 +120,7 @@ std::string IFrameLayout::describe() const
 {
     std::stringstream s; 
     s << "IFrameLayout(rect: {"
-      << x << ", " << y << ", " << width << ", " << height
+      << x << ", " << y << ", " << width.get() << ", " << height
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

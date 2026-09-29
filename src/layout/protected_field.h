@@ -25,9 +25,9 @@ private:
     std::shared_ptr<void> m_lifetime = std::make_shared<int>(0);
 };
 
-/// Represents an invalidatable field that keeps track of 
+/// Represents an invalidation field that keeps track of 
 /// its own lifetime to prevent accessing a dangling pointer 
-/// to a invalidation field that has gone out of scope.
+/// to a invalidatable that has gone out of scope.
 struct InvalidationField
 {
     Invalidatable* field;
@@ -35,6 +35,7 @@ struct InvalidationField
 };
 
 /// Represents a protected field along with its value and a dirty flag.
+/// Automatically handles dependency tracking of dependent fields.
 template<typename T>
 class ProtectedField : public Invalidatable
 {
@@ -53,7 +54,6 @@ public:
         return m_value;
     }
 
-    /// TODO: Remove these later, this was just to get things running again.
     /// Returns raw value without dirty checks.
     const T& getValue() const { return m_value; }
     T& getValue() { return m_value; }
@@ -92,6 +92,15 @@ public:
         set(field->read(this));
     }
 
+    bool isEmpty() const
+    {
+        if constexpr (requires { m_value.empty(); }) {
+            return m_value.empty();
+        }
+
+        return false;
+    }
+
 private:
     /// Marks each invalidation field as dirty, if the field is still alive.
     void notify()
@@ -109,6 +118,6 @@ private:
     bool m_dirty = true;
 
     /// Used to track fields that depend on this protected field.
-    /// This can be any type, so we'll use a list of invalidatables.
+    /// This can be any type, so we'll use a list of invalidation fields.
     std::vector<InvalidationField> m_invalidations;
 };

@@ -27,12 +27,13 @@ InputLayout::InputLayout(
 
 void InputLayout::layout()
 {
+    if (!layoutNeeded()) return;
     EmbedLayout::layout();
 
     // TODO: replace this with a read(&width)
     auto zoom = this->zoom.get();
 
-    width = dpx(Constants::INPUT_WIDTH_PX, zoom);
+    width.set(dpx(Constants::INPUT_WIDTH_PX, zoom));
     font = getFont(node, zoom);
     QFontMetrics metrics(font);
     height = metrics.lineSpacing();
@@ -53,7 +54,7 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
     auto borderRadius = pixelsToFloat(node->findStyle("border-radius", "0px"));
     if (bgColor != "transparent")
     {
-        auto command = std::make_unique<DrawRoundedRect>(x, y, width, height, bgColor, borderRadius);
+        auto command = std::make_unique<DrawRoundedRect>(x, y, width.get(), height, bgColor, borderRadius);
         commands.push_back(std::move(command));
     }
 
@@ -105,7 +106,7 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
 std::vector<std::unique_ptr<Command>> InputLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     auto zoom = this->zoom.get();
-    QRect rect(x, y, width, height);
+    auto rect = getRect();
     auto cmds = paintVisualEffects(node, std::move(commands), rect);
     paintOutline(node, cmds, rect, zoom);
     return cmds;
@@ -115,7 +116,7 @@ std::string InputLayout::describe() const
 {
     std::stringstream s; 
     s << "InputLayout(rect: {"
-      << x << ", " << y << ", " << width << ", " << height
+      << x << ", " << y << ", " << width.get() << ", " << height
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

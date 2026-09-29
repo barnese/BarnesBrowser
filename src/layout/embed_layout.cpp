@@ -14,6 +14,15 @@ EmbedLayout::EmbedLayout(
     this->previous = previous;
     this->frame = frame;
     this->node->layoutObject = this;
+    hasDirtyDescendants = true;
+}
+
+bool EmbedLayout::layoutNeeded() const
+{
+    if (zoom.isDirty()) return true;
+    if (width.isDirty()) return true;
+    if (hasDirtyDescendants) return true;
+    return false;
 }
 
 void EmbedLayout::layout()
@@ -27,12 +36,14 @@ void EmbedLayout::layout()
     {
         QFontMetrics previousMetrics(previous->font);
         auto space = previousMetrics.horizontalAdvance(" ");
-        x = previous->x + space + previous->width;
+        x = previous->x + space + previous->width.get(); // TODO: should be a read(&x)
     }
     else 
     {
         x = parent->x;
     }
+
+    hasDirtyDescendants = false;
 }
 
 bool EmbedLayout::shouldPaint() const

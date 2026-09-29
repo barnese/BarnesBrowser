@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "layout_helpers.h"
 #include "frame.h"
+#include "html_tree/node_helpers.h"
 
 #include <sstream>
 #include <iostream>
@@ -13,11 +14,12 @@ DocumentLayout::DocumentLayout(Node* node, Frame* frame)
 {
     this->node = node;
     this->node->layoutObject = this;
+    this->parent = nullptr;
     this->frame = frame;
     x = 0;
     y = 0;
-    width = 0;
     height = 0;
+    hasDirtyDescendants = true;
 }
 
 void DocumentLayout::layout()
@@ -25,34 +27,47 @@ void DocumentLayout::layout()
     throw DocumentLayoutException("layout() called without parameters!");
 }
 
-void DocumentLayout::layout(int parentWidth, double zoom)
+bool DocumentLayout::layoutNeeded() const
 {
-    m_parentWidth = parentWidth;
+    if (zoom.isDirty()) return true;
+    if (width.isDirty()) return true;
+    if (hasDirtyDescendants) return true;
+    return false;
+}
+
+void DocumentLayout::layout(int width, double zoom)
+{
+    if (!layoutNeeded()) return;
+
+    this->zoom.set(zoom);
+    this->width.set(width - 2 * dpx(Constants::HSTEP, zoom));
+
     std::unique_ptr<Layout> child;
-    if (children.getValue().empty())
+    if (children.isEmpty())
         child = std::make_unique<BlockLayout>(node, this, nullptr, frame);
     else
         child = std::move(children.getValue()[0]);
     auto* childPtr = child.get();
-
-    this->zoom.set(zoom);
     
-    // Since a child's zoom depends on its parent's zoom, we need
-    // to mark all the children when the zoom field changes.
-    childPtr->zoom.mark();
-
-    // Ensure idempotency
-    if (children.getValue().empty())
+    if (children.isEmpty())
         children.getValue().push_back(std::move(child)); 
     else
         children.getValue()[0] = std::move(child);
    
-    width = m_parentWidth - 2 * dpx(Constants::HSTEP, zoom);
     x = dpx(Constants::HSTEP, zoom);
     y = dpx(Constants::VSTEP, zoom);
 
     childPtr->layout();
+    hasDirtyDescendants = false;
+
     height = childPtr->height;
+
+    // Assert that the layout is clean.
+    auto list = treeToList<Layout>((Layout*)this);
+    for (const auto& item : list)
+    {
+        assert(!item->layoutNeeded());
+    }
 }
 
 bool DocumentLayout::shouldPaint() const 
@@ -69,7 +84,7 @@ std::vector<std::unique_ptr<Command>> DocumentLayout::paintEffects(std::vector<s
 {
     if (frame && frame != frame->getTabRootFrame() && frame->scroll != 0)
     {
-        QRect rect(x, y, width, height);
+        QRect rect = getRect();
         QPointF translation(0, -frame->scroll);
         auto transform = std::make_unique<Transform>(translation, rect, node, std::move(commands));
         commands = commandList(std::move(transform));
@@ -82,7 +97,7 @@ std::string DocumentLayout::describe() const
 {
     std::stringstream s; 
     s << "DocumentLayout(rect: {"
-      << x << ", " << y << ", " << width << ", " << height
+      << x << ", " << y << ", " << width.get() << ", " << height
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

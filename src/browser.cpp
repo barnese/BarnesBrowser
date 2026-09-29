@@ -852,6 +852,6 @@ void printCommand(const Command* command, int depth = 0)
 void Browser::printDrawList()
 {
     std::cout << "DRAW LIST:" << std::endl;
-    for (const auto& command : m_drawList)
+    for (const auto& command : m_activeTabDisplayList)
         printCommand(command.get());
 }

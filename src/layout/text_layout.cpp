@@ -22,10 +22,21 @@ TextLayout::TextLayout(
     this->parent = parent;
     this->previous = previous;
     this->node->layoutObject = this;
+    hasDirtyDescendants = true;
+}
+
+bool TextLayout::layoutNeeded() const
+{
+    if (zoom.isDirty()) return true;
+    if (width.isDirty()) return true;
+    if (hasDirtyDescendants) return true;
+    return false;
 }
 
 void TextLayout::layout()
 {
+    if (!layoutNeeded()) return;
+
     zoom.copy(&parent->zoom);
 
     // Handle <big> and <small> tags by adjusting the font size, if found.
@@ -47,13 +58,13 @@ void TextLayout::layout()
 
     font = getFont(parent->node, zoom, adjustSize);    
     QFontMetrics metrics(font);
-    width = metrics.horizontalAdvance(word);
+    width.set(metrics.horizontalAdvance(word));
 
     if (previous)
     {
         QFontMetrics previousMetrics(previous->font);
         auto space = previousMetrics.horizontalAdvance(" ");
-        x = previous->x + space + previous->width;
+        x = previous->x + space + previous->width.get();
     }
     else 
     {
@@ -63,6 +74,8 @@ void TextLayout::layout()
     height = metrics.lineSpacing();
     ascent = metrics.ascent() * 1.25;
     descent = metrics.descent() * 1.25;
+
+    hasDirtyDescendants = false;
 }
 
 bool TextLayout::shouldPaint() const 
@@ -91,7 +104,7 @@ std::string TextLayout::describe() const
 {
     std::stringstream s; 
     s << "TextLayout(rect: {"
-      << x << ", " << y << ", " << width << ", " << height
+      << x << ", " << y << ", " << width.get() << ", " << height
       << "}, node: " << trim(node->describe()) << ")";
     return s.str();
 }

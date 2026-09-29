@@ -2,7 +2,6 @@
 
 #include "commands/transform.h"
 #include "styles/css_parser.h"
-#include "protected_field.h"
 
 #include <iostream>
 
@@ -13,7 +12,7 @@ double dpx(double cssPx, double zoom)
 
 QRect absoluteBoundsForObj(Layout* layout)
 {
-    QRect rect(layout->x, layout->y, layout->width, layout->height);
+    auto rect = layout->getRect();
     auto current = layout->node;
     while (current)
     {
@@ -24,7 +23,7 @@ QRect absoluteBoundsForObj(Layout* layout)
     return rect;
 }
 
-void printLayoutTree(const Layout* layout, int depth)
+void printLayoutTree(Layout* layout, int depth)
 {
     if (depth == 0)
         std::cout << "Tree Layout:" << std::endl;
@@ -32,4 +31,18 @@ void printLayoutTree(const Layout* layout, int depth)
     std::cout << indent << layout->describe() << std::endl;
     for (const auto& child : layout->children.getValue())
         printLayoutTree(child.get(), depth + 1);
+}
+
+void markLayoutChildrenDirty(Layout* layout)
+{
+    if (!layout) return;
+
+    layout->children.mark();
+    
+    Layout* ancestor = layout;
+    while (ancestor != nullptr)
+    {
+        ancestor->hasDirtyDescendants = true;
+        ancestor = ancestor->parent;
+    }
 }

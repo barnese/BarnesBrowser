@@ -22,6 +22,7 @@ class BlockLayout : public Layout
 {
 public:
     BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* frame);
+    bool layoutNeeded() const override;
     void layout() override;
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;
@@ -43,7 +44,9 @@ private:
     template<typename T>
     void addInlineChild(Node* node, int wordWidth, Frame* frame, std::optional<QString> word = std::nullopt)
     {
-        if (m_cursorX + wordWidth > x + width)
+        auto width = this->width.read(&children);
+
+        if (m_cursorX + wordWidth > width)
             newLine();
 
         auto line = tempChildren.back().get();
@@ -69,6 +72,7 @@ private:
         }
 
         auto zoom = this->zoom.read(&children);
+
         const QFont font = getFont(node, zoom);
         const QFontMetrics metrics(font);
         const auto spaceWidth = metrics.horizontalAdvance(" ");

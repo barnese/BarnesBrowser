@@ -86,7 +86,7 @@ public:
 private:
     /// Recursively paints all layout objects, combining the 
     /// results into the provided display commands reference.
-    void paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
+    void paintTree(Layout& layout, std::vector<std::unique_ptr<Command>>& displayList);
     void activateElement(Element* element);
 
     std::unique_ptr<Frame> m_rootFrame;

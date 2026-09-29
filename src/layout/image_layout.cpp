@@ -21,6 +21,7 @@ ImageLayout::ImageLayout(
 
 void ImageLayout::layout()
 {
+    if (!layoutNeeded()) return;
     EmbedLayout::layout();
 
     // TODO: replace this with a read(&width) and read(&height)
@@ -36,22 +37,23 @@ void ImageLayout::layout()
 
         if (widthAttr.has_value() && heightAttr.has_value())
         {
-            width = dpx(std::stod(widthAttr.value()), zoom);
+            width.set(dpx(std::stod(widthAttr.value()), zoom));
             imageHeight = dpx(std::stod(heightAttr.value()), zoom);
         }
         else if (widthAttr.has_value())
         {
-            width = dpx(std::stod(widthAttr.value()), zoom);
-            imageHeight = width / aspectRatio;
+            width.set(dpx(std::stod(widthAttr.value()), zoom));
+            // TODO: replace width.get() with width.read(&height)
+            imageHeight = width.get() / aspectRatio;
         }
         else if (heightAttr.has_value())
         {
             imageHeight = dpx(std::stod(heightAttr.value()), zoom);
-            width = imageHeight * aspectRatio;
+            width.set(imageHeight * aspectRatio);
         }
         else 
         {    
-            width = dpx(imgWidth, zoom);
+            width.set(dpx(imgWidth, zoom));
             imageHeight = dpx(imgHeight, zoom);
         }
 
@@ -69,7 +71,7 @@ std::vector<std::unique_ptr<Command>> ImageLayout::paint() const
 
     if (auto const& element = dynamic_cast<Element*>(node))
     {
-        QRect rect(x, y + height - imageHeight, width, height);
+        QRect rect(x, y + height - imageHeight, width.get(), height);
         auto quality = node->findStyle("image-rendering", "auto");
         commands.push_back(
             std::make_unique<DrawImage>(element->image.get(), rect, quality)
@@ -83,7 +85,7 @@ std::string ImageLayout::describe() const
 {
     std::stringstream s; 
     s << "ImageLayout(rect: {"
-      << x << ", " << y << ", " << width << ", " << height
+      << x << ", " << y << ", " << width.get() << ", " << height
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

@@ -48,10 +48,10 @@ void replaceHTMLCharacterEntities(QString& word)
     }
 }
 
-int overrideSizeWithStyle(const Node* node, int size, std::string styleName)
+double overrideSizeWithStyle(const Node* node, int size, std::string styleName)
 {
     auto style = node->findStyle(styleName);
-    return style.has_value() ? pixelsToFloat(style.value()) : size;
+    return style.has_value() ? pixelsToDouble(style.value()) : size;
 }
 
 QFont getFont(const Node* node, double zoom, int adjustSize)

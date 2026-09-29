@@ -17,13 +17,11 @@ class DocumentLayout : public Layout
 {
 public:
     DocumentLayout(Node* node, Frame* frame);
+    bool layoutNeeded() const override;
     void layout() override;
-    void layout(int parentWidth, double zoom);
+    void layout(int width, double zoom);
     std::vector<std::unique_ptr<Command>> paint() const override;
     bool shouldPaint() const override;
     std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const override;
     std::string describe() const override;
-
-private:
-    int m_parentWidth;
 };

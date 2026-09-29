@@ -153,6 +153,16 @@ float pixelsToFloat(std::string pixelString)
     return std::stof(pixelString);
 }
 
+double pixelsToDouble(std::string pixelString)
+{
+    if (pixelString.size() > 2 && pixelString.substr(pixelString.size() - 2) == "px")
+    {
+        auto numericPart = pixelString.substr(0, pixelString.size() - 2);
+        return std::stod(numericPart);
+    }
+    return std::stod(pixelString);
+}
+
 std::optional<int> pixelsToInt(std::string pixelString)
 {
     try 

@@ -82,7 +82,8 @@ void BrowserTab::runAnimationFrame(const int scroll)
                 auto value = animation->animate();
                 if (value.has_value())
                 {
-                    node->styles[propertyName] = value.value();
+                    // TODO: should this use styles.set()?
+                    node->styles.get()[propertyName] = *value;
                     m_compositedUpdates.push_back(node);                
                     setNeedsPaint();
                 }
@@ -197,7 +198,7 @@ void BrowserTab::render()
     browser->measure.stop("render");
 }
 
-void BrowserTab::paintTree(const Layout& layout, std::vector<std::unique_ptr<Command>>& displayList)
+void BrowserTab::paintTree(Layout& layout, std::vector<std::unique_ptr<Command>>& displayList)
 {
     std::vector<std::unique_ptr<Command>> commands = layout.paint();
 
@@ -251,6 +252,11 @@ void BrowserTab::zoom(bool increment)
 
     m_logger.info("zoom set to " + std::to_string(m_zoom));
 
+    for (const auto& [id, frame] : windowIdToFrame)
+    {
+        frame->document->zoom.mark();
+    }
+
     m_scrollChangedInTab = true;
     setNeedsRenderAllFrames();
 }
@@ -260,6 +266,12 @@ void BrowserTab::resetZoom()
     m_logger.info("reset zoom");
     m_scroll /= m_zoom;
     m_zoom = 1;
+
+    for (const auto& [id, frame] : windowIdToFrame)
+    {
+        frame->document->zoom.mark();
+    }
+
     m_scrollChangedInTab = true;
     setNeedsRenderAllFrames();
 }

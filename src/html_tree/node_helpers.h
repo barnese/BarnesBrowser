@@ -9,6 +9,7 @@
 
 int getTabIndex(const Node* node);
 bool isFocusable(const Node* node);
+void dirtyStyle(Node* node);
 
 /// Converts a tree to a vector.
 /// @param node the root node of the tree

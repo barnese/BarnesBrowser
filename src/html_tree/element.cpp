@@ -23,7 +23,7 @@ std::string Element::describe() const
     s << ">, styles: {";
 
     std::string separator = "";
-    for (const auto& style : styles)
+    for (const auto& style : styles.getValue())
     {
         s << separator << style.first << ": " << style.second;
         separator = ", ";

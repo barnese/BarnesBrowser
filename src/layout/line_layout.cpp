@@ -17,13 +17,23 @@ LineLayout::LineLayout(
     this->parent = parent;
     this->previous = previous;
     this->node->layoutObject = this;
+    hasDirtyDescendants = true;
+}
+
+bool LineLayout::layoutNeeded() const
+{
+    if (zoom.isDirty()) return true;
+    if (width.isDirty()) return true;
+    if (hasDirtyDescendants) return true;
+    return false;
 }
 
 void LineLayout::layout()
 {
-    zoom.copy(&parent->zoom);
+    if (!layoutNeeded()) return;
 
-    width = parent->width;
+    zoom.copy(&parent->zoom);
+    width.copy(&parent->width);
     x = parent->x;
 
     if (previous)
@@ -36,9 +46,10 @@ void LineLayout::layout()
         child->layout();
     }
 
-    if (children.getValue().empty())
+    if (children.isEmpty())
     {
         height = 0;
+        hasDirtyDescendants = false;
         return;
     }
 
@@ -75,6 +86,8 @@ void LineLayout::layout()
     }
 
     height = maxAscent + maxDescent;
+
+    hasDirtyDescendants = false;
 }
 
 bool LineLayout::shouldPaint() const 
@@ -119,7 +132,7 @@ std::string LineLayout::describe() const
 {
     std::stringstream s; 
     s << "LineLayout(rect: {"
-      << x << ", " << y << ", " << width << ", " << height
+      << x << ", " << y << ", " << width.get() << ", " << height
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

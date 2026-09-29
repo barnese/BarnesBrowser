@@ -296,8 +296,8 @@ void Frame::loadIFrames()
 /// Adds styles to the given node and its children. 
 void Frame::addStyles(Node &node, const CSSRules& rules)
 {
-    StringMap oldStyle = node.styles;
-    node.styles.clear();
+    StringMap oldStyles = node.styles.getValue();
+    StringMap newStyles;
     auto darkMode = m_tab->isDarkMode();
 
     auto inheritedProperties = Constants::INHERITED_PROPERTIES;
@@ -309,11 +309,12 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
     {
         if (node.parent)
         {
-            node.styles[property] = node.parent->styles[property];
+            auto parentStyle = node.parent->styles.read(&node.styles);
+            newStyles[property] = parentStyle[property];
         }
         else 
         {
-            node.styles[property] = defaultValue;
+            newStyles[property] = defaultValue;
         }
     }
 
@@ -326,7 +327,7 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
 
         for (const auto& [property, value] : rule.styles)
         {        
-            node.styles[property] = value;
+            newStyles[property] = value;
         }
     }
 
@@ -341,33 +342,33 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
             auto pairs = parser.body();
             for (const auto& [property, value] : pairs)
             {
-                element->styles[property] = value;
+                newStyles[property] = value;
             }
         }
         
         // Handle font-size percentages.
-        if (element->styles["font-size"].ends_with('%'))
+        if (newStyles["font-size"].ends_with('%'))
         {
             std::string parentFontSize;
 
             if (auto* parent = dynamic_cast<Element*>(element->parent))
             {
-                parentFontSize = parent->styles["font-size"];
+                parentFontSize = parent->styles.get()["font-size"];
             }
             else 
             {
                 parentFontSize = Constants::INHERITED_PROPERTIES.at("font-size");
             }
 
-            float nodePercent = percentToFloat(element->styles["font-size"]);
+            float nodePercent = percentToFloat(newStyles["font-size"]);
             float parentPixels = pixelsToFloat(parentFontSize);
-            element->styles["font-size"] = std::format("{}px", nodePercent * parentPixels);
+            newStyles["font-size"] = std::format("{}px", nodePercent * parentPixels);
         }
     }
 
-    if (!oldStyle.empty())
+    if (!oldStyles.empty())
     {
-        auto transitions = diffStyles(oldStyle, node.styles);
+        auto transitions = diffStyles(oldStyles, newStyles);
         for (const auto& [property, values] : transitions)
         {
             const auto& [oldValue, newValue, numFrames] = values;
@@ -383,10 +384,12 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
                 auto animationResult = animation->animate();
                 node.animations[property] = std::move(animation);
                 if (animationResult.has_value())
-                    node.styles[property] = animationResult.value();
+                    newStyles[property] = animationResult.value();
             }
         }
     }
+
+    node.styles.set(newStyles);
 
     for (auto& child : node.children)
     {
@@ -530,14 +533,20 @@ void Frame::focusElement(Element* element)
     if (element && element != focus)
         needsFocusScroll = true;
     if (focus)
+    {
         focus->isFocused = false;
+        dirtyStyle(focus);
+    }
     auto focusedFrame = m_tab->getFocusedFrame();
     if (focusedFrame && focusedFrame != this)
         focusedFrame->setNeedsRender();
     m_tab->setFocus(element);
     m_tab->setFocusedFrame(this);
     if (element)
+    {
         element->isFocused = true;
+        dirtyStyle(element);
+    }
     setNeedsRender();
 }
 
@@ -673,16 +682,16 @@ void Frame::keyPress(std::string text)
         }
 
         lastText->appendText(text);
-        setNeedsRender();
 
-        // Any time an element's children are changed, we 
-        // need to set a dirty flag for the associated layout.
+        // Rebuild this block's inline children, and mark every
+        // ancestor so DocumentLayout will actually visit this node.
         auto obj = focus->layoutObject;
-        while (!dynamic_cast<BlockLayout*>(obj))
+        while (obj && !dynamic_cast<BlockLayout*>(obj))
         {
             obj = obj->parent;
         }
-        obj->children.mark();
+        markLayoutChildrenDirty(obj);
+        setNeedsRender();
     }
 }
 

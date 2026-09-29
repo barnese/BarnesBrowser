@@ -30,18 +30,30 @@ BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* fr
     this->frame = frame;
     x = 0;
     y = 0;
-    width = 0;
     height = 0;
     previousWord = nullptr;
+    hasDirtyDescendants = true;
+}
+
+bool BlockLayout::layoutNeeded() const
+{
+    if (zoom.isDirty()) return true;
+    if (width.isDirty()) return true;
+    if (children.isDirty()) return true;
+    if (hasDirtyDescendants) return true;
+    return false;
 }
 
 /// Contructs the layout tree for the current tree node.
 void BlockLayout::layout()
 {
+    if (!layoutNeeded()) return;
+
     zoom.copy(&parent->zoom);
+    width.copy(&parent->width);
 
     x = parent->x;
-    width = overrideSizeWithStyle(node, parent->width, "width");
+    width.set(overrideSizeWithStyle(node, width.get(), "width"));
 
     if (previous)
         y = previous->y + previous->height;
@@ -54,12 +66,19 @@ void BlockLayout::layout()
     else 
         layoutText();
 
-    height = 0;
     for (const auto& child : children.get())
     {
         child->layout();
+    }
+
+    hasDirtyDescendants = false;
+
+    // TODO: children = children.read(&height);
+
+    height = 0;
+    for (const auto& child : children.get())
+    {
         height += child->height;
-        child->zoom.mark();
     }
 
     height = overrideSizeWithStyle(node, height, "height");
@@ -70,7 +89,7 @@ void BlockLayout::layoutBlock()
     if (!children.isDirty()) return;
 
     // Fill a temporary vector of children that can be set
-    // to the member variable at the end. Note: creating this
+    // to the member variable at the end. Creating this
     // vector also ensures idempotency.
     std::vector<std::unique_ptr<Layout>> children;
 
@@ -100,11 +119,10 @@ void BlockLayout::layoutText()
 
     // Clear the children to ensure idempotency
     tempChildren.clear();
-
     newLine();
     recurse(node);
-
     children.set(std::move(tempChildren));
+    tempChildren.clear();
 }
 
 /// Determines if any children contain block elements.
@@ -232,6 +250,7 @@ void BlockLayout::word(Node* node, QString& word)
     replaceHTMLCharacterEntities(word);
 
     auto zoom = this->zoom.read(&children);
+
     const QFont font = getFont(node, zoom);
     const QFontMetrics metrics(font);
     const auto wordWidth = metrics.horizontalAdvance(word);
@@ -243,7 +262,7 @@ void BlockLayout::word(Node* node, QString& word)
 void BlockLayout::newLine()
 {
     previousWord = nullptr;
-    m_cursorX = x;
+    m_cursorX = 0;
     auto lastLine = (tempChildren.empty()) ? nullptr : tempChildren.back().get();
     auto newLine = std::make_unique<LineLayout>(node, this, lastLine);
     tempChildren.push_back(std::move(newLine));
@@ -278,9 +297,6 @@ std::unique_ptr<DrawLine> drawCursor(Layout* layout, int offset)
 
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 {
-    // Defensively make sure the children aren't dirty.
-    assert(!children.isDirty());
-
     std::vector<std::unique_ptr<Command>> commands;
 
     if (auto element = dynamic_cast<const Element*>(node)) 
@@ -296,12 +312,12 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
             }
             QString color(backgroundColor.c_str());
             auto borderRadius = element->findStyle("border-radius", "0px");
-            auto radius = pixelsToFloat(borderRadius);
-            auto command = std::make_unique<DrawRoundedRect>(x, y, width, height, color, radius);
+            auto radius = dpx(pixelsToFloat(borderRadius), zoom.get());
+            auto command = std::make_unique<DrawRoundedRect>(x, y, width.get(), height, color, radius);
             commands.push_back(std::move(command));
         }
 
-        if (element->isFocused && element->attributes.contains("contenteditable"))        
+        if (element->isFocused && element->attributes.contains("contenteditable"))
         {
             auto list = treeToList<Layout>((Layout*)this);
             std::vector<TextLayout*> textLayouts;
@@ -316,7 +332,7 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
             if (!textLayouts.empty())
             {
                 auto layout = textLayouts.back();
-                commands.push_back(drawCursor(layout, layout->width));
+                commands.push_back(drawCursor(layout, layout->width.get()));
             }
             else 
             {
@@ -330,17 +346,14 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 
 std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
-    QRect rect(x, y, width, height);
-    auto cmds = paintVisualEffects(node, std::move(commands), rect);
-    //paintOutline(node, cmds, rect, zoom);
-    return cmds;
+    return paintVisualEffects(node, std::move(commands), getRect());    
 }
 
 std::string BlockLayout::describe() const
 {
     std::stringstream s; 
     s << "BlockLayout(rect: {"
-      << x << ", " << y << ", " << width << ", " << height
+      << x << ", " << y << ", " << width.get() << ", " << height
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

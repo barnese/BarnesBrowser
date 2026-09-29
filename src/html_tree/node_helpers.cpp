@@ -36,6 +36,11 @@ bool isFocusable(const Node* node)
     return false;
 }
 
+void dirtyStyle(Node *node)
+{
+    node->styles.mark();
+}
+
 void treeToElementList(Node* node, std::vector<Element*>& list, std::optional<std::string> filterByTag)
 {
     if (const auto& element = dynamic_cast<Element*>(node))
