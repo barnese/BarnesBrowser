@@ -1,7 +1,6 @@
 #include "image_layout.h"
 
 #include "commands/draw_image.h"
-#include "styles/style_helpers.h"
 #include "html_tree/element.h"
 #include "layout_helpers.h"
 
@@ -43,8 +42,7 @@ void ImageLayout::layout()
         else if (widthAttr.has_value())
         {
             width.set(dpx(std::stod(widthAttr.value()), zoom));
-            // TODO: replace width.get() with width.read(&height)
-            imageHeight = width.get() / aspectRatio;
+            imageHeight = width.read(&height) / aspectRatio;
         }
         else if (heightAttr.has_value())
         {
@@ -57,11 +55,11 @@ void ImageLayout::layout()
             imageHeight = dpx(imgHeight, zoom);
         }
 
-        font = getFont(node, zoom);
-        QFontMetricsF metrics(font);
-        height = std::max(imageHeight, metrics.lineSpacing());
-        ascent = height;
-        descent = 0;
+        QFontMetricsF metrics(font.read(&height));
+        height.set(std::max(imageHeight, metrics.lineSpacing()));
+
+        ascent.set(height.read(&ascent));
+        descent.set(0);
     }
 }
 
@@ -71,7 +69,7 @@ std::vector<std::unique_ptr<Command>> ImageLayout::paint() const
 
     if (auto const& element = dynamic_cast<Element*>(node))
     {
-        QRect rect(x, y + height - imageHeight, width.get(), height);
+        QRect rect(x.get(), y.get() + height.get() - imageHeight, width.get(), height.get());
         auto quality = node->findStyle("image-rendering", "auto");
         commands.push_back(
             std::make_unique<DrawImage>(element->image.get(), rect, quality)
@@ -85,7 +83,7 @@ std::string ImageLayout::describe() const
 {
     std::stringstream s; 
     s << "ImageLayout(rect: {"
-      << x << ", " << y << ", " << width.get() << ", " << height
+      << x.get() << ", " << y.get() << ", " << width.get() << ", " << height.get()
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

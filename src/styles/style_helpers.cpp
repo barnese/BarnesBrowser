@@ -4,7 +4,6 @@
 #include "helpers/font_cache.h"
 #include "layout/layout_helpers.h"
 #include "helpers/string_helpers.h"
-#include "html_tree/element.h"
 
 QFont::Weight cssFontWeightToQt(const std::string& input)
 {
@@ -54,8 +53,10 @@ double overrideSizeWithStyle(const Node* node, int size, std::string styleName)
     return style.has_value() ? pixelsToDouble(style.value()) : size;
 }
 
-QFont getFont(const Node* node, double zoom, int adjustSize)
-{    
+QFont getFont(Node* node, double zoom, int adjustSize, Invalidatable* notify)
+{
+    node->styles.read(notify);
+
     auto family = QString::fromStdString(node->findStyle("font-family", "Helvetica"));
     auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
     auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));

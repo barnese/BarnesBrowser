@@ -26,7 +26,7 @@ public:
 
     QRect getRect() const
     {
-        return QRect(x, y, width.get(), height);
+        return QRect(x.get(), y.get(), width.get(), height.get());
     }
 
     Node* node = nullptr;
@@ -42,14 +42,12 @@ public:
     // Size and position of layout objects.
     ProtectedField<double> zoom;
     ProtectedField<double> width;
+    ProtectedField<double> height;
+    ProtectedField<double> x;
+    ProtectedField<double> y;
+    ProtectedField<QFont> font;
+    ProtectedField<int> ascent;
+    ProtectedField<int> descent;
 
     bool hasDirtyDescendants = false;
-
-    int x;
-    int y;
-    double height;
-
-    QFont font;
-    int ascent;
-    int descent;
 };

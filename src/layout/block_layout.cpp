@@ -28,9 +28,6 @@ BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* fr
     this->previous = previous;
     this->node->layoutObject = this;
     this->frame = frame;
-    x = 0;
-    y = 0;
-    height = 0;
     previousWord = nullptr;
     hasDirtyDescendants = true;
 }
@@ -51,14 +48,20 @@ void BlockLayout::layout()
 
     zoom.copy(&parent->zoom);
     width.copy(&parent->width);
+    x.copy(&parent->x);
 
-    x = parent->x;
     width.set(overrideSizeWithStyle(node, width.get(), "width"));
 
     if (previous)
-        y = previous->y + previous->height;
+    {
+        auto prevY = previous->y.read(&y);
+        auto prevHeight = previous->height.read(&y);
+        y.set(prevY + prevHeight);
+    }
     else 
-        y = parent->y;
+    {
+        y.copy(&parent->y);
+    }
 
     auto mode = getLayoutMode();
     if (mode == BLOCK)
@@ -73,15 +76,13 @@ void BlockLayout::layout()
 
     hasDirtyDescendants = false;
 
-    // TODO: children = children.read(&height);
-
-    height = 0;
-    for (const auto& child : children.get())
-    {
-        height += child->height;
+    auto maxHeight = 0;
+    for (const auto& child : children.read(&height))
+    {        
+        maxHeight += child->height.read(&height);
     }
 
-    height = overrideSizeWithStyle(node, height, "height");
+    height.set(overrideSizeWithStyle(node, maxHeight, "height"));
 }
 
 void BlockLayout::layoutBlock()
@@ -251,7 +252,7 @@ void BlockLayout::word(Node* node, QString& word)
 
     auto zoom = this->zoom.read(&children);
 
-    const QFont font = getFont(node, zoom);
+    const QFont font = getFont(node, zoom, 0, &children);
     const QFontMetrics metrics(font);
     const auto wordWidth = metrics.horizontalAdvance(word);
     
@@ -290,9 +291,9 @@ bool BlockLayout::shouldPaint() const
 
 std::unique_ptr<DrawLine> drawCursor(Layout* layout, int offset)
 {
-    auto x = layout->x + offset;
-    auto y = layout->y;
-    return std::make_unique<DrawLine>(x, y, x, y + layout->height, "red", 1);
+    auto x = layout->x.get() + offset;
+    auto y = layout->y.get();
+    return std::make_unique<DrawLine>(x, y, x, y + layout->height.get(), "red", 1);
 }
 
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
@@ -313,7 +314,7 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
             QString color(backgroundColor.c_str());
             auto borderRadius = element->findStyle("border-radius", "0px");
             auto radius = dpx(pixelsToFloat(borderRadius), zoom.get());
-            auto command = std::make_unique<DrawRoundedRect>(x, y, width.get(), height, color, radius);
+            auto command = std::make_unique<DrawRoundedRect>(getRect(), color, radius);
             commands.push_back(std::move(command));
         }
 
@@ -353,7 +354,7 @@ std::string BlockLayout::describe() const
 {
     std::stringstream s; 
     s << "BlockLayout(rect: {"
-      << x << ", " << y << ", " << width.get() << ", " << height
+      << x.get() << ", " << y.get() << ", " << width.get() << ", " << height.get()
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

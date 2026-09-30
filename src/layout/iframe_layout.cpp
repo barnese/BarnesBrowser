@@ -24,8 +24,7 @@ void IFrameLayout::layout()
     if (!layoutNeeded()) return;
     EmbedLayout::layout();
     
-    // TODO: Fix this to be a read(&width);
-    auto zoom = this->zoom.get();
+    auto zoom = this->zoom.read(&height);
 
     if (const auto& element = dynamic_cast<Element*>(node))
     {   
@@ -49,25 +48,25 @@ void IFrameLayout::layout()
 
         if (heightAttr.has_value())
         {
-            height = dpx(std::stod(*heightAttr) + 2, zoom);
+            height.set(dpx(std::stod(*heightAttr) + 2, zoom));
         }
         else if (heightStyle.has_value())
         {
-            height = dpx(std::stod(*heightStyle) + 2, zoom);
+            height.set(dpx(std::stod(*heightStyle) + 2, zoom));
         }
         else 
         {    
-            height = dpx(Constants::IFRAME_HEIGHT_PX + 2, zoom);
+            height.set(dpx(Constants::IFRAME_HEIGHT_PX + 2, zoom));
         }
 
         if (element->frame && element->frame->isLoaded())
         {
-            element->frame->setFrameSize(width.get() - dpx(2, zoom), height - dpx(2, zoom));
+            element->frame->setFrameSize(width.get() - dpx(2, zoom), height.get() - dpx(2, zoom));
             element->frame->document->width.mark();
         }
 
-        ascent = height;
-        descent = 0;
+        ascent.set(height.read(&ascent));
+        descent.set(0);
     }
 }
 
@@ -98,7 +97,7 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std
     auto zoom = this->zoom.get();
     auto diff = dpx(1, zoom);
     auto rect = getRect();
-    QPointF offset(x + diff, y + diff);
+    QPointF offset(x.get() + diff, y.get() + diff);
 
     // Simpler way for now. Let paintVisualEffects handle the clipping.
     auto updatedStyles = node->styles.get();
@@ -108,7 +107,12 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std
     // Translate the iframe's contents
     commands = commandList(std::make_unique<Transform>(offset, rect, node, std::move(commands)));
 
-    QRect outlineRect(x + diff, y + diff, width.get() - 2 * diff - 2, height - 2 * diff - 2);
+    QRect outlineRect(
+        x.get() + diff, 
+        y.get() + diff, 
+        width.get() - 2 * diff - 2, 
+        height.get() - 2 * diff - 2
+    );
     paintOutline(node, commands, outlineRect, zoom);
 
     commands = paintVisualEffects(node, std::move(commands), rect);
@@ -120,7 +124,7 @@ std::string IFrameLayout::describe() const
 {
     std::stringstream s; 
     s << "IFrameLayout(rect: {"
-      << x << ", " << y << ", " << width.get() << ", " << height
+      << x.get() << ", " << y.get() << ", " << width.get() << ", " << height.get()
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

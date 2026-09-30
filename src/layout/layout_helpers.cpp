@@ -32,17 +32,3 @@ void printLayoutTree(Layout* layout, int depth)
     for (const auto& child : layout->children.getValue())
         printLayoutTree(child.get(), depth + 1);
 }
-
-void markLayoutChildrenDirty(Layout* layout)
-{
-    if (!layout) return;
-
-    layout->children.mark();
-    
-    Layout* ancestor = layout;
-    while (ancestor != nullptr)
-    {
-        ancestor->hasDirtyDescendants = true;
-        ancestor = ancestor->parent;
-    }
-}

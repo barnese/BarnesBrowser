@@ -5,6 +5,8 @@
 #include "html_tree/node_helpers.h"
 #include "js_context_exception.h"
 #include "layout/block_layout.h"
+#include "layout/iframe_layout.h"
+#include "layout/image_layout.h"
 #include "layout/layout_helpers.h"
 #include "styles/css_parser.h"
 #include "browser.h"
@@ -169,6 +171,15 @@ void JSContext::setAttribute(int handle, std::string attrName, std::string value
     if (auto element = dynamic_cast<Element*>(node)) 
     {
         element->attributes[attrName] = value;
+        auto obj = element->layoutObject;
+        if (dynamic_cast<IFrameLayout*>(obj) || dynamic_cast<ImageLayout*>(obj))
+        {
+            if (attrName == "width" || attrName == "height")
+            {
+                obj->width.mark();
+                obj->height.mark();
+            }
+        }
         m_tab->setNeedsRenderAllFrames();
     }
 }
@@ -198,7 +209,7 @@ void JSContext::setInnerHtml(int handle, std::string html, int windowId)
     {
         obj = obj->parent;
     }
-    markLayoutChildrenDirty(obj);
+    obj->children.mark();
 
     frame->setNeedsRender();
 }

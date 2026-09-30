@@ -53,27 +53,43 @@ void TextLayout::layout()
         }
     }
 
-    // TODO: replace this with read(&font)
-    auto zoom = this->zoom.get();
+    auto zoom = this->zoom.read(&font);
+    auto styles = node->styles.read(&font);
+    font.set(getFont(parent->node, zoom, adjustSize, &font));
 
-    font = getFont(parent->node, zoom, adjustSize);    
-    QFontMetrics metrics(font);
-    width.set(metrics.horizontalAdvance(word));
+    {
+        QFontMetrics metrics(font.read(&width));
+        width.set(metrics.horizontalAdvance(word));
+    }
+
+    {
+        QFontMetrics metrics(font.read(&ascent));
+        ascent.set(metrics.ascent() * 1.25);
+    }
+
+    {
+        QFontMetrics metrics(font.read(&descent));
+        descent.set(metrics.descent() * 1.25);
+    }
+
+    {
+        QFontMetrics metrics(font.read(&height));
+        height.set(metrics.lineSpacing() * 1.25);
+    }
 
     if (previous)
     {
-        QFontMetrics previousMetrics(previous->font);
+        auto prevFont = previous->font.read(&x);
+        QFontMetrics previousMetrics(prevFont);
         auto space = previousMetrics.horizontalAdvance(" ");
-        x = previous->x + space + previous->width.get();
+        auto prevX = previous->x.read(&x);
+        auto prevWidth = previous->width.read(&x);
+        x.set(prevX + space + prevWidth);
     }
     else 
     {
-        x = parent->x;
+        x.copy(&parent->x);
     }
-
-    height = metrics.lineSpacing();
-    ascent = metrics.ascent() * 1.25;
-    descent = metrics.descent() * 1.25;
 
     hasDirtyDescendants = false;
 }
@@ -89,7 +105,7 @@ std::vector<std::unique_ptr<Command>> TextLayout::paint() const
 
     auto colorStyle = node->findStyle("color", "black");
     auto color = QString::fromStdString(colorStyle);
-    auto command = std::make_unique<DrawText>(x, y, word, font, color);
+    auto command = std::make_unique<DrawText>(x.get(), y.get(), word, font.get(), color);
     commands.push_back(std::move(command));
 
     return commands;
@@ -104,7 +120,7 @@ std::string TextLayout::describe() const
 {
     std::stringstream s; 
     s << "TextLayout(rect: {"
-      << x << ", " << y << ", " << width.get() << ", " << height
+      << x.get() << ", " << y.get() << ", " << width.get() << ", " << height.get()
       << "}, node: " << trim(node->describe()) << ")";
     return s.str();
 }

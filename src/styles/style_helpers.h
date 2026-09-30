@@ -1,6 +1,7 @@
 #pragma once
 
 #include "html_tree/node.h"
+#include "layout/protected_field.h"
 
 #include <string>
 #include <QFont>
@@ -12,4 +13,4 @@ void replaceHTMLCharacterEntities(QString& word);
 double overrideSizeWithStyle(const Node* node, int size, std::string styleName);
 
 /// Parses font styles on the given node and returns a font.
-QFont getFont(const Node* node, double zoom, int adjustSize = 0);
+QFont getFont(Node* node, double zoom, int adjustSize, Invalidatable* notify);

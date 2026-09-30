@@ -16,9 +16,6 @@ DocumentLayout::DocumentLayout(Node* node, Frame* frame)
     this->node->layoutObject = this;
     this->parent = nullptr;
     this->frame = frame;
-    x = 0;
-    y = 0;
-    height = 0;
     hasDirtyDescendants = true;
 }
 
@@ -54,13 +51,13 @@ void DocumentLayout::layout(int width, double zoom)
     else
         children.getValue()[0] = std::move(child);
    
-    x = dpx(Constants::HSTEP, zoom);
-    y = dpx(Constants::VSTEP, zoom);
+    x.set(dpx(Constants::HSTEP, zoom));
+    y.set(dpx(Constants::VSTEP, zoom));
 
     childPtr->layout();
     hasDirtyDescendants = false;
 
-    height = childPtr->height;
+    height.copy(&childPtr->height);
 
     // Assert that the layout is clean.
     auto list = treeToList<Layout>((Layout*)this);
@@ -97,7 +94,7 @@ std::string DocumentLayout::describe() const
 {
     std::stringstream s; 
     s << "DocumentLayout(rect: {"
-      << x << ", " << y << ", " << width.get() << ", " << height
+      << x.get() << ", " << y.get() << ", " << width.get() << ", " << height.get()
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

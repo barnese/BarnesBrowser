@@ -4,7 +4,6 @@
 #include "commands/draw_rounded_rect.h"
 #include "commands/draw_text.h"
 #include "constants.h"
-#include "styles/style_helpers.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
 #include "html_tree/text.h"
@@ -30,15 +29,14 @@ void InputLayout::layout()
     if (!layoutNeeded()) return;
     EmbedLayout::layout();
 
-    // TODO: replace this with a read(&width)
-    auto zoom = this->zoom.get();
-
+    auto zoom = this->zoom.read(&width);
     width.set(dpx(Constants::INPUT_WIDTH_PX, zoom));
-    font = getFont(node, zoom);
-    QFontMetrics metrics(font);
-    height = metrics.lineSpacing();
-    ascent = height;
-    descent = 0;
+
+    QFontMetrics metrics(font.read(&height));
+    height.set(metrics.lineSpacing());
+    
+    ascent.set(height.read(&ascent));
+    descent.set(0);
 }
 
 bool InputLayout::shouldPaint() const
@@ -54,7 +52,7 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
     auto borderRadius = pixelsToFloat(node->findStyle("border-radius", "0px"));
     if (bgColor != "transparent")
     {
-        auto command = std::make_unique<DrawRoundedRect>(x, y, width.get(), height, bgColor, borderRadius);
+        auto command = std::make_unique<DrawRoundedRect>(getRect(), bgColor, borderRadius);
         commands.push_back(std::move(command));
     }
 
@@ -68,10 +66,10 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
             // Draw a cursor if this input element is focused.
             if (element->isFocused) 
             {
-                QFontMetrics metrics(font);
-                auto cx = x + metrics.horizontalAdvance(text) + 1;
-                auto cy = y;
-                auto command = std::make_unique<DrawLine>(cx, cy, cx, cy + height, "black", 1);
+                QFontMetrics metrics(font.get());
+                auto cx = x.get() + metrics.horizontalAdvance(text) + 1;
+                auto cy = y.get();
+                auto command = std::make_unique<DrawLine>(cx, cy, cx, cy + height.get(), "black", 1);
                 commands.push_back(std::move(command));
             }
         }
@@ -96,7 +94,7 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
         }
 
         auto color = QString::fromStdString(node->findStyle("color", "black"));
-        auto command = std::make_unique<DrawText>(x, y, text, font, color);
+        auto command = std::make_unique<DrawText>(x.get(), y.get(), text, font.get(), color);
         commands.push_back(std::move(command));
     }
     
@@ -116,7 +114,7 @@ std::string InputLayout::describe() const
 {
     std::stringstream s; 
     s << "InputLayout(rect: {"
-      << x << ", " << y << ", " << width.get() << ", " << height
+      << x.get() << ", " << y.get() << ", " << width.get() << ", " << height.get()
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

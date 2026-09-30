@@ -14,7 +14,3 @@ double dpx(double cssPx, double zoom);
 QRect absoluteBoundsForObj(Layout* layout);
 
 void printLayoutTree(Layout* layout, int depth = 0);
-
-/// Marks a layout object's children dirty and walks ancestors
-/// setting hasDirtyDescendants so incremental layout will visit it.
-void markLayoutChildrenDirty(Layout* layout);

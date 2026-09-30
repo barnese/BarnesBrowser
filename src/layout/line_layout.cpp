@@ -34,12 +34,18 @@ void LineLayout::layout()
 
     zoom.copy(&parent->zoom);
     width.copy(&parent->width);
-    x = parent->x;
+    x.copy(&parent->x);
 
     if (previous)
-        y = previous->y + previous->height;
+    {
+        auto prevY = previous->y.read(&y);
+        auto prevHeight = previous->height.read(&y);
+        y.set(prevY + prevHeight);
+    }
     else 
-        y = parent->y;
+    {
+        y.copy(&parent->y);
+    }
 
     for (const auto& child : children.getValue())
     {
@@ -48,7 +54,9 @@ void LineLayout::layout()
 
     if (children.isEmpty())
     {
-        height = 0;
+        ascent.set(0);
+        descent.set(0);
+        height.set(0);
         hasDirtyDescendants = false;
         return;
     }
@@ -59,33 +67,32 @@ void LineLayout::layout()
     //     y-below-baseline = baseline + descent
     // This differs from Skia, so the signs here are different.
 
-    int maxAscent = children.getValue().front()->ascent;
+    int maxAscent = children.getValue().front()->ascent.read(&ascent);
     for (const auto& child : children.getValue())
     {
-        maxAscent = std::max(maxAscent, child->ascent);
+        maxAscent = std::max(maxAscent, child->ascent.read(&ascent));
     }
 
-    int baseline = y + maxAscent;
-
     for (const auto& child : children.getValue())
     {
+        int baseline = y.read(&child->y) + maxAscent;
         if (const auto& text = dynamic_cast<TextLayout*>(child.get()))
         {
-            child->y = baseline - child->ascent / 1.25;
+            child->y.set(baseline - child->ascent.read(&child->y) / 1.25);
         }
         else 
         {
-            child->y = baseline - child->ascent;
+            child->y.set(baseline - child->ascent.read(&child->y));
         }
     }
 
-    int maxDescent = children.getValue().front()->descent;
+    int maxDescent = children.getValue().front()->descent.read(&descent);
     for (const auto& child : children.getValue())
     {
-        maxDescent = std::max(maxDescent, child->descent);
+        maxDescent = std::max(maxDescent, child->descent.read(&descent));
     }
 
-    height = maxAscent + maxDescent;
+    height.set(maxAscent + maxDescent);
 
     hasDirtyDescendants = false;
 }
@@ -132,7 +139,7 @@ std::string LineLayout::describe() const
 {
     std::stringstream s; 
     s << "LineLayout(rect: {"
-      << x << ", " << y << ", " << width.get() << ", " << height
+      << x.get() << ", " << y.get() << ", " << width.get() << ", " << height.get()
       << "}, node: " << node->describe() << ")";
     return s.str();
 }

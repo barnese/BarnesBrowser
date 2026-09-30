@@ -28,19 +28,21 @@ bool EmbedLayout::layoutNeeded() const
 void EmbedLayout::layout()
 {
     zoom.copy(&parent->zoom);
-    // TODO: change this to a read(&font);
-    auto zoomValue = zoom.get();
 
-    font = getFont(node, zoomValue);
+    font.set(getFont(node, zoom.read(&font), 0, &font));
+
     if (previous)
     {
-        QFontMetrics previousMetrics(previous->font);
+        auto prevFont = previous->font.read(&x);
+        QFontMetrics previousMetrics(prevFont);
         auto space = previousMetrics.horizontalAdvance(" ");
-        x = previous->x + space + previous->width.get(); // TODO: should be a read(&x)
+        auto prevX = previous->x.read(&x);
+        auto prevWidth = previous->width.read(&x);
+        x.set(prevX + space + prevWidth);
     }
     else 
     {
-        x = parent->x;
+        x.copy(&parent->x);
     }
 
     hasDirtyDescendants = false;

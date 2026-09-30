@@ -73,7 +73,7 @@ private:
 
         auto zoom = this->zoom.read(&children);
 
-        const QFont font = getFont(node, zoom);
+        const QFont font = getFont(node, zoom, 0, &children);
         const QFontMetrics metrics(font);
         const auto spaceWidth = metrics.horizontalAdvance(" ");
         m_cursorX += wordWidth + spaceWidth;

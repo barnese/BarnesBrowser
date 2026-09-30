@@ -690,7 +690,7 @@ void Frame::keyPress(std::string text)
         {
             obj = obj->parent;
         }
-        markLayoutChildrenDirty(obj);
+        obj->children.mark();
         setNeedsRender();
     }
 }
@@ -757,10 +757,10 @@ void Frame::scrollTo(Element* element)
     }
 
     if (!obj) return;
-    if (scroll < obj->y && obj->y < scroll + m_height) return;
+    if (scroll < obj->y.get() && obj->y.get() < scroll + m_height) return;
 
     // Now scroll to that layout object.
-    auto newScroll = obj->y - Constants::SCROLL_STEP;
+    auto newScroll = obj->y.get() - Constants::SCROLL_STEP;
     m_logger.info("scrolling to " + std::to_string(newScroll));
     scroll = clampScroll(newScroll);
     scrollChangedInFrame = true;
@@ -774,7 +774,7 @@ void Frame::setFrameSize(double width, double height)
 
 int Frame::clampScroll(const int scroll)
 {
-    int height = ceil(document->height + 2 * Constants::VSTEP);
+    int height = ceil(document->height.get() + 2 * Constants::VSTEP);
     int maxScroll = height - m_height;
     return std::max(0, std::min(scroll, maxScroll));
 }

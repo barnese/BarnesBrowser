@@ -139,7 +139,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
         m_url, 
         newScroll, 
         rootFrameFocused,
-        ceil(m_rootFrame->document->height), 
+        ceil(m_rootFrame->document->height.get()), 
         std::move(m_displayList), 
         compositedUpdates,
         std::move(m_accessibilityTree),
