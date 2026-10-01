@@ -14,6 +14,16 @@ EmbedLayout::EmbedLayout(
     this->previous = previous;
     this->frame = frame;
     this->node->layoutObject = this;
+    
+    zoom = ProtectedField<double>(this, "zoom");
+    font = ProtectedField<QFont>(this, "font");
+    width = ProtectedField<double>(this, "width");
+    height = ProtectedField<double>(this, "height");
+    x = ProtectedField<double>(this, "x");
+    y = ProtectedField<double>(this, "y");
+    ascent = ProtectedField<int>(this, "ascent");
+    descent = ProtectedField<int>(this, "descent");
+ 
     hasDirtyDescendants = true;
 }
 

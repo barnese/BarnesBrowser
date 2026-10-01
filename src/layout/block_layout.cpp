@@ -29,6 +29,12 @@ BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* fr
     this->node->layoutObject = this;
     this->frame = frame;
     previousWord = nullptr;
+    
+    zoom = ProtectedField<double>(this, "zoom");
+    width = ProtectedField<double>(this, "width");
+    height = ProtectedField<double>(this, "height");
+    x = ProtectedField<double>(this, "x");
+
     hasDirtyDescendants = true;
 }
 

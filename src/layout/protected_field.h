@@ -1,9 +1,12 @@
 #pragma once
 
 #include <cassert>
+#include <iostream>
 #include <memory>
 #include <utility>
 #include <vector>
+
+class Layout;
 
 /// Abstraction for fields whose current state can be marked as invalid.
 class Invalidatable
@@ -40,6 +43,11 @@ template<typename T>
 class ProtectedField : public Invalidatable
 {
 public:
+    ProtectedField() = default;
+
+    ProtectedField(Layout* layout, std::string name) 
+        : m_layout(layout), m_name(name) {}
+
     /// Asserts the value is not dirty before returning it,
     /// which defensively helps you catch coding errors earlier.
     const T& get() const
@@ -69,6 +77,7 @@ public:
     /// Sets the value and resets the dirty flag.
     void set(T value)
     {
+        //std::cout << "Change " << describe() << std::endl;
         notify();
         m_value = std::move(value);
         m_dirty = false;
@@ -101,6 +110,8 @@ public:
         return false;
     }
 
+    std::string describe();
+
 private:
     /// Marks each invalidation field as dirty, if the field is still alive.
     void notify()
@@ -116,6 +127,8 @@ private:
 
     T m_value;
     bool m_dirty = true;
+    Layout* m_layout = nullptr;
+    std::string m_name;
 
     /// Used to track fields that depend on this protected field.
     /// This can be any type, so we'll use a list of invalidation fields.

@@ -51,3 +51,8 @@ public:
 
     bool hasDirtyDescendants = false;
 };
+
+// Because ProtectedField needs to use Layout, and because ProtectedField
+// is a template class, we need to include the template implementation
+// here to avoid circular includes. 
+#include "protected_field.tpp"

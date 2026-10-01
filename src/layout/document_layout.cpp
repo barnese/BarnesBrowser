@@ -16,6 +16,13 @@ DocumentLayout::DocumentLayout(Node* node, Frame* frame)
     this->node->layoutObject = this;
     this->parent = nullptr;
     this->frame = frame;
+
+    zoom = ProtectedField<double>(this, "zoom");
+    width = ProtectedField<double>(this, "width");
+    height = ProtectedField<double>(this, "height");
+    x = ProtectedField<double>(this, "x");
+    y = ProtectedField<double>(this, "y");
+
     hasDirtyDescendants = true;
 }
 
