@@ -23,6 +23,24 @@ namespace Constants
     /// Target refresh rate, 33 frames per millisecond.
     const int REFRESH_RATE_MS = 33;
 
+    /// CSS properties that this browser supports including default values.
+    const std::map<std::string, std::string> CSS_PROPERTIES =
+    {
+        { "font-size", "inherit" }, 
+        { "font-weight", "inherit" },
+        { "font-style", "inherit" }, 
+        { "color", "inherit" },
+        { "opacity", "1.0" }, 
+        { "transition", "" },
+        { "transform", "none" }, 
+        { "mix-blend-mode", "" },
+        { "border-radius", "0px" }, 
+        { "overflow", "visible" },
+        { "outline", "none" }, 
+        { "background-color", "transparent" },
+        { "image-rendering", "auto" }
+    };
+
     const std::vector<std::string> BLOCK_ELEMENTS = 
     {
         "html", "body", "article", "section", "nav", "aside",
