@@ -296,6 +296,15 @@ void Frame::loadIFrames()
 /// Adds styles to the given node and its children. 
 void Frame::addStyles(Node &node, const CSSRules& rules)
 {
+    if (!node.styles.isDirty())
+    {
+        for (auto& child : node.children)
+        {
+            addStyles(*child, rules);
+        }
+        return;
+    }
+
     StringMap oldStyles = node.styles.getValue();
     StringMap newStyles;
     auto darkMode = m_tab->isDarkMode();
@@ -757,10 +766,12 @@ void Frame::scrollTo(Element* element)
     }
 
     if (!obj) return;
-    if (scroll < obj->y.get() && obj->y.get() < scroll + m_height) return;
+
+    auto y = obj->y.getValue();
+    if (scroll < y && y < scroll + m_height) return;
 
     // Now scroll to that layout object.
-    auto newScroll = obj->y.get() - Constants::SCROLL_STEP;
+    auto newScroll = y - Constants::SCROLL_STEP;
     m_logger.info("scrolling to " + std::to_string(newScroll));
     scroll = clampScroll(newScroll);
     scrollChangedInFrame = true;

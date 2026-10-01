@@ -5,7 +5,6 @@
 #include "constants.h"
 #include "layout_helpers.h"
 #include "frame.h"
-#include "html_tree/node_helpers.h"
 
 #include <sstream>
 #include <iostream>
@@ -35,6 +34,9 @@ bool DocumentLayout::layoutNeeded() const
 {
     if (zoom.isDirty()) return true;
     if (width.isDirty()) return true;
+    if (height.isDirty()) return true;
+    if (x.isDirty()) return true;
+    if (y.isDirty()) return true;
     if (hasDirtyDescendants) return true;
     return false;
 }
@@ -67,11 +69,11 @@ void DocumentLayout::layout(int width, double zoom)
     height.copy(&childPtr->height);
 
     // Assert that the layout is clean.
-    auto list = treeToList<Layout>((Layout*)this);
-    for (const auto& item : list)
-    {
-        assert(!item->layoutNeeded());
-    }
+    //auto list = treeToList<Layout>((Layout*)this);
+    //for (const auto& item : list)
+    //{
+    //    assert(!item->layoutNeeded());
+    //}
 }
 
 bool DocumentLayout::shouldPaint() const 

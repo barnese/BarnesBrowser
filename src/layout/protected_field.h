@@ -45,8 +45,8 @@ class ProtectedField : public Invalidatable
 public:
     ProtectedField() = default;
 
-    ProtectedField(Layout* layout, std::string name) 
-        : m_layout(layout), m_name(name) {}
+    ProtectedField(Layout* layout, std::string name, Layout* parent = nullptr) 
+        : m_layout(layout), m_parent(parent), m_name(name) {}
 
     /// Asserts the value is not dirty before returning it,
     /// which defensively helps you catch coding errors earlier.
@@ -77,8 +77,13 @@ public:
     /// Sets the value and resets the dirty flag.
     void set(T value)
     {
-        //std::cout << "Change " << describe() << std::endl;
-        notify();
+        // Use this debugging statement to inspect which fields 
+        // are getting recomputed.
+        std::cout << "Change " << describe() << std::endl;
+
+        if (value != m_value)
+            notify();
+
         m_value = std::move(value);
         m_dirty = false;
     }
@@ -88,6 +93,7 @@ public:
     {
         if (m_dirty) return;
         m_dirty = true;
+        setAncestorDirtyFlags();
     }
 
     bool isDirty() const
@@ -123,11 +129,17 @@ private:
                 invalidation.field->mark();
             }
         }
+
+        setAncestorDirtyFlags();
     }
+
+    /// Sets descendant flags by walking the parent chain.
+    void setAncestorDirtyFlags();
 
     T m_value;
     bool m_dirty = true;
     Layout* m_layout = nullptr;
+    Layout* m_parent = nullptr;
     std::string m_name;
 
     /// Used to track fields that depend on this protected field.

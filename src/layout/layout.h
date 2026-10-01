@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <QFont>
-#include <QGraphicsScene>
 #include <QRect>
 #include <vector>
 
@@ -45,14 +44,16 @@ public:
     ProtectedField<double> height;
     ProtectedField<double> x;
     ProtectedField<double> y;
+
     ProtectedField<QFont> font;
     ProtectedField<int> ascent;
     ProtectedField<int> descent;
 
+    // Tracks whether any descendant has a dirty protected field.
     bool hasDirtyDescendants = false;
 };
 
 // Because ProtectedField needs to use Layout, and because ProtectedField
 // is a template class, we need to include the template implementation
 // here to avoid circular includes. 
-#include "protected_field.tpp"
+#include "protected_field.tpp" // IWYU pragma: keep

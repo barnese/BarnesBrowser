@@ -10,11 +10,6 @@ TaskRunner::TaskRunner()
 {
 }
 
-TaskRunner::~TaskRunner()
-{
-    setNeedsQuit();
-}
-
 void TaskRunner::scheduleTask(std::unique_ptr<ITask> task)
 {
     // Prevent simultaneous access to the queue by locking a mutex,

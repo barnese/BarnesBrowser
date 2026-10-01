@@ -13,7 +13,6 @@ class TaskRunner
 {
 public:
     TaskRunner();
-    ~TaskRunner();
     void scheduleTask(std::unique_ptr<ITask> task);
     void setNeedsQuit();
     bool isRunning();

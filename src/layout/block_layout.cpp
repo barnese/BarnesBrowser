@@ -30,10 +30,12 @@ BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* fr
     this->frame = frame;
     previousWord = nullptr;
     
-    zoom = ProtectedField<double>(this, "zoom");
-    width = ProtectedField<double>(this, "width");
-    height = ProtectedField<double>(this, "height");
-    x = ProtectedField<double>(this, "x");
+    children = ProtectedField<std::vector<std::unique_ptr<Layout>>>(this, "children", parent);
+    zoom = ProtectedField<double>(this, "zoom", parent);
+    width = ProtectedField<double>(this, "width", parent);
+    height = ProtectedField<double>(this, "height", parent);
+    x = ProtectedField<double>(this, "x", parent);
+    y = ProtectedField<double>(this, "y", parent);
 
     hasDirtyDescendants = true;
 }
@@ -42,6 +44,9 @@ bool BlockLayout::layoutNeeded() const
 {
     if (zoom.isDirty()) return true;
     if (width.isDirty()) return true;
+    if (height.isDirty()) return true;
+    if (x.isDirty()) return true;
+    if (y.isDirty()) return true;
     if (children.isDirty()) return true;
     if (hasDirtyDescendants) return true;
     return false;

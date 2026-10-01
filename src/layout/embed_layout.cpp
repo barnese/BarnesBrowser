@@ -15,14 +15,14 @@ EmbedLayout::EmbedLayout(
     this->frame = frame;
     this->node->layoutObject = this;
     
-    zoom = ProtectedField<double>(this, "zoom");
-    font = ProtectedField<QFont>(this, "font");
-    width = ProtectedField<double>(this, "width");
-    height = ProtectedField<double>(this, "height");
-    x = ProtectedField<double>(this, "x");
-    y = ProtectedField<double>(this, "y");
-    ascent = ProtectedField<int>(this, "ascent");
-    descent = ProtectedField<int>(this, "descent");
+    zoom = ProtectedField<double>(this, "zoom", parent);
+    font = ProtectedField<QFont>(this, "font", parent);
+    width = ProtectedField<double>(this, "width", parent);
+    height = ProtectedField<double>(this, "height", parent);
+    x = ProtectedField<double>(this, "x", parent);
+    y = ProtectedField<double>(this, "y", parent);
+    ascent = ProtectedField<int>(this, "ascent", parent);
+    descent = ProtectedField<int>(this, "descent", parent);
  
     hasDirtyDescendants = true;
 }
@@ -31,6 +31,12 @@ bool EmbedLayout::layoutNeeded() const
 {
     if (zoom.isDirty()) return true;
     if (width.isDirty()) return true;
+    if (height.isDirty()) return true;
+    if (x.isDirty()) return true;
+    if (y.isDirty()) return true;
+    if (ascent.isDirty()) return true;
+    if (descent.isDirty()) return true;
+    if (font.isDirty()) return true;
     if (hasDirtyDescendants) return true;
     return false;
 }

@@ -25,6 +25,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Gui 
     OpenGLWidgets
     Widgets
+    OpenGL
 )
 
 add_subdirectory(third_party/duktape)
@@ -123,6 +124,7 @@ target_link_libraries(main PRIVATE
     Qt6::Gui
     Qt6::OpenGLWidgets
     Qt6::Widgets
+    Qt6::OpenGL
     duktape
     dukglue
 )
@@ -161,6 +163,11 @@ target_link_libraries(tests PRIVATE
     OpenSSL::Crypto
     Qt6::Core
     Qt6::Gui
+    Qt6::OpenGLWidgets
+    Qt6::Widgets
+    Qt6::OpenGL
+    duktape
+    dukglue
 )
 
 include(CTest)

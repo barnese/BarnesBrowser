@@ -21,3 +21,14 @@ std::string ProtectedField<T>::describe()
     s << m_name << ")";
     return s.str();
 }
+
+template<typename T>
+void ProtectedField<T>::setAncestorDirtyFlags()
+{
+    auto parent = m_parent;
+    while (parent && !parent->hasDirtyDescendants)
+    {
+        parent->hasDirtyDescendants = true;
+        parent = parent->parent;
+    }
+}
