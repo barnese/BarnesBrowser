@@ -4,6 +4,7 @@
 #include "styles/style_helpers.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
+#include "html_tree/node_helpers.h"
 
 #include <QFont>
 #include <QFontMetrics>
@@ -23,14 +24,35 @@ TextLayout::TextLayout(
     this->previous = previous;
     this->node->layoutObject = this;
 
-    zoom = ProtectedField<double>(this, "zoom", parent);
-    font = ProtectedField<QFont>(this, "font", parent);
-    width = ProtectedField<double>(this, "width", parent);
-    height = ProtectedField<double>(this, "height", parent);
-    x = ProtectedField<double>(this, "x", parent);
-    y = ProtectedField<double>(this, "y", parent);
-    ascent = ProtectedField<int>(this, "ascent", parent);
-    descent = ProtectedField<int>(this, "descent", parent);
+    zoom.initialize(this, "zoom", parent, DepList{&parent->zoom});
+    font.initialize(this, "font", parent, DepList{
+        &zoom, 
+        &node->styles["font-weight"],
+        &node->styles["font-style"],
+        &node->styles["font-size"],
+        &node->styles["font-family"]
+    });
+    width.initialize(this, "width", parent, DepList{&font});
+    height.initialize(this, "height", parent, DepList{&font});
+    ascent.initialize(this, "ascent", parent, DepList{&font});
+    descent.initialize(this, "descent", parent, DepList{&font});
+    if (this->previous)
+    {
+        x.initialize(this, "x", parent, DepList{
+            &this->previous->x, 
+            &this->previous->font, 
+            &this->previous->width
+        });
+    }
+    else
+    {
+        x.initialize(this, "x", parent, DepList{&parent->x});
+    }
+    y.initialize(this, "y", parent, DepList{
+        &ascent, 
+        &this->parent->y, 
+        &this->parent->ascent
+    });
  
     hasDirtyDescendants = true;
 }
@@ -70,7 +92,6 @@ void TextLayout::layout()
     }
 
     auto zoom = this->zoom.read(&font);
-    auto styles = node->styles.read(&font);
     font.set(getFont(parent->node, zoom, adjustSize, &font));
 
     {

@@ -82,8 +82,7 @@ void BrowserTab::runAnimationFrame(const int scroll)
                 auto value = animation->animate();
                 if (value.has_value())
                 {
-                    // TODO: should this use styles.set()?
-                    node->styles.get()[propertyName] = *value;
+                    node->styles[propertyName].set(*value);
                     m_compositedUpdates.push_back(node);                
                     setNeedsPaint();
                 }

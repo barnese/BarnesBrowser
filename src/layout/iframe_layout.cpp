@@ -100,9 +100,7 @@ std::vector<std::unique_ptr<Command>> IFrameLayout::paintEffects(std::vector<std
     QPointF offset(x.get() + diff, y.get() + diff);
 
     // Simpler way for now. Let paintVisualEffects handle the clipping.
-    auto updatedStyles = node->styles.get();
-    updatedStyles["overflow"] = "clip";
-    node->styles.set(updatedStyles);
+    node->styles["overflow"].set("clip");
     
     // Translate the iframe's contents
     commands = commandList(std::make_unique<Transform>(offset, rect, node, std::move(commands)));

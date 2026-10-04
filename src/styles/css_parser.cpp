@@ -291,7 +291,7 @@ StringMap parseTransition(std::string& value)
 }
 
 /// @returns a map of only the transitioning properties, mapping
-/// each property to its old value, new value an duration (in frames).
+/// each property to its old value, new value and duration (in frames).
 StringTupleMap diffStyles(StringMap& oldStyle, StringMap& newStyle)
 {
     StringTupleMap transitions;

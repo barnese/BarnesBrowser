@@ -222,7 +222,6 @@ void JSContext::setStyle(int handle, std::string style, int windowId)
     if (auto element = dynamic_cast<Element*>(node))
     {
         element->attributes["style"] = style;
-        element->styles.mark();
         dirtyStyle(element);
         frame->setNeedsRender();
     }    

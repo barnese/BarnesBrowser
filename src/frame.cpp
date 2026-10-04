@@ -6,6 +6,7 @@
 #include "html_tree/text.h"
 #include "layout/block_layout.h"
 #include "layout/layout_helpers.h"
+#include "layout/protected_field.h"
 #include "styles/numeric_animation.h"
 #include "browser.h"
 #include "browser_tab.h"
@@ -293,10 +294,41 @@ void Frame::loadIFrames()
     }
 }
 
-/// Adds styles to the given node and its children. 
-void Frame::addStyles(Node &node, const CSSRules& rules)
+void Frame::initStyles(Node& node)
 {
-    if (!node.styles.isDirty())
+    // Create the styles map, which allows us to freeze each style's depenencies.
+    std::map<std::string, ProtectedField<std::string>> styles;
+    for (auto const& [property, value] : Constants::CSS_PROPERTIES)
+    {
+        std::vector<Invalidatable*> dependencies;
+        if (node.parent && Constants::INHERITED_PROPERTIES.contains(property))
+        {
+            dependencies = {&node.parent->styles[property]};
+        }
+
+        auto [it, inserted] = styles.try_emplace(property);
+        it->second.initialize(&node, property, {}, dependencies);
+    }
+    node.styles = styles;
+}
+
+/// Adds styles to the given node and its children. 
+void Frame::addStyles(Node& node, const CSSRules& rules)
+{
+    if (node.styles.empty())
+        initStyles(node);
+
+    bool needsStyle = false;
+    for (const auto& [property, field] : node.styles)
+    {
+        if (field.isDirty())
+        {
+            needsStyle = true;
+            break;
+        }
+    }
+
+    if (!needsStyle)
     {
         for (auto& child : node.children)
         {
@@ -305,8 +337,13 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
         return;
     }
 
-    StringMap oldStyles = node.styles.getValue();
-    StringMap newStyles;
+    StringMap oldStyles;    
+    for (const auto& [property, field] : node.styles)
+    {
+        oldStyles.emplace(property, field.getValue());
+    }
+
+    StringMap newStyles = Constants::CSS_PROPERTIES;
     auto darkMode = m_tab->isDarkMode();
 
     auto inheritedProperties = Constants::INHERITED_PROPERTIES;
@@ -318,8 +355,8 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
     {
         if (node.parent)
         {
-            auto parentStyle = node.parent->styles.read(&node.styles);
-            newStyles[property] = parentStyle[property];
+            auto parentValue = node.parent->styles[property].read(&node.styles[property]);
+            newStyles[property] = parentValue;
         }
         else 
         {
@@ -362,7 +399,7 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
 
             if (auto* parent = dynamic_cast<Element*>(element->parent))
             {
-                parentFontSize = parent->styles.get()["font-size"];
+                parentFontSize = parent->styles["font-size"].read(&node.styles["font-size"]);
             }
             else 
             {
@@ -380,13 +417,13 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
         auto transitions = diffStyles(oldStyles, newStyles);
         for (const auto& [property, values] : transitions)
         {
-            const auto& [oldValue, newValue, numFrames] = values;
+            auto& [oldValue, newValue, numFrames] = values;
 
             if (property == "opacity")
             {
                 setNeedsRender();
                 auto animation = std::make_unique<NumericAnimation>(
-                    std::stod(oldValue), 
+                    std::stod(oldValue == "" ? "0" : oldValue), 
                     std::stod(newValue), 
                     std::stoi(numFrames)
                 );
@@ -398,7 +435,10 @@ void Frame::addStyles(Node &node, const CSSRules& rules)
         }
     }
 
-    node.styles.set(newStyles);
+    for (auto& [property, field] : node.styles)
+    {
+        field.set(newStyles[property]);
+    }
 
     for (auto& child : node.children)
     {

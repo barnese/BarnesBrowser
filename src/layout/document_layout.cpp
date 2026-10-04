@@ -3,6 +3,7 @@
 #include "commands/transform.h"
 #include "block_layout.h"
 #include "constants.h"
+#include "html_tree/node_helpers.h"
 #include "layout_helpers.h"
 #include "frame.h"
 
@@ -16,11 +17,19 @@ DocumentLayout::DocumentLayout(Node* node, Frame* frame)
     this->parent = nullptr;
     this->frame = frame;
 
-    zoom = ProtectedField<double>(this, "zoom");
-    width = ProtectedField<double>(this, "width");
-    height = ProtectedField<double>(this, "height");
-    x = ProtectedField<double>(this, "x");
-    y = ProtectedField<double>(this, "y");
+    // Create the protected fields for this document layout.
+    // which doesn't have any external dependencies, so we 
+    // can mark that explicitly in the depenencies parameter,
+    // marking them as "frozen".
+    zoom.initialize(this, "zoom", {}, DepList{});
+    width.initialize(this, "width", {}, DepList{});
+    x.initialize(this, "x", {}, DepList{});
+    y.initialize(this, "y", {}, DepList{});
+
+    // Height is the exception because document layouts depend on
+    // its child's height, which means we have to wait until layout
+    // to freeze it.
+    height.initialize(this, "height");
 
     hasDirtyDescendants = true;
 }
@@ -50,11 +59,16 @@ void DocumentLayout::layout(int width, double zoom)
 
     std::unique_ptr<Layout> child;
     if (children.isEmpty())
+    {
         child = std::make_unique<BlockLayout>(node, this, nullptr, frame);
+        height.setDependenciesAndFreeze({&child->height});
+    }
     else
+    {
         child = std::move(children.getValue()[0]);
+    }
     auto* childPtr = child.get();
-    
+   
     if (children.isEmpty())
         children.getValue().push_back(std::move(child)); 
     else
@@ -69,11 +83,11 @@ void DocumentLayout::layout(int width, double zoom)
     height.copy(&childPtr->height);
 
     // Assert that the layout is clean.
-    //auto list = treeToList<Layout>((Layout*)this);
-    //for (const auto& item : list)
-    //{
-    //    assert(!item->layoutNeeded());
-    //}
+    // auto list = treeToList<Layout>((Layout*)this);
+    // for (const auto& item : list)
+    // {
+    //     assert(!item->layoutNeeded());
+    // }
 }
 
 bool DocumentLayout::shouldPaint() const 

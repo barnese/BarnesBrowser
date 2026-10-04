@@ -29,6 +29,7 @@ namespace Constants
         { "font-size", "inherit" }, 
         { "font-weight", "inherit" },
         { "font-style", "inherit" }, 
+        { "font-family", "Helvetica" },
         { "color", "inherit" },
         { "opacity", "1.0" }, 
         { "transition", "" },

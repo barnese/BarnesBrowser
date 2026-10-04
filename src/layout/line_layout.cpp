@@ -18,13 +18,22 @@ LineLayout::LineLayout(
     this->previous = previous;
     this->node->layoutObject = this;
     
-    zoom = ProtectedField<double>(this, "zoom", parent);
-    width = ProtectedField<double>(this, "width", parent);
-    height = ProtectedField<double>(this, "height", parent);
-    x = ProtectedField<double>(this, "x", parent);
-    y = ProtectedField<double>(this, "y", parent);
-    ascent = ProtectedField<int>(this, "ascent", parent);
-    descent = ProtectedField<int>(this, "descent", parent);
+    zoom.initialize(this, "zoom", parent, DepList{&parent->zoom});
+    x.initialize(this, "x", parent, DepList{&parent->x});
+    std::vector<Invalidatable*> yDependencies;
+    if (previous)
+    {
+        yDependencies = {&previous->y, &previous->height};
+    }
+    else {
+        yDependencies = {&parent->y};
+    }
+    y.initialize(this, "y", parent, yDependencies);
+    initializedFields = false;
+    ascent.initialize(this, "ascent", parent);
+    descent.initialize(this, "descent", parent);
+    width.initialize(this, "width", parent, DepList{&parent->width});
+    height.initialize(this, "height", parent, DepList{&ascent, &descent});
     
     hasDirtyDescendants = true;
 }
@@ -44,6 +53,23 @@ bool LineLayout::layoutNeeded() const
 
 void LineLayout::layout()
 {
+    if (!initializedFields)
+    {
+        DepList ascentDeps;
+        DepList descentDeps;
+
+        for (auto& child : children.getValue())
+        {
+            ascentDeps.push_back(&child->ascent);
+            descentDeps.push_back(&child->descent);
+        }
+        
+        ascent.setDependenciesAndFreeze(ascentDeps);
+        descent.setDependenciesAndFreeze(descentDeps);
+        
+        initializedFields = true;
+    }
+
     if (!layoutNeeded()) return;
 
     zoom.copy(&parent->zoom);

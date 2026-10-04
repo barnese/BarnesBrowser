@@ -55,12 +55,10 @@ double overrideSizeWithStyle(const Node* node, int size, std::string styleName)
 
 QFont getFont(Node* node, double zoom, int adjustSize, Invalidatable* notify)
 {
-    node->styles.read(notify);
-
-    auto family = QString::fromStdString(node->findStyle("font-family", "Helvetica"));
-    auto weight = cssFontWeightToQt(node->findStyle("font-weight", "normal"));
-    auto style = cssFontStyleToQt(node->findStyle("font-style", "normal"));
-    auto sizePx = pixelsToFloat(node->findStyle("font-size", "14px"));
+    auto family = QString::fromStdString(node->styles["font-family"].read(notify));
+    auto weight = cssFontWeightToQt(node->styles["font-weight"].read(notify));
+    auto style = cssFontStyleToQt(node->styles["font-style"].read(notify));
+    auto sizePx = pixelsToFloat(node->styles["font-size"].read(notify));
     auto size = dpx(sizePx * 0.75 + adjustSize, zoom);
 
     return FontCache::instance().getFont(family, size, weight, style);

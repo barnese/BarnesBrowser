@@ -32,23 +32,23 @@ public:
 
     std::string findStyle(const std::string& styleName, const std::string& defaultValue) const   
     {
-        auto it = styles.getValue().find(styleName);        
-        return (it != styles.getValue().end()) ? it->second : defaultValue;
+        auto it = styles.find(styleName);        
+        return (it != styles.end()) ? it->second.getValue() : defaultValue;
     }
 
     std::optional<std::string> findStyle(const std::string& styleName) const
     {
-        auto it = styles.getValue().find(styleName);
-        if (it == styles.getValue().end())
+        auto it = styles.find(styleName);
+        if (it == styles.end())
         {
             return std::nullopt;
         }
-        return it->second;
+        return it->second.getValue();
     }
 
     Node* parent = nullptr;
     std::vector<std::unique_ptr<Node>> children;
-    ProtectedField<std::map<std::string, std::string>> styles;
+    std::map<std::string, ProtectedField<std::string>> styles;
     std::map<std::string, std::unique_ptr<CSSAnimation>> animations;
     bool isFocused;
     VisualEffect* blendOp = nullptr;

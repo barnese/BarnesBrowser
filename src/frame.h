@@ -68,7 +68,8 @@ private:
     void loadStyles();
     void loadImages();
     void loadIFrames();
-    void addStyles(Node &node, const CSSRules& rules);
+    void initStyles(Node& node);
+    void addStyles(Node& node, const CSSRules& rules);
     CSSRules getDefaultStyleSheet();
     std::vector<std::string> getStyleSheetLinks(Node* tree);
     std::vector<std::string> getScriptLinks(Node* tree);

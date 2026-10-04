@@ -15,14 +15,29 @@ EmbedLayout::EmbedLayout(
     this->frame = frame;
     this->node->layoutObject = this;
     
-    zoom = ProtectedField<double>(this, "zoom", parent);
-    font = ProtectedField<QFont>(this, "font", parent);
-    width = ProtectedField<double>(this, "width", parent);
-    height = ProtectedField<double>(this, "height", parent);
-    x = ProtectedField<double>(this, "x", parent);
-    y = ProtectedField<double>(this, "y", parent);
-    ascent = ProtectedField<int>(this, "ascent", parent);
-    descent = ProtectedField<int>(this, "descent", parent);
+    zoom.initialize(this, "zoom", parent, DepList{&parent->zoom});
+    font.initialize(this, "font", parent, DepList{
+        &node->styles["font-family"],
+        &node->styles["font-weight"],
+        &node->styles["font-style"],
+        &node->styles["font-size"]
+    });
+    width.initialize(this, "width", parent, DepList{&parent->zoom});
+    height.initialize(this, "height", parent, DepList{&zoom, &font, &width});
+    
+    DepList xDependencies;
+    if (previous)
+    {
+        xDependencies = {&previous->x, &previous->font, &previous->width};
+    }
+    else 
+    {
+        xDependencies = {&parent->x};
+    }
+    x.initialize(this, "x", parent, xDependencies);
+    y.initialize(this, "y", parent, DepList{&ascent, &parent->y, &parent->ascent});
+    ascent.initialize(this, "ascent", parent, DepList{&height});
+    descent.initialize(this, "descent", parent, DepList{});
  
     hasDirtyDescendants = true;
 }

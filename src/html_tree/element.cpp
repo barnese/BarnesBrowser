@@ -23,9 +23,9 @@ std::string Element::describe() const
     s << ">, styles: {";
 
     std::string separator = "";
-    for (const auto& style : styles.getValue())
+    for (const auto& [property, field] : styles)
     {
-        s << separator << style.first << ": " << style.second;
+        s << separator << property << ": " << field.getValue();
         separator = ", ";
     }
 

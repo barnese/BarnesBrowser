@@ -29,13 +29,28 @@ BlockLayout::BlockLayout(Node* node, Layout* parent, Layout* previous, Frame* fr
     this->node->layoutObject = this;
     this->frame = frame;
     previousWord = nullptr;
+
+    // Create the protected fields for block layouts. Note that
+    // block layouts can freeze zoom, width, x and y dependencies.
+    zoom.initialize(this, "zoom", parent, DepList{&parent->zoom});
+    width.initialize(this, "width", parent, DepList{&parent->width});
+    x.initialize(this, "x", parent, DepList{&parent->x});
+
+    std::vector<Invalidatable*> yDependencies;
+    if (this->previous)
+    {
+        yDependencies = {&previous->y, &previous->height};
+    }
+    else 
+    {
+        yDependencies.push_back(&parent->y);
+    }
+    y.initialize(this, "y", parent, yDependencies);
+
+    children.initialize(this, "children", parent, std::nullopt, InvalidList{});
     
-    children = ProtectedField<std::vector<std::unique_ptr<Layout>>>(this, "children", parent);
-    zoom = ProtectedField<double>(this, "zoom", parent);
-    width = ProtectedField<double>(this, "width", parent);
-    height = ProtectedField<double>(this, "height", parent);
-    x = ProtectedField<double>(this, "x", parent);
-    y = ProtectedField<double>(this, "y", parent);
+    // Height can be frozen once the children field is computed.
+    height.initialize(this, "height", parent);
 
     hasDirtyDescendants = true;
 }
@@ -79,6 +94,14 @@ void BlockLayout::layout()
         layoutBlock();
     else 
         layoutText();
+
+
+    DepList heightDeps;
+    for (const auto& child : this->children.get())
+    {
+        heightDeps.push_back(&child->height);
+    }
+    height.setDependenciesAndFreeze(heightDeps);
 
     for (const auto& child : children.get())
     {

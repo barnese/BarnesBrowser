@@ -21,4 +21,7 @@ public:
     bool shouldPaint() const override;
     std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const override;
     std::string describe() const override;
+
+private:
+    bool initializedFields;
 };
