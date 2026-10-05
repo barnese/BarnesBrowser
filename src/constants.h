@@ -38,6 +38,7 @@ namespace Constants
         { "border-radius", "0px" }, 
         { "overflow", "visible" },
         { "outline", "none" }, 
+        { "background", "transparent" },
         { "background-color", "transparent" },
         { "image-rendering", "auto" }
     };
