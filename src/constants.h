@@ -40,7 +40,9 @@ namespace Constants
         { "outline", "none" }, 
         { "background", "transparent" },
         { "background-color", "transparent" },
-        { "image-rendering", "auto" }
+        { "image-rendering", "auto" },
+        { "height", "" },
+        { "width", "" }
     };
 
     const std::vector<std::string> BLOCK_ELEMENTS = 

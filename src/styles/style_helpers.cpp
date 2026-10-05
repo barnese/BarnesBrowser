@@ -50,7 +50,7 @@ void replaceHTMLCharacterEntities(QString& word)
 double overrideSizeWithStyle(const Node* node, int size, std::string styleName)
 {
     auto style = node->findStyle(styleName);
-    return style.has_value() ? pixelsToDouble(style.value()) : size;
+    return style.has_value() && !style.value().empty() ? pixelsToDouble(*style) : size;
 }
 
 QFont getFont(Node* node, double zoom, int adjustSize, Invalidatable* notify)
