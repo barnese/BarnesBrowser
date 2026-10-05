@@ -323,13 +323,6 @@ bool BlockLayout::shouldPaint() const
     return false;
 }
 
-std::unique_ptr<DrawLine> drawCursor(Layout* layout, int offset)
-{
-    auto x = layout->x.get() + offset;
-    auto y = layout->y.get();
-    return std::make_unique<DrawLine>(x, y, x, y + layout->height.get(), "red", 1);
-}
-
 std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 {
     std::vector<std::unique_ptr<Command>> commands;

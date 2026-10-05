@@ -38,3 +38,10 @@ std::string DrawLine::describe() const
     s << ")";
     return s.str();
 }
+
+std::unique_ptr<DrawLine> drawCursor(const Layout* layout, int offset)
+{
+    auto x = layout->x.get() + offset;
+    auto y = layout->y.get();
+    return std::make_unique<DrawLine>(x, y, x, y + layout->height.get(), "black", 1);
+}

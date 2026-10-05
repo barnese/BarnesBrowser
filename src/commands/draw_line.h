@@ -1,6 +1,7 @@
 #pragma once
 
 #include "paint_command.h"
+#include "layout/layout.h"
 
 #include <QString>
 
@@ -16,3 +17,6 @@ private:
     QString m_color;
     int m_thickness;
 };
+
+/// Helper that creates a command to draw a cursor.
+std::unique_ptr<DrawLine> drawCursor(const Layout* layout, int offset);

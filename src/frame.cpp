@@ -583,7 +583,8 @@ void Frame::focusElement(Element* element)
     if (focus)
     {
         focus->isFocused = false;
-        dirtyStyle(focus);
+        if (element)
+            dirtyStyle(focus);
     }
     auto focusedFrame = m_tab->getFocusedFrame();
     if (focusedFrame && focusedFrame != this)

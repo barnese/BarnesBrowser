@@ -67,10 +67,8 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
             if (element->isFocused) 
             {
                 QFontMetrics metrics(font.get());
-                auto cx = x.get() + metrics.horizontalAdvance(text) + 1;
-                auto cy = y.get();
-                auto command = std::make_unique<DrawLine>(cx, cy, cx, cy + height.get(), "black", 1);
-                commands.push_back(std::move(command));
+                auto offset = metrics.horizontalAdvance(text) + 2;
+                commands.push_back(drawCursor(this, offset));
             }
         }
         else if (element->tag == "button")
@@ -94,7 +92,7 @@ std::vector<std::unique_ptr<Command>> InputLayout::paint() const
         }
 
         auto color = QString::fromStdString(node->findStyle("color", "black"));
-        auto command = std::make_unique<DrawText>(x.get(), y.get(), text, font.get(), color);
+        auto command = std::make_unique<DrawText>(x.get(), y.get() + 1, text, font.get(), color);
         commands.push_back(std::move(command));
     }
     
