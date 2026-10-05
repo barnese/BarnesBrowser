@@ -4,11 +4,11 @@
 #include "commands/command.h"
 #include "html_tree/element.h"
 #include "html_tree/node.h"
+#include "networking/url.h"
 #include "scripting/js_context.h"
 #include "tasks/task_runner.h"
 #include "logger.h"
 #include "point.h"
-#include "url.h"
 
 #include <string>
 #include <optional>

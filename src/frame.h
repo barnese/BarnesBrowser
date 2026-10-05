@@ -2,12 +2,12 @@
 
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
+#include "networking/url.h"
 #include "scripting/js_context.h"
 #include "styles/css_parser.h"
 #include "tasks/task_runner.h"
 #include "logger.h"
 #include "point.h"
-#include "url.h"
 
 #include <optional>
 #include <string>

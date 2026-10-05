@@ -1,5 +1,6 @@
 #include "browser.h"
-#include "url.h"
+
+#include "networking/url.h"
 
 #include <QApplication>
 #include <QFile>

@@ -9,8 +9,8 @@
 #include "commands/visual_effect.h"
 #include "chrome/chrome.h"
 #include "helpers/measure_time.h"
+#include "networking/url.h"
 #include "logger.h"
-#include "url.h"
 
 #include <memory>
 #include <optional>

@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "url.h"
+#include "networking/url.h"
 
 #define TAG "[test_url]"
 

@@ -2,7 +2,7 @@
 
 #include "duk_config.h"
 #include "html_tree/node.h"
-#include "url.h"
+#include "networking/url.h"
 
 #include <string>
 #include <QObject>

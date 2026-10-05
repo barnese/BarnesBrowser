@@ -75,6 +75,7 @@ add_executable(main
     src/layout/layout_helpers.cpp
     src/layout/line_layout.cpp
     src/layout/text_layout.cpp
+    src/networking/url.cpp
     src/styles/css_parser.cpp
     src/styles/descendant_selector.cpp
     src/styles/numeric_animation.cpp
@@ -87,7 +88,6 @@ add_executable(main
     src/browser_tab.cpp
     src/browser_view.cpp
     src/main.cpp
-    src/url.cpp
     src/frame.cpp
 )
 
@@ -160,11 +160,11 @@ add_executable(tests
     src/html_tree/element.cpp
     src/html_tree/html_parser.cpp
     src/html_tree/text.cpp
+    src/networking/url.cpp
     src/styles/css_parser.cpp
     src/styles/descendant_selector.cpp
     src/styles/pseudo_class_selector.cpp
     src/styles/tag_selector.cpp
-    src/url.cpp
 )
 
 target_include_directories(tests PRIVATE src)

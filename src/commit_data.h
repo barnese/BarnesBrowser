@@ -5,7 +5,7 @@
 #include "commands/visual_effect.h"
 #include "html_tree/node.h"
 #include "html_tree/element.h"
-#include "url.h"
+#include "networking/url.h"
 
 #include <map>
 #include <memory>
