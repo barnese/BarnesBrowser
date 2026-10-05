@@ -160,10 +160,10 @@ Window.prototype.dispatchEvent = function(evt) {
 Object.defineProperty(Window.prototype, 'parent', {
   configurable: true,
   get: function() {
-    var parent_id = call_python('parent', window._id);
-    if (parent_id != undefined) {
-        var parent = WINDOWS[parent_id];
-        if (parent === undefined) parent = new Window(parent_id);
+    var parentId = currentJSContext.parent(window._id);
+    if (parentId != undefined) {
+        var parent = WINDOWS[parentId];
+        if (parent === undefined) parent = new Window(parentId);
         return parent;
     }
   }
