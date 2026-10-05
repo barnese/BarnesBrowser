@@ -564,7 +564,9 @@ void Frame::advanceTab()
     if (index < focusableElements.size())
     {
         focusElement(focusableElements[index]);
+#if VERBOSE_DEBUG_OUTPUT        
         m_logger.info("set focus to " + m_tab->getFocus()->describe());
+#endif
     }
     else 
     {
