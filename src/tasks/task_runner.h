@@ -20,6 +20,7 @@ public:
 
 private:
     void run(std::stop_token stopToken);
+    void log(std::string message);
 
     std::queue<std::unique_ptr<ITask>> m_tasks;
     std::mutex m_mutex;

@@ -27,7 +27,7 @@ void TaskRunner::run(std::stop_token stopToken)
     // which allows us to have human-readable thread names.
     threadRegistry().add(std::this_thread::get_id(), "Main Thread");
 
-    m_logger.info("starting");
+    log("starting");
 
     while (true)
     {
@@ -55,7 +55,7 @@ void TaskRunner::run(std::stop_token stopToken)
         // been released from the queue and can't be accessed by another thread.
         if (!task->getName().empty())        
         {
-            m_logger.info("running " + task->getName());
+            log("running " + task->getName());
         }
         task->run();
     }
@@ -78,4 +78,13 @@ void TaskRunner::clearPendingTasks()
 {
     std::unique_lock lock(m_mutex);
     m_tasks = {};
+}
+
+void TaskRunner::log(std::string message)
+{
+#if VERBOSE_DEBUG_OUTPUT
+    m_logger.info(message);
+#else
+    (void)message;
+#endif
 }

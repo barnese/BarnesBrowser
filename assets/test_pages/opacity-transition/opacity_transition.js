@@ -5,6 +5,7 @@ function start_fade_out(e) {
     div.style = "opacity:0.1";
     e.preventDefault();
 }
+
 function start_fade_in(e) {
     window.console.log("[opacity-transition.js] start fade in");
     div.style = "opacity:0.999";

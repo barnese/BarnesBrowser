@@ -39,7 +39,9 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
     try
     {
         m_loaded = false;
+#if VERBOSE_DEBUG_OUTPUT
         m_logger.info("loading: " + url.describe());
+#endif
         taskRunner.clearPendingTasks();
         windowIdToFrame.clear();
         m_focusedFrame = nullptr;
@@ -167,7 +169,10 @@ void BrowserTab::setNeedsRenderAllFrames()
 void BrowserTab::render()
 {
     browser->measure.start("render");
+
+#if VERBOSE_DEBUG_OUTPUT 
     m_logger.info("rendering");
+#endif
 
     for (const auto& [id, frame] : windowIdToFrame)
     {

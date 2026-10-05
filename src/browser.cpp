@@ -17,8 +17,6 @@ Browser::Browser(QWidget* parent)
     // which allows us to have human-readable thread names.
     threadRegistry().add(std::this_thread::get_id(), "Browser Thread");
 
-    m_logger.info("starting");
-
     auto* layout = new QVBoxLayout(this);
     m_chrome = new Chrome(this);
     m_view = new BrowserView(this);
@@ -165,7 +163,9 @@ void Browser::compositeRasterAndDraw()
 {
     std::lock_guard lock(m_mutex);
     if (!m_needsComposite && !m_needsRaster && !m_needsDraw) return;
+#if VERBOSE_DEBUG_OUTPUT
     m_logger.info("composite rastering and drawing");
+#endif
     measure.start("compositeRasterAndDraw");
     if (m_needsComposite)
     {
@@ -504,7 +504,10 @@ void Browser::setActiveTab(BrowserTab* tab)
 
 void Browser::clearData()
 {
+#if VERBOSE_DEBUG_OUTPUT
     m_logger.info("clearing data");
+#endif
+
     m_activeTabScroll = 0;
     m_activeTabUrl = std::nullopt;
     m_activeTabDisplayList.clear();

@@ -10,6 +10,7 @@
                 "-B", "build",
                 "-DCMAKE_BUILD_TYPE=Debug",
                 "-DSHOW_COMPOSITED_LAYER_BORDERS=OFF",
+                "-DVERBOSE_DEBUG_OUTPUT=OFF",
             ],
             "problemMatcher": []
         },

@@ -117,6 +117,18 @@ if(SHOW_COMPOSITED_LAYER_BORDERS)
     )
 endif()
 
+option(
+    VERBOSE_DEBUG_OUTPUT
+    "Enables more verbose debug output"
+    OFF
+)
+
+if(VERBOSE_DEBUG_OUTPUT)
+    target_compile_definitions(main PRIVATE 
+        VERBOSE_DEBUG_OUTPUT=$<BOOL:${VERBOSE_DEBUG_OUTPUT}>
+    )
+endif()
+
 target_link_libraries(main PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
