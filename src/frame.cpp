@@ -297,7 +297,7 @@ void Frame::loadIFrames()
 void Frame::initStyles(Node& node)
 {
     // Create the styles map, which allows us to freeze each style's depenencies.
-    std::map<std::string, ProtectedField<std::string>> styles;
+    auto& styles = node.styles;
     for (auto const& [property, value] : Constants::CSS_PROPERTIES)
     {
         std::vector<Invalidatable*> dependencies;
@@ -309,7 +309,6 @@ void Frame::initStyles(Node& node)
         auto [it, inserted] = styles.try_emplace(property);
         it->second.initialize(&node, property, {}, dependencies);
     }
-    node.styles = styles;
 }
 
 /// Adds styles to the given node and its children. 

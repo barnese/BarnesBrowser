@@ -43,10 +43,12 @@ public:
     ProtectedField() = default;
 
     // Explicitly delete copy/move to guardrail using protected fields.
-    // ProtectedField(const ProtectedField&) = delete;
-    // ProtectedField& operator=(const ProtectedField&) = delete;
-    // ProtectedField(ProtectedField&&) = delete;
-    // ProtectedField& operator=(ProtectedField&&) = delete;
+    // This is to prevent accidentally copying or moving which can result
+    // in dangling invalidation pointers.
+    ProtectedField(const ProtectedField&) = delete;
+    ProtectedField& operator=(const ProtectedField&) = delete;
+    ProtectedField(ProtectedField&&) = delete;
+    ProtectedField& operator=(ProtectedField&&) = delete;
 
     void initialize(
         ProtectedFieldOwner obj, 
