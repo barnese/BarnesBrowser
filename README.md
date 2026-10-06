@@ -1,16 +1,16 @@
 # Barnes Browser
 
-This is a simple, experimental web browser written to explore browser concepts for educational purposes. It is a work in progress. For now, only simple HTML pages will work correctly. Use at your own risk!
-
-It is based on the book [Web Browser Engineering](https://browser.engineering/) by Pavel Panchekha & Chris Harrelson.
+This is a simple, experimental web browser written to explore browser concepts for educational purposes. It is based on the book [Web Browser Engineering](https://browser.engineering/) by Pavel Panchekha and Chris Harrelson.
 
 The browser is primarily written in C++. See the code under `/src`. It uses CMake for building and package management. See `CMakeLists.txt` for build configuration settings. 
 
-This project also includes a simple, test web server, written in Python, that helps serve various pages to test the browser.
+This project also includes a simple, test web server, written in Python, that helps serve various pages to test the browser. See the Test Pages section below for more information. 
+
+⚠️ Disclaimer: This project is a work in progress. For now, only simple HTML pages will work correctly. Use at your own risk!
 
 ## Building the Project
 
-The following instructions are for macOS. If you're building the project on Linux, see [README_LINUX](./README_LINUX.md).
+The following instructions are for macOS. If you're building the project on Linux, see the [README for Linux](./README_LINUX.md).
 
 If you use Visual Studio Code to build and run this project, add the following extensions:
 
@@ -28,6 +28,7 @@ These are the dependencies used in this project.
 3. [Catch2](https://github.com/catchorg/Catch2) - used for unit tests
 4. [Duktape](https://duktape.org/) - used for the Javascript engine
 5. [Dukglue](https://github.com/Aloshi/dukglue) - a Duktape wrapper for convenience functions
+6. [Python 3](https://www.python.org/) - (optional) used to run test web servers
 
 ## Unit Tests
 

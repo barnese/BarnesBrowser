@@ -17,3 +17,6 @@ struct UrlComponents
             port == other.port;
     }
 };
+
+/// Helper that gets the URL components for the given URL.
+UrlComponents getUrlComponents(std::string url);

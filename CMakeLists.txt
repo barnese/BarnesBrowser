@@ -76,6 +76,7 @@ add_executable(main
     src/layout/line_layout.cpp
     src/layout/text_layout.cpp
     src/networking/url.cpp
+    src/networking/url_components.cpp
     src/styles/css_parser.cpp
     src/styles/descendant_selector.cpp
     src/styles/numeric_animation.cpp
@@ -161,6 +162,7 @@ add_executable(tests
     src/html_tree/html_parser.cpp
     src/html_tree/text.cpp
     src/networking/url.cpp
+    src/networking/url_components.cpp
     src/styles/css_parser.cpp
     src/styles/descendant_selector.cpp
     src/styles/pseudo_class_selector.cpp
