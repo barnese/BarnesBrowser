@@ -3,6 +3,7 @@
 #include <cassert>
 #include <optional>
 #include <set>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
