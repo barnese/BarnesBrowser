@@ -57,6 +57,7 @@ add_executable(main
     src/commands/draw_rounded_rect.cpp
     src/commands/draw_text.cpp
     src/commands/transform.cpp
+    src/helpers/file_helpers.cpp
     src/helpers/measure_time.cpp
     src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp
@@ -156,6 +157,7 @@ add_executable(tests
     src/tests/test_string_helpers.cpp
     src/tests/test_url.cpp
 
+    src/helpers/file_helpers.cpp
     src/helpers/ssl_helper.cpp
     src/helpers/string_helpers.cpp
     src/html_tree/element.cpp

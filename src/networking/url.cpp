@@ -1,5 +1,6 @@
 #include "url.h"
 
+#include "helpers/file_helpers.h"
 #include "helpers/string_helpers.h"
 #include "globals.h"
 
@@ -238,6 +239,25 @@ void parseAndStoreCookie(std::string host, std::string cookie)
 }
 
 URLResponse URL::request(std::optional<URL> referrer, std::optional<std::string> payload) const
+{
+    if (m_urlComponents.scheme == "file")
+    {
+        return requestFromFile(m_urlComponents.path);
+    }
+    else 
+    {
+        return requestFromNetwork(referrer, payload);
+    }
+}
+
+URLResponse URL::requestFromFile(const std::string& path) const
+{
+    URLResponse response;
+    response.body = readFile(path);
+    return response;
+}
+
+URLResponse URL::requestFromNetwork(std::optional<URL> referrer, std::optional<std::string> payload) const
 {
     URLResponse response;
 

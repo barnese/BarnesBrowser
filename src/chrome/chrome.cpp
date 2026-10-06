@@ -1,5 +1,7 @@
 #include "chrome.h"
 
+#include "helpers/file_helpers.h"
+
 #include <QVBoxLayout>
 
 Chrome::Chrome(QWidget* parent) : QWidget(parent) 
@@ -69,7 +71,19 @@ void Chrome::handleReturnPressed()
 void Chrome::addTab(QString tabName, QString address, size_t index)
 {
     m_tabBar->addTab(tabName);
-    m_addressBar->setText(address);
+
+    auto newTabHtmlPath = getNewTabHtmlFilePath();
+
+    // Don't show the URL in the address bar for our new tab HTML page.
+    if (address == newTabHtmlPath)
+    {
+        m_addressBar->setText("");
+    }
+    else 
+    {
+        m_addressBar->setText(address);
+    }   
+
     m_tabBar->setCurrentIndex(index);
 }
 

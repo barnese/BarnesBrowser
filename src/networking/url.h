@@ -35,6 +35,10 @@ public:
     UrlComponents components() const { return m_urlComponents; };
 
 private:
+    URLResponse requestFromFile(const std::string& path) const;
+
+    URLResponse requestFromNetwork(std::optional<URL> referrer, std::optional<std::string> payload=std::nullopt) const;
+
     void sendRequest(SSLHelper* ssl, int sock, std::string request) const;
     
     /// Receives the response from a URL request.

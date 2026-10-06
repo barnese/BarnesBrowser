@@ -5,6 +5,7 @@
 #include "commands/draw_outline.h"
 #include "commands/paint_command.h"
 #include "constants.h"
+#include "helpers/file_helpers.h"
 #include "helpers/thread_registry.h"
 #include "html_tree/node_helpers.h"
 
@@ -17,6 +18,7 @@ Browser::Browser(QWidget* parent)
     // which allows us to have human-readable thread names.
     threadRegistry().add(std::this_thread::get_id(), "Browser Thread");
 
+    // Layout the main browser UI.
     auto* layout = new QVBoxLayout(this);
     m_chrome = new Chrome(this);
     m_view = new BrowserView(this);
@@ -433,8 +435,11 @@ void Browser::newTabInternal(std::optional<URL> url)
     }
     else 
     {
-        address = "";
+        auto newTabHtmlPath = getNewTabHtmlFilePath();
+        address = QString::fromStdString(newTabHtmlPath);
         tabName = "New Tab";
+        auto url = URL(newTabHtmlPath);
+        scheduleLoad(url);
     }
     m_view->setFocus();
     m_chrome->addTab(tabName, address, m_tabs.size() - 1);
