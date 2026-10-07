@@ -401,7 +401,7 @@ std::string URL::describe(bool showPort) const
     ss << m_urlComponents.scheme;
     ss << "://";
     ss << m_urlComponents.host;
-    if (showPort)
+    if (showPort && m_urlComponents.scheme != "file" && m_urlComponents.scheme != "https")
     {
         ss << ":";
         ss << m_urlComponents.port;

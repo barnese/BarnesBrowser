@@ -477,10 +477,11 @@ void Browser::changeTab(size_t index)
     m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
-void Browser::setTabTitle(const std::string& title)
+void Browser::setTabAddress(const std::string& address, const std::string& title)
 {
     std::lock_guard lock(m_mutex);
     auto activeIndex = getActiveTabIndex();
+    m_chrome->setAddress(QString::fromStdString(address));
     m_chrome->setTabName(QString::fromStdString(title), activeIndex);
 }
 

@@ -71,25 +71,16 @@ void Chrome::handleReturnPressed()
 void Chrome::addTab(QString tabName, QString address, size_t index)
 {
     m_tabBar->addTab(tabName);
-
-    auto newTabHtmlPath = getNewTabHtmlFilePath();
-
-    // Don't show the URL in the address bar for our new tab HTML page.
-    if (address == newTabHtmlPath)
-    {
-        m_addressBar->setText("");
-    }
-    else 
-    {
-        m_addressBar->setText(address);
-    }   
-
+    setAddress(address);
     m_tabBar->setCurrentIndex(index);
 }
 
 void Chrome::setAddress(QString address)
 {
-    m_addressBar->setText(address);
+    auto newTabHtmlPath = getNewTabHtmlFilePath();
+
+    // Don't show the URL in the address bar for the New Tab HTML page.
+    m_addressBar->setText(address == newTabHtmlPath ? "" : address);
 }
 
 void Chrome::setTabName(QString tabName, size_t index)

@@ -64,7 +64,7 @@ public:
     JSContext* getJs(URL url);
     bool isDarkMode() { return m_darkMode; }
     double getZoom() { return m_zoom; }
-    void setTabTitle(const std::string& title);
+    void setTabAddress(const std::string& address, const std::string& title);
     void addHistory(URL url) { m_history.push_back(url); }
     Frame* getRootFrame() { return m_rootFrame.get(); }
     Frame* getFrameByWindowId(int windowID);

@@ -330,9 +330,9 @@ bool BrowserTab::allowRequest(const URL& url)
     return m_allowedOrigins.empty() || containsUrl;
 }
 
-void BrowserTab::setTabTitle(const std::string& title)
+void BrowserTab::setTabAddress(const std::string& address, const std::string& title)
 {    
-    browser->setTabTitle(title);
+    browser->setTabAddress(address, title);
 }
 
 void BrowserTab::click(Point point)
