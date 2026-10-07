@@ -25,6 +25,7 @@ void DrawCompositedLayer::execute(PaintContext& context)
     auto opacity = static_cast<float>(context.painter.opacity());
 
     context.painter.beginNativePainting();
+    context.painter.translate(0, -context.scroll);
 
     // Configure OpenGL blending for transparent layers.
     auto* gl = QOpenGLContext::currentContext()->functions();
@@ -34,7 +35,7 @@ void DrawCompositedLayer::execute(PaintContext& context)
     context.blitter->bind();
     context.blitter->setOpacity(opacity);
 
-    auto viewport = QRect(QPoint(0, context.scroll), context.viewportSize);
+    auto viewport = QRect(QPoint(0, 0), context.viewportSize);
     auto targetTransform = QOpenGLTextureBlitter::targetTransform(targetRect, viewport);
 
     context.blitter->blit(fbo->texture(), targetTransform, QOpenGLTextureBlitter::OriginBottomLeft);
