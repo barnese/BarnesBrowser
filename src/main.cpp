@@ -1,7 +1,5 @@
 #include "browser.h"
 
-#include "networking/url.h"
-
 #include <QApplication>
 #include <QFile>
 #include <QStyleHints>

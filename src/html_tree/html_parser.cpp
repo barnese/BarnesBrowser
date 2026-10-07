@@ -120,8 +120,10 @@ void HTMLParser::addTag(const std::string& text)
 
 void HTMLParser::addText(const std::string& text)
 {
+    auto trimmedText = trim(text);
+
     // Ignore whitespace.
-    if (trim(text) == "") 
+    if (trimmedText == "") 
     {
         return;
     }
@@ -130,7 +132,7 @@ void HTMLParser::addText(const std::string& text)
 
     // Adds the text as a child node to the last unfinished node.
     const auto& parent = m_unfinished.back();
-    auto node = std::make_unique<Text>(text);
+    auto node = std::make_unique<Text>(trimmedText);
     parent->addChild(std::move(node));
 }
 
