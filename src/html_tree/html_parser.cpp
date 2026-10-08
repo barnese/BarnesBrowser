@@ -80,6 +80,12 @@ void HTMLParser::addTag(const std::string& text)
 
     addImplicitTags(tag);
 
+    // Handle tags like <br/> by remove the trailing slash.
+    if (tag.ends_with('/'))
+    {
+        tag.pop_back();
+    }
+
     if (tag.starts_with('/'))
     {
         // The very last tag is an edge case. Since there is

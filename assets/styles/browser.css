@@ -1,35 +1,52 @@
 h1 { 
     font-size: 30px; 
     font-weight: bold;
+    margin-bottom: 24px;
 }
+
 h2 {
     font-size: 28px;
     font-weight: bold;
+    margin-bottom: 24px;
 }
+
 h3 {
     font-size: 26px;
     font-weight: bold;
+    margin-bottom: 24px;
 }
+
 a { color: blue; }
 i { font-style: italic; }
 b { font-weight: bold; }
 small { font-size: 90%; }
 big { font-size: 110%; }
 pre { background-color: gray; }
+
 input {
     font-size: 24px;
     font-weight: normal;
     font-style: normal;
     background-color: lightblue;
 }
+
 button {
     font-size: 24px;
     font-weight: normal;
     font-style: normal;
     background-color: orange;
 }
+
 iframe {
     outline: 1px solid black;
+}
+
+p {
+    margin-bottom: 24px;
+}
+
+br {
+    height: 24px;
 }
 
 input:focus { outline: 2px solid black; }

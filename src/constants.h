@@ -42,7 +42,11 @@ namespace Constants
         { "background-color", "transparent" },
         { "image-rendering", "auto" },
         { "height", "" },
-        { "width", "" }
+        { "width", "" },
+        { "margin-top", "0px" },
+        { "margin-bottom", "24px" },
+        { "margin-left", "0px" },
+        { "margin-right", "0px" },
     };
 
     const std::vector<std::string> BLOCK_ELEMENTS = 

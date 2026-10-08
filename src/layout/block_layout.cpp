@@ -78,15 +78,31 @@ void BlockLayout::layout()
 
     width.set(overrideSizeWithStyle(node, width.get(), "width"));
 
+    double marginTop = 0;
+
+    if (const auto element = dynamic_cast<const Element*>(node))
+    {
+        if (std::ranges::contains(Constants::BLOCK_ELEMENTS, element->tag))
+        {
+            auto marginTopStyle = node->findStyle("margin-top");
+
+            if (marginTopStyle)
+            {
+                marginTop = pixelsToDouble(*marginTopStyle);
+            }
+        }
+    }
+
     if (previous)
     {
         auto prevY = previous->y.read(&y);
         auto prevHeight = previous->height.read(&y);
-        y.set(prevY + prevHeight);
+        y.set(prevY + prevHeight + marginTop);
     }
     else 
     {
-        y.copy(&parent->y);
+        auto yValue = parent->y.read(&y) + marginTop;
+        y.set(yValue);
     }
 
     auto mode = getLayoutMode();
@@ -94,7 +110,6 @@ void BlockLayout::layout()
         layoutBlock();
     else 
         layoutText();
-
 
     DepList heightDeps;
     for (const auto& child : this->children.get())
@@ -115,6 +130,23 @@ void BlockLayout::layout()
     {        
         maxHeight += child->height.read(&height);
     }
+
+    double marginBottom = 0;
+
+    if (const auto element = dynamic_cast<const Element*>(node))
+    {
+        if (std::ranges::contains(Constants::BLOCK_ELEMENTS, element->tag))
+        {
+            auto marginBottomStyle = node->findStyle("margin-bottom");            
+
+            if (marginBottomStyle)
+            {
+                marginBottom += pixelsToDouble(*marginBottomStyle);
+            }
+        }
+    }
+
+    maxHeight += marginTop + marginBottom;
 
     height.set(overrideSizeWithStyle(node, maxHeight, "height"));
 }
@@ -374,7 +406,7 @@ std::vector<std::unique_ptr<Command>> BlockLayout::paint() const
 
 std::vector<std::unique_ptr<Command>> BlockLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
-    return paintVisualEffects(node, std::move(commands), getRect());    
+    return paintVisualEffects(node, std::move(commands), getRect());
 }
 
 std::string BlockLayout::describe() const
