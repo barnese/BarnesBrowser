@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cctype>
+#include <openssl/evp.h>
 
 std::vector<std::string> split(const std::string& text, const std::string& delimiter, bool firstOnly)
 {
@@ -210,4 +211,27 @@ std::string urlEncode(const std::string& value)
     }
 
     return escaped.str();
+}
+
+std::optional<std::string> decodeBase64(std::string_view input) {
+    if (input.size() % 4 != 0)
+        return std::nullopt;
+
+    std::string output(3 * (input.size() / 4), '\0');
+
+    int length = EVP_DecodeBlock(
+        reinterpret_cast<unsigned char*>(output.data()),
+        reinterpret_cast<const unsigned char*>(input.data()),
+        static_cast<int>(input.size())
+    );
+
+    if (length < 0)
+        return std::nullopt;
+
+    // Remove bytes added because of Base64 padding.
+    if (!input.empty() && input.back() == '=') --length;
+    if (input.size() > 1 && input[input.size() - 2] == '=') --length;
+
+    output.resize(length);
+    return output;
 }

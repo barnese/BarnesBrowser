@@ -164,3 +164,10 @@ TEST_CASE("pixelsToInt() returns nullopt for invalid string", TAG)
     auto actual = pixelsToInt("invalid");
     REQUIRE(!actual.has_value());
 }
+
+TEST_CASE("decodeBase64 returns readable string", TAG)
+{
+    auto actual = decodeBase64("SGVsbG8h");
+    std::string expected = "Hello!";
+    REQUIRE(expected == actual);
+}

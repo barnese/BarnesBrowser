@@ -36,6 +36,7 @@ public:
 
 private:
     URLResponse requestFromFile(const std::string& path) const;
+    URLResponse requestFromData(const UrlComponents& components) const;
 
     URLResponse requestFromNetwork(std::optional<URL> referrer, std::optional<std::string> payload=std::nullopt) const;
 

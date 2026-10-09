@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /// Splits a string by a delimiter.
@@ -27,3 +28,6 @@ std::optional<int> pixelsToInt(std::string pixelString);
 double pixelsToDouble(std::string pixelString);
 
 std::string urlEncode(const std::string& value);
+
+/// Decodes a base64-encoded string into a readable string.
+std::optional<std::string> decodeBase64(std::string_view input);

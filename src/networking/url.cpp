@@ -244,6 +244,10 @@ URLResponse URL::request(std::optional<URL> referrer, std::optional<std::string>
     {
         return requestFromFile(m_urlComponents.path);
     }
+    else if (m_urlComponents.scheme == "data")
+    {
+        return requestFromData(m_urlComponents);
+    }
     else 
     {
         return requestFromNetwork(referrer, payload);
@@ -254,6 +258,31 @@ URLResponse URL::requestFromFile(const std::string& path) const
 {
     URLResponse response;
     response.body = readFile(path);
+    return response;
+}
+
+URLResponse URL::requestFromData(const UrlComponents& components) const
+{
+    URLResponse response;
+    if (components.data)
+    {
+        auto data = *components.data;
+
+        if (components.base64)
+        {
+            auto decoded = decodeBase64(data);
+            if (decoded)
+                data = *decoded;
+        }
+
+        std::vector<std::byte> result;
+        result.reserve(data.size());
+        for (unsigned char c : data)
+        {
+            result.push_back(static_cast<std::byte>(c));
+        }
+        response.body = result;
+    }
     return response;
 }
 
@@ -398,6 +427,25 @@ bool URL::operator==(const URL& other) const
 std::string URL::describe(bool showPort) const
 {
     std::stringstream ss;
+
+    if (m_urlComponents.scheme == "data")
+    {
+        ss << m_urlComponents.scheme << ":";
+
+        if (m_urlComponents.mediaType)
+            ss << *m_urlComponents.mediaType;
+
+        if (m_urlComponents.base64)
+            ss << ";base64";
+
+        ss << ",";
+
+        if (m_urlComponents.data)
+            ss << *m_urlComponents.data;
+
+        return ss.str();
+    }
+
     ss << m_urlComponents.scheme;
     ss << "://";
     ss << m_urlComponents.host;

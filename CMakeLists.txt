@@ -156,6 +156,7 @@ add_executable(tests
     src/tests/test_css_parser.cpp
     src/tests/test_string_helpers.cpp
     src/tests/test_url.cpp
+    src/tests/test_url_components.cpp
 
     src/helpers/file_helpers.cpp
     src/helpers/ssl_helper.cpp

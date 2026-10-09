@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <cstdint>
+#include <optional>
+#include <string>
 
 struct UrlComponents 
 {
@@ -10,12 +11,20 @@ struct UrlComponents
     std::string path;
     uint16_t port;
 
+    /// Support for data URLs
+    bool base64 = false;
+    std::optional<std::string> mediaType = std::nullopt;
+    std::optional<std::string> data = std::nullopt;
+
     bool operator==(const UrlComponents& other) const
     {
         return scheme == other.scheme &&
             host == other.host &&
             path == other.path &&
-            port == other.port;
+            port == other.port &&
+            base64 == other.base64 &&
+            mediaType == other.mediaType &&
+            data == other.data;
     }
 };
 
