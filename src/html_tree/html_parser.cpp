@@ -36,15 +36,7 @@ std::unique_ptr<Node> HTMLParser::parse()
         }
         else
         {
-            // Replace line breaks with spaces.
-            if (c == '\n')
-            {
-                buffer += ' ';
-            } 
-            else 
-            {
-                buffer += c;
-            }
+            buffer += c;
         }        
     }
 
@@ -124,21 +116,37 @@ void HTMLParser::addTag(const std::string& text)
     } 
 }
 
-void HTMLParser::addText(const std::string& text)
+void HTMLParser::addText(const std::string& input)
 {
-    auto trimmedText = trim(text);
-
-    // Ignore whitespace.
-    if (trimmedText == "") 
-    {
-        return;
-    }
+    if (trim(input) == "") return;
 
     addImplicitTags();
 
-    // Adds the text as a child node to the last unfinished node.
     const auto& parent = m_unfinished.back();
-    auto node = std::make_unique<Text>(trimmedText);
+    bool ignoreWhitespaceAndLineBreaks = true;
+
+    if (const auto element = dynamic_cast<const Element*>(parent.get()))
+    {
+        if (element->tag == "pre")
+        {
+            ignoreWhitespaceAndLineBreaks = false;
+        }
+    }
+
+    std::string text;
+
+    if (ignoreWhitespaceAndLineBreaks)
+    {
+        text = trim(input);
+        std::erase_if(text, [](char c) { return c == '\n' || c == '\r'; });
+    }
+    else 
+    {
+        text = input;
+    }
+
+    // Adds the text as a child node to the last unfinished node.
+    auto node = std::make_unique<Text>(text);
     parent->addChild(std::move(node));
 }
 

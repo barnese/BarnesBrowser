@@ -27,6 +27,10 @@ public:
         if (!m_fonts.contains(key)) 
         { 
             QFont font(family, size, weight, style); 
+
+            if (family == "monospace")
+                font.setStyleHint(QFont::Monospace);
+
             m_fonts[key] = font; 
         } 
         

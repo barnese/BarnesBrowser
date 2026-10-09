@@ -267,6 +267,11 @@ void BlockLayout::recurse(Node* node)
         for (auto& w : words)
         {
             word(node, w);
+            
+            if (w.endsWith("\n"))
+            {
+                newLine();
+            }
         }
     }
 }

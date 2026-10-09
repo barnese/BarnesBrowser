@@ -20,12 +20,14 @@ h2 {
 
 pre { 
     line-height: 1.5;
-    background-color: gray; 
+    background-color: lightgray;
+    font-family: monospace;
+    font-size: 20px;
 }
 
 .code-sample { 
     font-size: 60%; 
-    font-family: monospace; 
+    font-family: monospace;
 }
 
 footer p { 

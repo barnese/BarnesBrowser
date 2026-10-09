@@ -4,7 +4,6 @@
 #include "styles/style_helpers.h"
 #include "helpers/string_helpers.h"
 #include "html_tree/element.h"
-#include "html_tree/node_helpers.h"
 
 #include <QFont>
 #include <QFontMetrics>
