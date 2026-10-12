@@ -12,6 +12,7 @@ struct URLResponse
     std::string statusCode;
     std::optional<std::string> errorMessage;
     std::vector<std::byte> body;
+    bool viewSource;
 
     std::string bodyString()
     {

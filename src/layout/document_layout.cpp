@@ -8,7 +8,6 @@
 #include "frame.h"
 
 #include <sstream>
-#include <iostream>
 
 DocumentLayout::DocumentLayout(Node* node, Frame* frame)
 {
@@ -81,8 +80,6 @@ void DocumentLayout::layout(int width, double zoom)
     hasDirtyDescendants = false;
 
     height.copy(&childPtr->height);
-
-    std::cout << "[DocumentLayout] document height = " << height.getValue() << std::endl;
 
     // Assert that the layout is clean. If you get this assert,
     // it means one of the layouts has a dirty protected field.

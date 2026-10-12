@@ -1,4 +1,7 @@
 #include "string_helpers.h"
+
+#include "constants.h"
+
 #include <algorithm>
 #include <regex>
 #include <string>
@@ -234,4 +237,37 @@ std::optional<std::string> decodeBase64(std::string_view input) {
 
     output.resize(length);
     return output;
+}
+
+void replaceEntitiesWithHTMLChars(std::string& text)
+{
+    // Convert encoded entities to their actual characters.
+    for (const auto& [code, symbol] : Constants::HTML_CHARACTER_ENTITIES)
+    {
+        size_t pos = 0;
+        while ((pos = text.find(code, pos)) != std::string::npos)
+        {
+            text.replace(pos, code.length(), symbol);
+            pos += symbol.length();
+        }
+    }
+}
+
+void replaceHTMLCharsWithEntities(std::string& text)
+{
+    auto entities = Constants::HTML_CHARACTER_ENTITIES;
+    
+    // Don't convert spaces.
+    entities.erase("&nbsp;");
+    
+    // Convert characters to encoded entities.
+    for (const auto& [code, symbol] : entities)
+    {
+        size_t pos = 0;
+        while ((pos = text.find(symbol, pos)) != std::string::npos)
+        {
+            text.replace(pos, symbol.length(), code);
+            pos += code.length();
+        }
+    }
 }

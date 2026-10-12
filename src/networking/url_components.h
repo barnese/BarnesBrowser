@@ -16,6 +16,8 @@ struct UrlComponents
     std::optional<std::string> mediaType = std::nullopt;
     std::optional<std::string> data = std::nullopt;
 
+    bool viewSource = false;
+
     bool operator==(const UrlComponents& other) const
     {
         return scheme == other.scheme &&

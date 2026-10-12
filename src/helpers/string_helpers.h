@@ -31,3 +31,9 @@ std::string urlEncode(const std::string& value);
 
 /// Decodes a base64-encoded string into a readable string.
 std::optional<std::string> decodeBase64(std::string_view input);
+
+/// Replaces entities with HTML characters.
+void replaceEntitiesWithHTMLChars(std::string& text);
+
+/// Replaces HTML characters with encoded entities.
+void replaceHTMLCharsWithEntities(std::string& text);

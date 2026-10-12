@@ -258,6 +258,7 @@ URLResponse URL::requestFromFile(const std::string& path) const
 {
     URLResponse response;
     response.body = readFile(path);
+    response.viewSource = m_urlComponents.viewSource;
     return response;
 }
 
@@ -289,6 +290,7 @@ URLResponse URL::requestFromData(const UrlComponents& components) const
 URLResponse URL::requestFromNetwork(std::optional<URL> referrer, std::optional<std::string> payload) const
 {
     URLResponse response;
+    response.viewSource = m_urlComponents.viewSource;
 
     UrlComponents urlComponents = m_urlComponents;
 
@@ -444,6 +446,10 @@ std::string URL::describe(bool showPort) const
             ss << *m_urlComponents.data;
 
         return ss.str();
+    }
+    else if (m_urlComponents.viewSource)
+    {
+        ss << "view-source:";
     }
 
     ss << m_urlComponents.scheme;

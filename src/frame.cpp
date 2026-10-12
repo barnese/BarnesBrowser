@@ -44,6 +44,12 @@ void Frame::load(URL url, std::optional<std::string> payload)
 
     auto response = url.request(m_url, payload);
     auto body = response.errorMessage.has_value() ? response.errorMessage.value() : response.bodyString();
+    
+    if (response.viewSource)
+    {
+        replaceHTMLCharsWithEntities(body);
+    }
+
     m_url = url;
 
     if (!m_parentFrame)

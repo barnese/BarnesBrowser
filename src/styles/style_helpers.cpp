@@ -37,16 +37,6 @@ QFont::Style cssFontStyleToQt(const std::string& style)
     return QFont::Style::StyleNormal;
 }
 
-void replaceHTMLCharacterEntities(QString& word)
-{
-    for (const auto& entity : Constants::HTML_CHARACTER_ENTITIES)
-    {
-        auto code = QString::fromStdString(entity.first);
-        auto symbol = QString::fromStdString(entity.second);
-        word.replace(code, symbol);
-    }
-}
-
 double overrideSizeWithStyle(const Node* node, int size, std::string styleName)
 {
     auto style = node->findStyle(styleName);

@@ -178,3 +178,51 @@ TEST_CASE("decodeBase64 returns readable string", TAG)
     std::string expected = "Hello!";
     REQUIRE(expected == actual);
 }
+
+TEST_CASE("replaceEntitiesWithHTMLChars() empty string", TAG)
+{
+    std::string actual = "";
+    std::string expected = "";
+    replaceEntitiesWithHTMLChars(actual);
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("replaceEntitiesWithHTMLChars() no entities", TAG)
+{
+    std::string actual = "The apple is red.";
+    std::string expected = "The apple is red.";
+    replaceEntitiesWithHTMLChars(actual);
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("replaceEntitiesWithHTMLChars() has entities", TAG)
+{
+    std::string actual = "&lt;h1&gt;Title&lt;/h1&gt;";
+    std::string expected = "<h1>Title</h1>";
+    replaceEntitiesWithHTMLChars(actual);
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("replaceHTMLCharsWithEntities() empty string", TAG)
+{
+    std::string actual = "";
+    std::string expected = "";
+    replaceHTMLCharsWithEntities(actual);
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("replaceHTMLCharsWithEntities() no entities", TAG)
+{
+    std::string actual = "The apple is red.";
+    std::string expected = "The apple is red.";
+    replaceHTMLCharsWithEntities(actual);
+    REQUIRE(expected == actual);
+}
+
+TEST_CASE("replaceHTMLCharsWithEntities() has entities", TAG)
+{
+    std::string actual = "<h1>Title</h1>";
+    std::string expected = "&lt;h1&gt;Title&lt;/h1&gt;";
+    replaceHTMLCharsWithEntities(actual);
+    REQUIRE(expected == actual);
+}

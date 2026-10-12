@@ -320,7 +320,9 @@ void BlockLayout::input(Node* node)
 
 void BlockLayout::word(Node* node, QString& word)
 {
-    replaceHTMLCharacterEntities(word);
+    std::string text = word.toStdString();
+    replaceEntitiesWithHTMLChars(text);
+    word = QString::fromStdString(text);
 
     auto zoom = this->zoom.read(&children);
 

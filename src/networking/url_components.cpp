@@ -34,6 +34,14 @@ UrlComponents getUrlComponents(std::string url)
 
         return components;
     }
+    else if (url.starts_with("view-source:"))
+    {
+        components.viewSource = true;
+     
+        std::string_view urlView = url;
+        urlView.remove_prefix(12);
+        url = urlView;
+    }
 
     // Otherwise, parse the URL as a normal URL.
     auto parts = split(url, "://");
