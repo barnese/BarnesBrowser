@@ -63,7 +63,7 @@ void LineLayout::layout()
             ascentDeps.push_back(&child->ascent);
             descentDeps.push_back(&child->descent);
         }
-        
+      
         ascent.setDependenciesAndFreeze(ascentDeps);
         descent.setDependenciesAndFreeze(descentDeps);
         
@@ -112,6 +112,14 @@ void LineLayout::layout()
     {
         maxAscent = std::max(maxAscent, child->ascent.read(&ascent));
     }
+    ascent.set(maxAscent);
+
+    int maxDescent = children.getValue().front()->descent.read(&descent);
+    for (const auto& child : children.getValue())
+    {
+        maxDescent = std::max(maxDescent, child->descent.read(&descent));
+    }
+    descent.set(maxDescent);
 
     for (const auto& child : children.getValue())
     {
@@ -124,12 +132,6 @@ void LineLayout::layout()
         {
             child->y.set(baseline - child->ascent.read(&child->y));
         }
-    }
-
-    int maxDescent = children.getValue().front()->descent.read(&descent);
-    for (const auto& child : children.getValue())
-    {
-        maxDescent = std::max(maxDescent, child->descent.read(&descent));
     }
 
     height.set(maxAscent + maxDescent);

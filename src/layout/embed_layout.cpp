@@ -17,13 +17,16 @@ EmbedLayout::EmbedLayout(
     
     zoom.initialize(this, "zoom", parent, DepList{&parent->zoom});
     font.initialize(this, "font", parent, DepList{
+        &zoom,
         &node->styles["font-family"],
         &node->styles["font-weight"],
         &node->styles["font-style"],
         &node->styles["font-size"]
     });
-    width.initialize(this, "width", parent, DepList{&parent->zoom});
+    width.initialize(this, "width", parent, DepList{&zoom});
     height.initialize(this, "height", parent, DepList{&zoom, &font, &width});
+    ascent.initialize(this, "ascent", parent, DepList{&height});
+    descent.initialize(this, "descent", parent, DepList{});
     
     DepList xDependencies;
     if (previous)
@@ -36,8 +39,6 @@ EmbedLayout::EmbedLayout(
     }
     x.initialize(this, "x", parent, xDependencies);
     y.initialize(this, "y", parent, DepList{&ascent, &parent->y, &parent->ascent});
-    ascent.initialize(this, "ascent", parent, DepList{&height});
-    descent.initialize(this, "descent", parent, DepList{});
  
     hasDirtyDescendants = true;
 }

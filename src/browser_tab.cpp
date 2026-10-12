@@ -44,6 +44,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
 #endif
         taskRunner.clearPendingTasks();
         windowIdToFrame.clear();
+        m_focus = nullptr;
         m_focusedFrame = nullptr;
         m_rootFrame = std::make_unique<Frame>(this, nullptr);
         m_rootFrame->load(url, payload);

@@ -116,6 +116,7 @@ void BlockLayout::layout()
     {
         heightDeps.push_back(&child->height);
     }
+    heightDeps.push_back(&children);
     height.setDependenciesAndFreeze(heightDeps);
 
     for (const auto& child : children.get())

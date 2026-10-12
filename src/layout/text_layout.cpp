@@ -91,7 +91,8 @@ void TextLayout::layout()
     }
 
     auto zoom = this->zoom.read(&font);
-    font.set(getFont(parent->node, zoom, adjustSize, &font));
+
+    font.set(getFont(node, zoom, adjustSize, &font));
 
     {
         QFontMetrics metrics(font.read(&width));

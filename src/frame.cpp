@@ -336,7 +336,7 @@ void Frame::addStyles(Node& node, const CSSRules& rules)
         return;
     }
 
-    StringMap oldStyles;    
+    StringMap oldStyles;
     for (const auto& [property, field] : node.styles)
     {
         oldStyles.emplace(property, field.getValue());
@@ -619,8 +619,6 @@ void Frame::activateElement(Element* element)
     }
     else if (element->tag == "button")
     {
-        if (js->dispatchEvent("click", element, windowId)) return;
-
         Node* node = element;
 
         while (node)
@@ -767,6 +765,9 @@ void Frame::click(Point point)
 
     auto last = objs.back();
     Node* elt = last->node;
+
+    if (elt && js->dispatchEvent("click", elt, windowId)) return;
+
     while (elt)
     {
         if (auto element = dynamic_cast<Element*>(elt))
@@ -814,8 +815,8 @@ void Frame::scrollTo(Element* element)
 
     // Now scroll to that layout object.
     auto newScroll = y - Constants::SCROLL_STEP;
-    m_logger.info("scrolling to " + std::to_string(newScroll));
     scroll = clampScroll(newScroll);
+    m_logger.info("scrolling to " + std::to_string(scroll));
     scrollChangedInFrame = true;
 }
 

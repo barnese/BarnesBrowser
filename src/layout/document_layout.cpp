@@ -1,9 +1,9 @@
 #include "document_layout.h"
 
 #include "commands/transform.h"
+#include "html_tree/node_helpers.h"
 #include "block_layout.h"
 #include "constants.h"
-#include "html_tree/node_helpers.h"
 #include "layout_helpers.h"
 #include "frame.h"
 
@@ -70,7 +70,7 @@ void DocumentLayout::layout(int width, double zoom)
     auto* childPtr = child.get();
    
     if (children.isEmpty())
-        children.getValue().push_back(std::move(child)); 
+        children.getValue().push_back(std::move(child));
     else
         children.getValue()[0] = std::move(child);
    
@@ -82,12 +82,15 @@ void DocumentLayout::layout(int width, double zoom)
 
     height.copy(&childPtr->height);
 
-    // Assert that the layout is clean.
-    // auto list = treeToList<Layout>((Layout*)this);
-    // for (const auto& item : list)
-    // {
-    //     assert(!item->layoutNeeded());
-    // }
+    std::cout << "[DocumentLayout] document height = " << height.getValue() << std::endl;
+
+    // Assert that the layout is clean. If you get this assert,
+    // it means one of the layouts has a dirty protected field.
+    auto list = treeToList<Layout>((Layout*)this);
+    for (const auto& item : list)
+    {
+        assert(!item->layoutNeeded());
+    }
 }
 
 bool DocumentLayout::shouldPaint() const 

@@ -50,7 +50,7 @@ window.Node.prototype.addEventListener = function(type, listener) {
 window.Node.prototype.dispatchEvent = function(event) {
     var type = event.type;
     var handle = this.handle;
-    window.console.log("[runtime.js] dispatching event " + type + ", handle: " + handle);
+    //window.console.log("[runtime.js] dispatching event " + type + ", handle: " + handle);
     var list = (window.EVENT_LISTENERS[handle] && 
         window.EVENT_LISTENERS[handle][type]) || [];
     for (var i = 0; i < list.length; i++) {

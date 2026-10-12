@@ -103,7 +103,6 @@ public:
         setAncestorDirtyFlags();
     }
 
-
     /// Asserts the value is not dirty before returning it,
     /// which defensively helps you catch coding errors earlier.
     const T& get() const
@@ -132,14 +131,14 @@ public:
         // were declared.
         if (notify->frozenDependencies || frozenInvalidations)        
         {
-            //assert(invalidations.contains(notify));
+            assert(invalidations.contains(notify));
         }
         else 
         {
             invalidations.insert(notify);
         }
 
-        return getValue();
+        return get();
     }
 
     /// Sets the value and resets the dirty flag.
@@ -147,7 +146,7 @@ public:
     {
         // Use this debugging statement to inspect which fields 
         // are getting recomputed.
-        //std::cout << "Change " << describe() << std::endl;
+        //std::cout << "Change " << describe().substr(0, 100) << std::endl;
 
         if (value != m_value)
             notify();

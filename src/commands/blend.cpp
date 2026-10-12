@@ -104,7 +104,7 @@ void Blend::execute(PaintContext& context)
 
         PaintContext blendContext { 
             layerPainter, 
-            context.blitter, 
+            context.blitter,
             m_rect.size(),
             context.scroll
         };

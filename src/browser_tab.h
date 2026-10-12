@@ -95,8 +95,8 @@ private:
     std::unique_ptr<AccessibilityNode> m_accessibilityTree;
     URL m_url;
     std::vector<URL> m_history;
-    Element* m_focus;
-    Frame* m_focusedFrame;
+    Element* m_focus = nullptr;
+    Frame* m_focusedFrame = nullptr;
     std::vector<URL> m_allowedOrigins;
     std::map<std::string, std::unique_ptr<JSContext>> m_originToJs;
 
