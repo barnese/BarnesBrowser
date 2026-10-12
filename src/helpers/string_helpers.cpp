@@ -64,7 +64,7 @@ std::vector<std::string> splitBySpaceQuoted(const std::string& text)
             inDoubleQuotes = !inDoubleQuotes;
         }
 
-        if (c == ' ')
+        if (c == ' ' || c == '\n' || c == '\r')
         {
             if (!inSingleQuotes && !inDoubleQuotes)
             {

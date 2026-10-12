@@ -251,13 +251,20 @@ void Frame::loadImages()
                 m_logger.error("blocked image due to CSP: " + imageUrl.describe());
                 continue;
             }
-            auto response = imageUrl.request(m_url);
-            QImage img;
-            if (img.loadFromData(response.body))
+            try 
             {
-                image->image = std::make_unique<QImage>(img);
+                auto response = imageUrl.request(m_url);
+                QImage img;
+                if (img.loadFromData(response.body))
+                {
+                    image->image = std::make_unique<QImage>(img);
+                }
+                else 
+                {
+                    image->image = std::make_unique<QImage>(":/assets/images/broken_image.png");
+                }
             }
-            else 
+            catch (...)
             {
                 image->image = std::make_unique<QImage>(":/assets/images/broken_image.png");
             }

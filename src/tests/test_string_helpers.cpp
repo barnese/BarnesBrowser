@@ -80,6 +80,13 @@ TEST_CASE("splitBySpaceQuoted() string with quotes without spaces", TAG)
     REQUIRE(expected == actual);
 }
 
+TEST_CASE("splitBySpaceQuoted() string with quotes and new line", TAG)
+{
+    std::vector<std::string> expected { "img", "src=\"smile.jpg\"", "alt=\"smiley face\"" };
+    auto actual = splitBySpaceQuoted("img src=\"smile.jpg\"\nalt=\"smiley face\"");
+    REQUIRE(expected == actual);
+}
+
 TEST_CASE("trimRight() removes whitespace to the right of a string", TAG)
 {
     REQUIRE(trimRight("hi ") == "hi");
