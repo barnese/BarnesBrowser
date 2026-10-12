@@ -25,7 +25,6 @@ void DrawCompositedLayer::execute(PaintContext& context)
     auto opacity = static_cast<float>(context.painter.opacity());
 
     context.painter.beginNativePainting();
-    context.painter.translate(0, -context.scroll);
 
     // Configure OpenGL blending for transparent layers.
     auto* gl = QOpenGLContext::currentContext()->functions();

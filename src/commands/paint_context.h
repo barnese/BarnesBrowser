@@ -10,5 +10,4 @@ struct PaintContext
     QPainter& painter;
     QOpenGLTextureBlitter* blitter;
     QSize viewportSize;
-    int scroll = 0;
 };

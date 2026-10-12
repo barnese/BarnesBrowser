@@ -243,7 +243,7 @@ void Browser::handlePaintRequest(PaintContext& context)
 {
     if (!m_activeTab->isLoaded()) return;
 
-    context.scroll = m_activeTabScroll;
+    context.painter.translate(0, -m_activeTabScroll);
 
     for (const auto& item : m_drawList)
     {

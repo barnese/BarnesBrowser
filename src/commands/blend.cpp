@@ -105,8 +105,7 @@ void Blend::execute(PaintContext& context)
         PaintContext blendContext { 
             layerPainter, 
             context.blitter,
-            m_rect.size(),
-            context.scroll
+            m_rect.size()
         };
         
         for (const auto& item : children)
