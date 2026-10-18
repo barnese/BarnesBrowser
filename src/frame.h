@@ -2,6 +2,7 @@
 
 #include "html_tree/node.h"
 #include "layout/document_layout.h"
+#include "networking/resource_loader.h"
 #include "networking/url.h"
 #include "scripting/js_context.h"
 #include "styles/css_parser.h"
@@ -39,8 +40,9 @@ public:
     void click(Point point);
     void activateElement(Element* element);
     void scrollDown();
-
     void scrollTo(Element* element);
+    URLResponse request(URL url, std::optional<URL> referrer, std::optional<std::string> payload=std::nullopt);
+
     bool isLoaded() { return m_loaded; }
     bool needsStyle() { return m_needsStyle; }
     bool needsLayout() { return m_needsLayout; }
@@ -85,6 +87,7 @@ private:
     std::unique_ptr<Node> m_node;
     std::vector<URL> m_allowedOrigins;
     URL m_url;
+    ResourceLoader m_resourceLoader;
     CSSRules m_rules;
     bool m_loaded;
     

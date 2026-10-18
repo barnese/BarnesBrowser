@@ -76,6 +76,8 @@ add_executable(main
     src/layout/layout_helpers.cpp
     src/layout/line_layout.cpp
     src/layout/text_layout.cpp
+    src/networking/http_connection.cpp
+    src/networking/resource_loader.cpp
     src/networking/url.cpp
     src/networking/url_components.cpp
     src/styles/css_parser.cpp
@@ -107,28 +109,19 @@ target_compile_options(main PRIVATE
 )
 
 # Debug Options - Enable in tasks.json.
-option(
-    SHOW_COMPOSITED_LAYER_BORDERS 
-    "Enables composition layer borders" 
-    OFF
-)
-
+option(SHOW_COMPOSITED_LAYER_BORDERS "Enables composition layer borders" OFF)
 if(SHOW_COMPOSITED_LAYER_BORDERS)
-    target_compile_definitions(main PRIVATE 
-        SHOW_COMPOSITED_LAYER_BORDERS=$<BOOL:${SHOW_COMPOSITED_LAYER_BORDERS}>
-    )
+    target_compile_definitions(main PRIVATE SHOW_COMPOSITED_LAYER_BORDERS=$<BOOL:${SHOW_COMPOSITED_LAYER_BORDERS}>)
 endif()
 
-option(
-    VERBOSE_DEBUG_OUTPUT
-    "Enables more verbose debug output"
-    OFF
-)
-
+option(VERBOSE_DEBUG_OUTPUT "Enables more verbose debug output" OFF)
 if(VERBOSE_DEBUG_OUTPUT)
-    target_compile_definitions(main PRIVATE 
-        VERBOSE_DEBUG_OUTPUT=$<BOOL:${VERBOSE_DEBUG_OUTPUT}>
-    )
+    target_compile_definitions(main PRIVATE VERBOSE_DEBUG_OUTPUT=$<BOOL:${VERBOSE_DEBUG_OUTPUT}>)
+endif()
+
+option(NETWORK_DEBUG_OUTPUT "Enables network debug output" OFF)
+if(NETWORK_DEBUG_OUTPUT)
+    target_compile_definitions(main PRIVATE NETWORK_DEBUG_OUTPUT=$<BOOL:${NETWORK_DEBUG_OUTPUT}>)
 endif()
 
 target_link_libraries(main PRIVATE
@@ -164,6 +157,8 @@ add_executable(tests
     src/html_tree/element.cpp
     src/html_tree/html_parser.cpp
     src/html_tree/text.cpp
+    src/networking/http_connection.cpp
+    src/networking/resource_loader.cpp
     src/networking/url.cpp
     src/networking/url_components.cpp
     src/styles/css_parser.cpp

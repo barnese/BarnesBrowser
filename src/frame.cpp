@@ -18,6 +18,7 @@ Frame::Frame(BrowserTab* tab, Frame* parentFrame)
     : m_tab(tab),
       m_parentFrame(parentFrame),
       m_url(""),
+      m_resourceLoader(true),
       m_logger(Logger("Frame"))
 {
     m_loaded = false;
@@ -38,13 +39,14 @@ Frame::Frame(BrowserTab* tab, Frame* parentFrame)
 void Frame::load(URL url, std::optional<std::string> payload)
 {
     m_loaded = false;
-    m_logger.info("loading: " + url.describe());
+    m_logger.info("loading");
     scroll = 0;
     scrollChangedInFrame = true;
 
-    auto response = url.request(m_url, payload);
+    auto response = m_resourceLoader.request(url, m_url, payload);
+
     auto body = response.errorMessage.has_value() ? response.errorMessage.value() : response.bodyString();
-    
+   
     if (response.viewSource)
     {
         replaceHTMLCharsWithEntities(body);
@@ -186,7 +188,7 @@ void Frame::loadScripts()
         }
         try
         {
-            auto body = scriptUrl.request(m_url).bodyString();
+            auto body = m_resourceLoader.request(scriptUrl, m_url).bodyString();
 
             // Rather than run the script right away, schedule it to be processed later.
             auto task = std::make_unique<Task<JSContext*, std::string, std::string, int>>(
@@ -224,7 +226,7 @@ void Frame::loadStyles()
                 continue;
             }
 
-            auto linkBody = linkUrl.request(m_url).bodyString();
+            auto linkBody = m_resourceLoader.request(linkUrl, m_url).bodyString();
             auto linkResults = CSSParser(trim(linkBody)).parse();
 
             // The map merge doesn't replace existing values,
@@ -259,7 +261,7 @@ void Frame::loadImages()
             }
             try 
             {
-                auto response = imageUrl.request(m_url);
+                auto response = m_resourceLoader.request(imageUrl, m_url);
                 QImage img;
                 if (img.loadFromData(response.body))
                 {
@@ -831,6 +833,11 @@ void Frame::scrollTo(Element* element)
     scroll = clampScroll(newScroll);
     m_logger.info("scrolling to " + std::to_string(scroll));
     scrollChangedInFrame = true;
+}
+
+URLResponse Frame::request(URL url, std::optional<URL> referrer, std::optional<std::string> payload)
+{
+    return m_resourceLoader.request(url, referrer, payload);
 }
 
 void Frame::setFrameSize(double width, double height)

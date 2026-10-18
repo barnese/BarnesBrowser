@@ -8,7 +8,10 @@ SSLHelper::SSLHelper()
     SSL_library_init();
     SSLeay_add_ssl_algorithms();
     SSL_load_error_strings();
+}
 
+void SSLHelper::init()
+{
     m_context = SSL_CTX_new(TLS_client_method());
     SSL_CTX_set_default_verify_paths(m_context);
     SSL_CTX_set_verify(m_context, SSL_VERIFY_PEER, nullptr);
@@ -24,6 +27,11 @@ SSLHelper::SSLHelper()
 
 SSL* SSLHelper::connect(int sock, const std::string& host)
 {
+    if (!m_ssl)
+    {
+        init();
+    }
+
     SSL_set_fd(m_ssl, sock);
     SSL_set_tlsext_host_name(m_ssl, host.c_str());
     SSL_set1_host(m_ssl, host.c_str());
@@ -52,6 +60,8 @@ void SSLHelper::shutdown()
     SSL_shutdown(m_ssl);
     SSL_free(m_ssl);
     SSL_CTX_free(m_context);
+    m_ssl = nullptr;
+    m_context = nullptr;
 }
 
 void SSLHelper::logSSLError()

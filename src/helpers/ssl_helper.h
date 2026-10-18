@@ -13,8 +13,9 @@ class SSLHelper
         void shutdown();
     
     private:
+        void init();
         void logSSLError();
 
-        SSL* m_ssl;
-        SSL_CTX* m_context;
+        SSL* m_ssl = nullptr;
+        SSL_CTX* m_context = nullptr;
 };

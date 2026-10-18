@@ -293,7 +293,10 @@ std::string JSContext::runLoad(int handle, URL frameUrl, URL fullUrl, std::strin
     {
         payload = body;
     }
-    auto response = fullUrl.request(frameUrl, payload).bodyString();
+    
+    auto frame = m_tab->getFrameByWindowId(windowId);
+
+    auto response = frame->request(fullUrl, frameUrl, payload).bodyString();
 
     // Schedule a task to send the response back to JavaScript.
     auto task = std::make_unique<Task<JSContext*, int, std::string, int>>(
