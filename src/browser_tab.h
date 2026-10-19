@@ -99,6 +99,7 @@ private:
     Frame* m_focusedFrame = nullptr;
     std::vector<URL> m_allowedOrigins;
     std::map<std::string, std::unique_ptr<JSContext>> m_originToJs;
+    std::unique_ptr<ResourceLoader> m_resourceLoader;
 
     bool m_loaded;
     int m_scroll;

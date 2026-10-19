@@ -1,5 +1,6 @@
 #pragma once
 
+#include "http_cache.h"
 #include "http_connection.h"
 #include "url.h"
 #include "url_components.h"
@@ -38,4 +39,5 @@ private:
 
     bool m_keepAlive;
     std::unique_ptr<HttpConnection> m_connection;
+    HttpCache m_httpCache;
 };

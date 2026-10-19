@@ -76,6 +76,7 @@ add_executable(main
     src/layout/layout_helpers.cpp
     src/layout/line_layout.cpp
     src/layout/text_layout.cpp
+    src/networking/http_cache.cpp
     src/networking/http_connection.cpp
     src/networking/resource_loader.cpp
     src/networking/url.cpp

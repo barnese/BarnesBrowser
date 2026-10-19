@@ -29,6 +29,7 @@ BrowserTab::BrowserTab(int width, int height)
     m_focus = nullptr;
     m_focusedFrame = nullptr;
     m_rootFrame = nullptr;
+    m_resourceLoader = std::make_unique<ResourceLoader>(true);
 }
 
 BrowserTab::~BrowserTab() = default;
@@ -46,7 +47,7 @@ void BrowserTab::load(URL url, std::optional<std::string> payload)
         windowIdToFrame.clear();
         m_focus = nullptr;
         m_focusedFrame = nullptr;
-        m_rootFrame = std::make_unique<Frame>(this, nullptr);
+        m_rootFrame = std::make_unique<Frame>(this, nullptr, m_resourceLoader.get());
         m_rootFrame->load(url, payload);
         m_rootFrame->setFrameSize(m_width, m_height);
         m_loaded = true;

@@ -14,11 +14,11 @@
 
 #include <fstream>
 
-Frame::Frame(BrowserTab* tab, Frame* parentFrame)
+Frame::Frame(BrowserTab* tab, Frame* parentFrame, ResourceLoader* resourceLoader)
     : m_tab(tab),
+      m_resourceLoader(resourceLoader),
       m_parentFrame(parentFrame),
       m_url(""),
-      m_resourceLoader(true),
       m_logger(Logger("Frame"))
 {
     m_loaded = false;
@@ -43,7 +43,7 @@ void Frame::load(URL url, std::optional<std::string> payload)
     scroll = 0;
     scrollChangedInFrame = true;
 
-    auto response = m_resourceLoader.request(url, m_url, payload);
+    auto response = m_resourceLoader->request(url, m_url, payload);
 
     auto body = response.errorMessage.has_value() ? response.errorMessage.value() : response.bodyString();
    
@@ -188,7 +188,7 @@ void Frame::loadScripts()
         }
         try
         {
-            auto body = m_resourceLoader.request(scriptUrl, m_url).bodyString();
+            auto body = m_resourceLoader->request(scriptUrl, m_url).bodyString();
 
             // Rather than run the script right away, schedule it to be processed later.
             auto task = std::make_unique<Task<JSContext*, std::string, std::string, int>>(
@@ -226,7 +226,7 @@ void Frame::loadStyles()
                 continue;
             }
 
-            auto linkBody = m_resourceLoader.request(linkUrl, m_url).bodyString();
+            auto linkBody = m_resourceLoader->request(linkUrl, m_url).bodyString();
             auto linkResults = CSSParser(trim(linkBody)).parse();
 
             // The map merge doesn't replace existing values,
@@ -261,7 +261,7 @@ void Frame::loadImages()
             }
             try 
             {
-                auto response = m_resourceLoader.request(imageUrl, m_url);
+                auto response = m_resourceLoader->request(imageUrl, m_url);
                 QImage img;
                 if (img.loadFromData(response.body))
                 {
@@ -295,7 +295,7 @@ void Frame::loadIFrames()
             iframe->frame = nullptr;
             continue;
         }
-        iframe->frame = std::make_unique<Frame>(m_tab, this);
+        iframe->frame = std::make_unique<Frame>(m_tab, this, m_resourceLoader);
 
         // Since iframes can be slow to load, load them asynchronously.
         auto task = std::make_unique<Task<Frame*, URL, std::optional<std::string>>>(
@@ -837,7 +837,7 @@ void Frame::scrollTo(Element* element)
 
 URLResponse Frame::request(URL url, std::optional<URL> referrer, std::optional<std::string> payload)
 {
-    return m_resourceLoader.request(url, referrer, payload);
+    return m_resourceLoader->request(url, referrer, payload);
 }
 
 void Frame::setFrameSize(double width, double height)

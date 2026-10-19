@@ -246,13 +246,23 @@ URLResponse ResourceLoader::requestFromNetwork(URL url, const std::optional<URL>
     URLResponse response;
     response.viewSource = url.components().viewSource;
 
+    std::string urlString = url.describe();
+
+    // If we have already cached the response for this request, just return it.
+    if (auto cached = m_httpCache.get(urlString))
+    {
+        std::cout << "[ResourceLoader] using cache for " << urlString << std::endl;
+        response.body = cached->body;
+        return response;
+    }
+
     UrlComponents urlComponents = url.components();
 
     // Loop to handle URLs that respond with a redirect responses, 
     // but only up to 10 times to avoid infinite redirect loops.
     for (int redirectCount = 0; redirectCount < 10; ++redirectCount)
     {
-        std::cout << "[ResourceLoader] requestFromNetwork " << url.describe() << std::endl;
+        std::cout << "[ResourceLoader] requesting " << urlString << std::endl;
         std::string request;
         if (payload == std::nullopt)
         {
@@ -300,6 +310,28 @@ URLResponse ResourceLoader::requestFromNetwork(URL url, const std::optional<URL>
             size_t contentLength = std::stoul(headers["Content-Length"]);
 
             body = m_connection->readBody(contentLength);
+
+            // Cache the result if we receive a cache control header
+            // with a max-age directive from the server.
+            if (headers.contains("Cache-Control"))
+            {                
+                auto value = headers["Cache-Control"];
+
+                if (value.starts_with("max-age=")) // TODO: make a parsing function for this
+                {
+                    int age = std::stoi(value.substr(8)); // This fragility needs to be replaced
+
+                    auto contentType = headers["Content-Type"];
+                    
+                    CachedResponse entry {
+                        .body = body,
+                        .contentType = contentType,
+                        .expiresAt = std::chrono::steady_clock::now() + std::chrono::seconds(age)
+                    };
+
+                    m_httpCache.put(urlString, std::move(entry));
+                }
+            }
         }
 
         response.statusCode = getStatusCode(headerData);

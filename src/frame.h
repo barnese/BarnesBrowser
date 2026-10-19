@@ -22,7 +22,7 @@ class Element;
 class Frame
 {
 public:
-    Frame(BrowserTab* tab, Frame* parentFrame);
+    Frame(BrowserTab* tab, Frame* parentFrame, ResourceLoader* resourceLoader);
 
     void load(URL url, std::optional<std::string> payload=std::nullopt);
     void render();
@@ -83,11 +83,11 @@ private:
     void submitForm(Element* element);
 
     BrowserTab* m_tab;
+    ResourceLoader* m_resourceLoader;
     Frame* m_parentFrame;
     std::unique_ptr<Node> m_node;
     std::vector<URL> m_allowedOrigins;
     URL m_url;
-    ResourceLoader m_resourceLoader;
     CSSRules m_rules;
     bool m_loaded;
     
