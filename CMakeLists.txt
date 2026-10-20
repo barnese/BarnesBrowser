@@ -76,6 +76,7 @@ add_executable(main
     src/layout/layout_helpers.cpp
     src/layout/line_layout.cpp
     src/layout/text_layout.cpp
+    src/networking/header_parser_helpers.cpp
     src/networking/http_cache.cpp
     src/networking/http_connection.cpp
     src/networking/resource_loader.cpp
@@ -148,6 +149,7 @@ qt_add_resources(main "images"
 
 add_executable(tests
     src/tests/test_css_parser.cpp
+    src/tests/test_header_parser_helpers.cpp
     src/tests/test_string_helpers.cpp
     src/tests/test_url.cpp
     src/tests/test_url_components.cpp
@@ -158,6 +160,8 @@ add_executable(tests
     src/html_tree/element.cpp
     src/html_tree/html_parser.cpp
     src/html_tree/text.cpp
+    src/networking/header_parser_helpers.cpp
+    src/networking/http_cache.cpp
     src/networking/http_connection.cpp
     src/networking/resource_loader.cpp
     src/networking/url.cpp

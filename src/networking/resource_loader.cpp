@@ -3,6 +3,7 @@
 #include "helpers/file_helpers.h"
 #include "helpers/string_helpers.h"
 #include "globals.h"
+#include "header_parser_helpers.h"
 
 #include <cassert>
 #include <iostream>
@@ -103,21 +104,6 @@ std::string formatPostRequest(
 bool isRedirect(int statusCode)
 {
     return statusCode >= 301 && statusCode <= 308;
-}
-
-/// Parses the status code from the given header text.
-std::string getStatusCode(std::string headerText)
-{
-    // Parse the status line.
-    std::istringstream stream(headerText);
-    std::string statusLine;
-    std::getline(stream, statusLine);
-    std::istringstream statusStream(statusLine);
-    std::string version;
-    std::string statusCode;
-    statusStream >> version;
-    statusStream >> statusCode;
-    return statusCode;
 }
 
 /// @brief Parses header text from a HTML response.
@@ -315,18 +301,16 @@ URLResponse ResourceLoader::requestFromNetwork(URL url, const std::optional<URL>
             // with a max-age directive from the server.
             if (headers.contains("Cache-Control"))
             {                
-                auto value = headers["Cache-Control"];
+                auto cachePolicy = parseCacheControl(headers["Cache-Control"]);
 
-                if (value.starts_with("max-age=")) // TODO: make a parsing function for this
+                if (!cachePolicy->noStore && cachePolicy->maxAge)
                 {
-                    int age = std::stoi(value.substr(8)); // This fragility needs to be replaced
-
                     auto contentType = headers["Content-Type"];
                     
                     CachedResponse entry {
                         .body = body,
                         .contentType = contentType,
-                        .expiresAt = std::chrono::steady_clock::now() + std::chrono::seconds(age)
+                        .expiresAt = std::chrono::steady_clock::now() + *cachePolicy->maxAge
                     };
 
                     m_httpCache.put(urlString, std::move(entry));
@@ -334,7 +318,7 @@ URLResponse ResourceLoader::requestFromNetwork(URL url, const std::optional<URL>
             }
         }
 
-        response.statusCode = getStatusCode(headerData);
+        response.statusCode = parseStatusCode(headerData);
         response.headers = headers;
         response.body = body;
 

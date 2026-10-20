@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 HttpConnection::HttpConnection()
 {
@@ -44,15 +45,51 @@ int lookupDNSAndConnect(std::string host, uint16_t port)
 bool HttpConnection::canReuse(const URL& url)
 {
     // Determine is we can reuse the existing connection.
-    return m_sock >= 0 && 
+    return isSocketAlive() && 
         m_lastURL && 
         m_lastURL->components().host == url.components().host &&
         m_lastURL->components().port == url.components().port &&
         m_lastURL->components().scheme == url.components().scheme;
 }
 
+bool HttpConnection::isSocketAlive()
+{
+    if (m_sock < 0) return false;
+
+    char byte;
+
+    ssize_t result;
+    if (m_useSSL)
+    {
+        return false; // TODO: find a way to determine if socket is alive for SSL.
+    }
+    else
+    {
+        result = recv(m_sock, &byte, 1, MSG_PEEK | MSG_DONTWAIT);
+    }
+    
+    if (result == 0)
+    {
+        // The server has closed the connection.
+        return false;
+    }
+
+    if (result < 0)
+    {
+        // No data available. Check for error codes EAGAIN and EWOULDBLOCK
+        return errno == EAGAIN || errno == EWOULDBLOCK;
+    }
+
+    return true;
+}
+
 void HttpConnection::connect(const URL& url)
 {
+    if (url.components().scheme == "https")
+    {
+        m_useSSL = true;
+    }
+
     if (!canReuse(url))
     {
         std::cout << "[HttpConnection] resetting connection\n";
@@ -60,9 +97,8 @@ void HttpConnection::connect(const URL& url)
 
         m_sock = lookupDNSAndConnect(url.components().host, url.components().port);
 
-        if (url.components().scheme == "https")
+        if (m_useSSL)
         {
-            m_useSSL = true;
             m_ssl.connect(m_sock, url.components().host);
         }
     }

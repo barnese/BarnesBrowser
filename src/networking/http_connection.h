@@ -26,6 +26,7 @@ public:
 private:
     void connect(const URL& url);
     bool canReuse(const URL& url);
+    bool isSocketAlive();
     void receive();
     std::vector<std::byte> read(size_t count);
 
