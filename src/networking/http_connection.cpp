@@ -85,10 +85,7 @@ bool HttpConnection::isSocketAlive()
 
 void HttpConnection::connect(const URL& url)
 {
-    if (url.components().scheme == "https")
-    {
-        m_useSSL = true;
-    }
+    m_useSSL = url.components().scheme == "https";
 
     if (!canReuse(url))
     {
