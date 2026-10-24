@@ -59,7 +59,11 @@ std::string URL::describe(bool showPort) const
 {
     std::stringstream ss;
 
-    if (m_urlComponents.scheme == "data")
+    if (m_urlComponents.aboutBlank)
+    {
+        return "about:blank";
+    }
+    else if (m_urlComponents.scheme == "data")
     {
         ss << m_urlComponents.scheme << ":";
 

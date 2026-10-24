@@ -32,7 +32,11 @@ URLResponse ResourceLoader::request(
 {
     auto components = url.components();
 
-    if (components.scheme == "file")
+    if (components.aboutBlank)
+    {
+        return aboutBlank();
+    }
+    else if (components.scheme == "file")
     {
         return requestFromFile(components.path, components.viewSource);
     }
@@ -192,6 +196,22 @@ std::string ResourceLoader::readHeaders(std::span<const std::byte> data, size_t&
 
     // The header terminator wasn't found.
     return {};
+}
+
+URLResponse ResourceLoader::aboutBlank() const
+{
+    URLResponse response;
+    std::string body = "&nbsp;";
+    std::vector<std::byte> bodyBytes;
+    bodyBytes.reserve(body.size());
+
+    std::transform(body.begin(), body.end(), std::back_inserter(bodyBytes), [](unsigned char c) {
+        return static_cast<std::byte>(c);
+    });
+
+    response.body = bodyBytes;
+
+    return response;
 }
 
 URLResponse ResourceLoader::requestFromFile(const std::string& path, bool viewSource) const

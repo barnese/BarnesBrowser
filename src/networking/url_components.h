@@ -17,6 +17,7 @@ struct UrlComponents
     std::optional<std::string> data = std::nullopt;
 
     bool viewSource = false;
+    bool aboutBlank = false;
 
     bool operator==(const UrlComponents& other) const
     {

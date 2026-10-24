@@ -26,6 +26,7 @@ private:
     URLResponse requestFromFile(const std::string& path, bool viewSource) const;
     URLResponse requestFromData(const UrlComponents& components) const;
     URLResponse requestFromNetwork(URL url, const std::optional<URL>& referrer, std::optional<std::string> payload=std::nullopt);
+    URLResponse aboutBlank() const;
 
     /// Reads the headers from a span that points to some binary data.
     /// @param pos - reference to a position variable which helps

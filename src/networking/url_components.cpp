@@ -42,6 +42,11 @@ UrlComponents getUrlComponents(std::string url)
         urlView.remove_prefix(12);
         url = urlView;
     }
+    else if (url.starts_with("about:blank"))
+    {
+        components.aboutBlank = true;
+        return components;
+    }
 
     // Otherwise, parse the URL as a normal URL.
     auto parts = split(url, "://");
