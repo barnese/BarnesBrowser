@@ -23,9 +23,9 @@ public:
     virtual std::vector<std::unique_ptr<Command>> paintEffects(std::vector<std::unique_ptr<Command>> commands) const = 0;
     virtual std::string describe() const = 0;
 
-    QRect getRect() const
+    QRectF getRect() const
     {
-        return QRect(x.get(), y.get(), width.get(), height.get());
+        return QRectF(x.get(), y.get(), width.get(), height.get());
     }
 
     Node* node = nullptr;

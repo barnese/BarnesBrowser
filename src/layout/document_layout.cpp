@@ -104,7 +104,7 @@ std::vector<std::unique_ptr<Command>> DocumentLayout::paintEffects(std::vector<s
 {
     if (frame && frame != frame->getTabRootFrame() && frame->scroll != 0)
     {
-        QRect rect = getRect();
+        auto rect = getRect();
         QPointF translation(0, -frame->scroll);
         auto transform = std::make_unique<Transform>(translation, rect, node, std::move(commands));
         commands = commandList(std::move(transform));

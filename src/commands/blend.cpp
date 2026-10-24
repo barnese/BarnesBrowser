@@ -78,7 +78,8 @@ void Blend::execute(PaintContext& context)
     QOpenGLFramebufferObjectFormat format;
     format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
     format.setSamples(0);
-    auto fbo = QOpenGLFramebufferObject(m_rect.size(), format);
+    QSize rectSize(m_rect.size().width(), m_rect.size().height());
+    auto fbo = QOpenGLFramebufferObject(rectSize, format);
 
     if (!fbo.isValid())
     {
@@ -93,10 +94,10 @@ void Blend::execute(PaintContext& context)
     }
 
     {
-        QOpenGLPaintDevice device(m_rect.size());
+        QOpenGLPaintDevice device(rectSize);
         QPainter layerPainter(&device);
         layerPainter.setCompositionMode(QPainter::CompositionMode_Source);
-        layerPainter.fillRect(QRect(QPoint(0, 0), rect.size()), Qt::transparent);
+        layerPainter.fillRect(QRect(QPoint(0, 0), rectSize), Qt::transparent);
         layerPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
         
         // Make child coordinates remain in the parent's coordinates.
@@ -105,7 +106,7 @@ void Blend::execute(PaintContext& context)
         PaintContext blendContext { 
             layerPainter, 
             context.blitter,
-            m_rect.size()
+            rectSize
         };
         
         for (const auto& item : children)
@@ -298,7 +299,7 @@ std::string Blend::describe() const
     return s.str();
 }
 
-QRect Blend::map(QRect rect) const
+QRectF Blend::map(QRectF rect) const
 {
     if (children.empty()) return rect;
 
@@ -306,7 +307,7 @@ QRect Blend::map(QRect rect) const
     {
         if (blend->getBlendMode() == "destination-in")
         {
-            QRect bounds = rect.translated(0, 0);
+            QRectF bounds = rect.translated(0, 0);
             return bounds.intersected(blend->rect);
         }
     }

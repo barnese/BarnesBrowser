@@ -16,7 +16,7 @@ CompositedLayer::CompositedLayer(Command* displayItem)
     }
 }
 
-QRect localToAbsolute(const Command* displayItem, QRect rect)
+QRectF localToAbsolute(const Command* displayItem, QRectF rect)
 {
     while (displayItem->parent)
     {
@@ -27,7 +27,7 @@ QRect localToAbsolute(const Command* displayItem, QRect rect)
     return rect;
 }
 
-QRect absoluteToLocal(const Command* displayItem, QRect rect)
+QRectF absoluteToLocal(const Command* displayItem, QRectF rect)
 {
     std::vector<Command*> parentChain;
     while (displayItem->parent)
@@ -45,7 +45,7 @@ QRect absoluteToLocal(const Command* displayItem, QRect rect)
 
 QRectF CompositedLayer::compositedBounds() const
 {
-    QRect rect;
+    QRectF rect;
 
     if (!displayItems.has_value()) 
         return rect;

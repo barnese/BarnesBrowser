@@ -9,7 +9,7 @@
 class DrawLine : public PaintCommand
 {
 public:
-    DrawLine(int x1, int y1, int x2, int y2, QString color, int thickness);
+    DrawLine(double x1, double y1, double x2, double y2, QString color, int thickness);
     void execute(PaintContext& context) override;
     std::string describe() const override;
 

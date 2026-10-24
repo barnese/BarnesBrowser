@@ -9,7 +9,7 @@
 class DrawText : public PaintCommand
 {
 public:
-    DrawText(int x1, int y1, QString text, QFont font, QString color);
+    DrawText(double x1, double y1, QString text, QFont font, QString color);
     void execute(PaintContext& context) override;
     std::string describe() const override;
 

@@ -2,14 +2,14 @@
 
 #include "paint_command.h"
 
+#include <QRectF>
 #include <QString>
 
 /// Defines a command for drawing a rounded rectangle.
 class DrawRoundedRect : public PaintCommand
 {
 public:
-    DrawRoundedRect(int x1, int y1, int x2, int y2, QString color, double radius);
-    DrawRoundedRect(QRect rect, QString color, double radius);
+    DrawRoundedRect(QRectF rect, QString color, double radius);
     void execute(PaintContext& context) override;
     std::string describe() const override;
 

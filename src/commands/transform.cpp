@@ -4,7 +4,7 @@
 
 Transform::Transform(
     std::optional<QPointF> translation, 
-    QRect rect, 
+    QRectF rect, 
     Node* node, 
     std::vector<std::unique_ptr<Command>> children
 ) : VisualEffect(rect, std::move(children), node), m_translation(translation)
@@ -53,7 +53,7 @@ std::string Transform::describe() const
     return s.str();
 }
 
-QRect mapTranslation(QRect rect, std::optional<QPointF> translation, bool reversed)
+QRectF mapTranslation(QRectF rect, std::optional<QPointF> translation, bool reversed)
 {
     if (!translation.has_value())
         return rect;
@@ -66,12 +66,12 @@ QRect mapTranslation(QRect rect, std::optional<QPointF> translation, bool revers
     return matrix.mapRect(rect);
 }
 
-QRect Transform::map(QRect rect) const
+QRectF Transform::map(QRectF rect) const
 {
     return mapTranslation(rect, m_translation, false);
 }
 
-QRect Transform::unmap(QRect rect) const
+QRectF Transform::unmap(QRectF rect) const
 {
     return mapTranslation(rect, m_translation, true);
 }

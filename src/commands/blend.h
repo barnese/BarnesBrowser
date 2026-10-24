@@ -21,12 +21,12 @@ public:
     void execute(PaintContext& context) override;
     std::string describe() const override;
     std::unique_ptr<Command> clone(std::unique_ptr<Command> child) override;
-    QRect map(QRect rect) const override;
+    QRectF map(QRectF rect) const override;
     std::optional<std::string> getBlendMode() const { return m_blendMode; }
-    void setBlendRect(QRect r) { m_rect = r; };
+    void setBlendRect(QRectF r) { m_rect = r; };
 
 private:
     std::optional<std::string> m_blendMode;
     double m_opacity;
-    QRect m_rect;
+    QRectF m_rect;
 };

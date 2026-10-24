@@ -4,7 +4,7 @@
 
 #include <memory>
 #include <string>
-#include <QRect>
+#include <QRectF>
 #include <vector>
 
 class IAccessibilityNode
@@ -25,16 +25,16 @@ public:
     AccessibilityNode* getParent() { return m_parent; }
     bool containsPoint(int x, int y);
     AccessibilityNode* hitTest(int x, int y);
-    std::vector<QRect> absoluteBounds();
-    void mapToParent(QRect& rect);
+    std::vector<QRectF> absoluteBounds();
+    void mapToParent(QRectF& rect);
 
     std::string role;
     std::string text;
     std::vector<std::unique_ptr<AccessibilityNode>> children;
-    std::vector<QRect> bounds;
+    std::vector<QRectF> bounds;
 
 private:
-    std::vector<QRect> computeBounds();
+    std::vector<QRectF> computeBounds();
     void printTree(const AccessibilityNode* node, int depth = 0);
     void buildInternal(const Node* node);
 

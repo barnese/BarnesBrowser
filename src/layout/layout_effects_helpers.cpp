@@ -11,7 +11,7 @@
 std::vector<std::unique_ptr<Command>> paintVisualEffects(
     Node* node, 
     std::vector<std::unique_ptr<Command>> commands, 
-    QRect rect)
+    QRectF rect)
 {
     auto opacity = std::stod(node->findStyle("opacity", "1.0"));
     auto blendMode = node->findStyle("mix-blend-mode");
@@ -75,7 +75,7 @@ std::optional<ParseOutlineResult> parseOutline(const std::string& outlineString)
     return ParseOutlineResult(thickness.value(), color);
 }
 
-void paintOutline(Node* node, std::vector<std::unique_ptr<Command>>& commands, QRect rect, double zoom)
+void paintOutline(Node* node, std::vector<std::unique_ptr<Command>>& commands, QRectF rect, double zoom)
 {
     if (!node) return;
 

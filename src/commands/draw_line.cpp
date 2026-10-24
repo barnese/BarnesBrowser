@@ -5,7 +5,7 @@
 #include <QPainter>
 #include <sstream>
 
-DrawLine::DrawLine(int x1, int y1, int x2, int y2, QString color, int thickness)
+DrawLine::DrawLine(double x1, double y1, double x2, double y2, QString color, int thickness)
     : m_color(color),
       m_thickness(thickness)
 {

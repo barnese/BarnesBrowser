@@ -6,14 +6,7 @@
 #include <QPen>
 #include <sstream>
 
-DrawRoundedRect::DrawRoundedRect(int x1, int y1, int x2, int y2, QString color, double radius)
-    : m_color(color),
-      m_radius(radius)
-{
-    rect = {x1, y1, x2, y2};
-}
-
-DrawRoundedRect::DrawRoundedRect(QRect r, QString color, double radius)
+DrawRoundedRect::DrawRoundedRect(QRectF r, QString color, double radius)
     : m_color(color),
       m_radius(radius)
 {

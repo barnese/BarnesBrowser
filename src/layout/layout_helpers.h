@@ -11,6 +11,6 @@ double dpx(double cssPx, double zoom);
 /// coordinates of what the user sees including the translation
 /// offset by walking up the node tree and mapping through 
 /// each translation found.
-QRect absoluteBoundsForObj(Layout* layout);
+QRectF absoluteBoundsForObj(Layout* layout);
 
 void printLayoutTree(Layout* layout, int depth = 0);

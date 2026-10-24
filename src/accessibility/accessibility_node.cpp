@@ -69,7 +69,7 @@ AccessibilityNode::AccessibilityNode(const Node* node, AccessibilityNode* parent
     }
 }
 
-std::vector<QRect> AccessibilityNode::computeBounds()
+std::vector<QRectF> AccessibilityNode::computeBounds()
 {
     if (m_node->layoutObject)
     {
@@ -86,7 +86,7 @@ std::vector<QRect> AccessibilityNode::computeBounds()
     }
 
     auto inLine = m_node->parent;
-    std::vector<QRect> bounds;
+    std::vector<QRectF> bounds;
     
     while (!inLine->layoutObject)
     {
@@ -95,7 +95,7 @@ std::vector<QRect> AccessibilityNode::computeBounds()
 
     for (const auto& line : inLine->layoutObject->children.getValue())
     {
-        QRect lineBounds;
+        QRectF lineBounds;
         for (const auto& child : line->children.getValue())
         {
             if (child->node->parent == m_node)
@@ -260,9 +260,9 @@ AccessibilityNode* AccessibilityNode::hitTest(int x, int y)
     return node;
 }
 
-std::vector<QRect> AccessibilityNode::absoluteBounds()
+std::vector<QRectF> AccessibilityNode::absoluteBounds()
 {
-    std::vector<QRect> absBounds;
+    std::vector<QRectF> absBounds;
 
     for (const auto& bound : this->bounds)
     {
@@ -286,7 +286,7 @@ std::vector<QRect> AccessibilityNode::absoluteBounds()
     return absBounds;
 }
 
-void AccessibilityNode::mapToParent(QRect&)
+void AccessibilityNode::mapToParent(QRectF&)
 {
     // Nothing to do.
 }

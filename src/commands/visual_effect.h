@@ -6,7 +6,7 @@
 class VisualEffect : public Command
 {
 public:
-    VisualEffect(QRect r, std::vector<std::unique_ptr<Command>> commands, Node* n)
+    VisualEffect(QRectF r, std::vector<std::unique_ptr<Command>> commands, Node* n)
     {
         node = n;
         rect = r;
@@ -29,5 +29,5 @@ public:
         }
     }
 
-    QRect unmap(QRect rect) const override { return rect; }
+    QRectF unmap(QRectF rect) const override { return rect; }
 };

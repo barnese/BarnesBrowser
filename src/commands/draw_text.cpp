@@ -6,16 +6,21 @@
 #include <QPainter>
 #include <sstream>
 
-DrawText::DrawText(int x1, int y1, QString text, QFont font, QString color)
+DrawText::DrawText(double x1, double y1, QString text, QFont font, QString color)
     : m_text(text),
       m_font(font),
       m_color(color)
 {
     QFontMetrics metrics(m_font);
+    double ascent = metrics.ascent();
+    double descent = metrics.descent();
 
-    rect = { x1, y1, 
+    // Slightly adjust y and height to account for emoji fonts.
+    rect = { 
+        x1, 
+        y1 - 2, 
         x1 + metrics.horizontalAdvance(text), 
-        metrics.ascent() + metrics.descent()
+        ascent + descent + 2
     };
 }
 
@@ -25,7 +30,9 @@ void DrawText::execute(PaintContext& context)
     auto color = parseColor(m_color);
     painter.setPen(color);
     painter.setFont(m_font);
-    painter.drawText(rect, m_text);
+    
+    // Align text left/centered to fix emojis.
+    painter.drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, m_text);
 }
 
 std::string DrawText::describe() const

@@ -7,7 +7,7 @@ class FrameAccessibilityNode : public AccessibilityNode
 public:
     FrameAccessibilityNode(const Node* node, AccessibilityNode* parent = nullptr);
     AccessibilityNode* hitTest(int x, int y);
-    void mapToParent(QRect& rect);
+    void mapToParent(QRectF& rect);
 
     int scroll;
     double zoom;

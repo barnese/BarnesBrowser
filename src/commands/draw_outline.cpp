@@ -6,7 +6,7 @@
 #include <QPen>
 #include <sstream>
 
-DrawOutline::DrawOutline(QRect r, std::string color, int thickness)
+DrawOutline::DrawOutline(QRectF r, std::string color, int thickness)
     : m_color(QString::fromStdString(color)),
       m_thickness(thickness)
 {

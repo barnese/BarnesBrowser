@@ -36,7 +36,7 @@ AccessibilityNode* FrameAccessibilityNode::hitTest(int x, int y)
     return node;
 }
 
-void FrameAccessibilityNode::mapToParent(QRect& rect)
+void FrameAccessibilityNode::mapToParent(QRectF& rect)
 {
     auto bounds = this->bounds[0];
     rect.translate(bounds.left(), bounds.top() - scroll);

@@ -10,7 +10,7 @@ double dpx(double cssPx, double zoom)
     return cssPx * zoom;
 }
 
-QRect absoluteBoundsForObj(Layout* layout)
+QRectF absoluteBoundsForObj(Layout* layout)
 {
     auto rect = layout->getRect();
     auto current = layout->node;

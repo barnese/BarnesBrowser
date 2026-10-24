@@ -8,7 +8,7 @@
 class DrawOutline : public PaintCommand
 {
 public:
-    DrawOutline(QRect rect, std::string color, int thickness);
+    DrawOutline(QRectF rect, std::string color, int thickness);
     void execute(PaintContext& context) override;
     std::string describe() const override;
 

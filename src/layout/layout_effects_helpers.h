@@ -16,7 +16,7 @@
 std::vector<std::unique_ptr<Command>> paintVisualEffects(
     Node* node, 
     std::vector<std::unique_ptr<Command>> commands, 
-    QRect rect
+    QRectF rect
 );
 
 struct ParseOutlineResult
@@ -29,4 +29,4 @@ struct ParseOutlineResult
 std::optional<ParseOutlineResult> parseOutline(const std::string& outlineString);
 
 /// Adds a DrawOwnline command to the given commands.
-void paintOutline(Node* node, std::vector<std::unique_ptr<Command>>& commands, QRect rect, double zoom);
+void paintOutline(Node* node, std::vector<std::unique_ptr<Command>>& commands, QRectF rect, double zoom);

@@ -6,6 +6,7 @@
 #include <string>
 #include <QImage>
 #include <QRect>
+#include <QRectF>
 
 /// Defines an interface for a painting and visual effects commands
 /// used to draw the visual content of a web page. Commands form
@@ -25,12 +26,12 @@ public:
     virtual std::string describe() const = 0;
 
     // Map the given rect into the Command's coordinate space.
-    virtual QRect map(QRect rect) const = 0;
+    virtual QRectF map(QRectF rect) const = 0;
 
     // Inverse of map
-    virtual QRect unmap(QRect rect) const = 0;
+    virtual QRectF unmap(QRectF rect) const = 0;
 
-    QRect rect;
+    QRectF rect;
     Command* parent;
     std::vector<std::unique_ptr<Command>> children;
 

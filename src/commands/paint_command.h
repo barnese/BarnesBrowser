@@ -6,12 +6,12 @@
 /// commmands, such as VisualEffects.
 class PaintCommand : public Command
 {
-    QRect map(QRect rect) const override 
+    QRectF map(QRectF rect) const override 
     { 
         return rect; 
     }
     
-    QRect unmap(QRect rect) const override
+    QRectF unmap(QRectF rect) const override
     { 
         return rect; 
     }

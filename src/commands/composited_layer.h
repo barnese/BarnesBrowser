@@ -5,11 +5,11 @@
 #include <QGraphicsItem>
 #include <QOpenGLFramebufferObject>
 #include <QPainter>
-#include <QRect>
+#include <QRectF>
 #include <optional>
 
-QRect localToAbsolute(const Command* displayItem, QRect rect);
-QRect absoluteToLocal(const Command* displayItem, QRect rect);
+QRectF localToAbsolute(const Command* displayItem, QRectF rect);
+QRectF absoluteToLocal(const Command* displayItem, QRectF rect);
 
 class CompositedLayer
 {

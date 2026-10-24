@@ -153,7 +153,7 @@ std::vector<std::unique_ptr<Command>> LineLayout::paint() const
 std::vector<std::unique_ptr<Command>> LineLayout::paintEffects(std::vector<std::unique_ptr<Command>> commands) const
 {
     // Add an outline draw command if focused.
-    QRect outlineRect;
+    QRectF outlineRect;
     Node* outlineNode = nullptr;
 
     for (const auto& child : children.getValue())
