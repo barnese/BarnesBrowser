@@ -241,7 +241,10 @@ std::string HttpConnection::readHeaders()
 
             m_receiveBuffer.erase(m_receiveBuffer.begin(), end);
 
-            return reinterpret_cast<const char*>(headers.data());
+            return std::string(
+                reinterpret_cast<const char*>(headers.data()),
+                headers.size()
+            );
         }
 
         receive();

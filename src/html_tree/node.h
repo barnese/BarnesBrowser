@@ -52,5 +52,5 @@ public:
     std::map<std::string, std::unique_ptr<CSSAnimation>> animations;
     bool isFocused;
     VisualEffect* blendOp = nullptr;
-    Layout* layoutObject;
+    Layout* layoutObject = nullptr;
 };

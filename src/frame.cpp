@@ -30,6 +30,7 @@ Frame::Frame(BrowserTab* tab, Frame* parentFrame, ResourceLoader* resourceLoader
     scroll = 0;
     scrollChangedInFrame = false;
     needsFocusScroll = false;
+    js = nullptr;
 
     // Give this frame an identifier, a "window ID".
     windowId = m_tab->windowIdToFrame.size();
@@ -811,7 +812,7 @@ void Frame::click(Point point)
 void Frame::scrollTo(Element* element)
 {
     // Find the layout object corresponding to the focused element.
-    Layout* obj;
+    Layout* obj = nullptr;
     auto layouts = treeToList<Layout>(document.get());
 
     for (const auto& layout : layouts)
