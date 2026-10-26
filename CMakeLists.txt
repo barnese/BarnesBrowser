@@ -108,7 +108,14 @@ target_compile_options(main PRIVATE
     -Wall
     -Wextra
     -pedantic
+    #-fsanitize=address
+    #-fno-omit-frame-pointer
+    #-g
 )
+
+#target_link_options(main PRIVATE
+#    -fsanitize=address
+#)
 
 # Debug Options - Enable in tasks.json.
 option(SHOW_COMPOSITED_LAYER_BORDERS "Enables composition layer borders" OFF)
