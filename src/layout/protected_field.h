@@ -11,16 +11,44 @@
 class Node;
 class Layout;
 
-/// Abstraction for fields whose current state can be marked as invalid.
+/// Abstraction for a field whose current state can be marked as invalid.
+/// This uses a bidirectional dependency graph which allows a field
+/// to keep track of its upstream and downstream dependencies for
+/// handling invalidation.
 class Invalidatable
 {
 public:
-    virtual ~Invalidatable() = default;
+    virtual ~Invalidatable()
+    {
+        // Remove ourselves from all upstream fields.
+        for (auto* dependency : dependencies)
+        {
+            dependency->invalidations.erase(this);
+        }
+
+        // Remove ourselves from all downstream fields.
+        for (auto* invalidation : invalidations)
+        {
+            invalidation->dependencies.erase(this);
+        }
+    }
+
     virtual void mark() = 0;
 
     bool frozenDependencies = false;
     bool frozenInvalidations = false;
+    
+    /// Keeps track of fields that invalidate this field when changed (upstream).
     std::set<Invalidatable*> invalidations = {};
+
+    /// Keeps track of fields that this field invalidates when changed (downstream).
+    std::set<Invalidatable*> dependencies = {};
+
+    void addInvalidation(Invalidatable* field)
+    {
+        invalidations.insert(field);
+        field->dependencies.insert(this);
+    }
 };
 
 using DepList = std::vector<Invalidatable*>;
@@ -69,7 +97,7 @@ public:
             frozenDependencies = true;
             for (auto& dependency : *dependencies)
             {
-                dependency->invalidations.insert(this);
+                dependency->addInvalidation(this);
             }            
         }
 
@@ -80,7 +108,7 @@ public:
             assert(name == "children");
             for (auto& invalidation : *invalidations)
             {
-                this->invalidations.insert(invalidation);
+                addInvalidation(invalidation);
             }
         }
     }
@@ -135,7 +163,7 @@ public:
         }
         else 
         {
-            invalidations.insert(notify);
+            addInvalidation(notify);
         }
 
         return get();
