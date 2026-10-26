@@ -43,6 +43,7 @@ void Frame::load(URL url, std::optional<std::string> payload)
     m_logger.info("loading");
     scroll = 0;
     scrollChangedInFrame = true;
+    m_tab->setFocus(nullptr);
 
     auto response = m_resourceLoader->request(url, m_url, payload);
 
