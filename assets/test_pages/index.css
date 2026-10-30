@@ -26,7 +26,7 @@ pre {
 }
 
 .code-sample { 
-    font-size: 60%; 
+    font-size: 80%; 
     font-family: monospace;
 }
 
@@ -37,4 +37,8 @@ footer p {
 
 a:focus { 
     outline: 2px solid red; 
+}
+
+.title {
+    text-align: center;
 }

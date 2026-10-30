@@ -2,6 +2,7 @@
 
 #include "html_tree/node.h"
 #include "layout/protected_field.h"
+#include "layout/text_alignment.h"
 
 #include <string>
 #include <QFont>
@@ -13,3 +14,5 @@ double overrideSizeWithStyle(const Node* node, int size, std::string styleName);
 
 /// Parses font styles on the given node and returns a font.
 QFont getFont(Node* node, double zoom, int adjustSize, Invalidatable* notify);
+
+TextAlignment getTextAlignment(const Node* node);

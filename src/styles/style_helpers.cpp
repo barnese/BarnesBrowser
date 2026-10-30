@@ -53,3 +53,21 @@ QFont getFont(Node* node, double zoom, int adjustSize, Invalidatable* notify)
 
     return FontCache::instance().getFont(family, size, weight, style);
 }
+
+TextAlignment getTextAlignment(const Node* node)
+{
+    // TODO: Should we walk up the parent chain to find this?
+    auto textAlign = node->findStyle("text-align");
+
+    if (textAlign)
+    {
+        auto alignment = toLowercase(*textAlign);
+
+        if (alignment == "right")
+            return RIGHT;
+        else if (alignment == "center")
+            return CENTER;
+    }
+
+    return LEFT;
+}

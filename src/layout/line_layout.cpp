@@ -6,17 +6,20 @@
 #include <algorithm>
 #include <QFontMetrics>
 #include <sstream>
+#include <iostream>
 
 LineLayout::LineLayout(
     Node* node, 
     Layout* parent, 
-    Layout* previous
+    Layout* previous,
+    TextAlignment alignment
 )
 {
     this->node = node;
     this->parent = parent;
     this->previous = previous;
     this->node->layoutObject = this;
+    m_alignment = alignment;
     
     zoom.initialize(this, "zoom", parent, DepList{&parent->zoom});
     x.initialize(this, "x", parent, DepList{&parent->x});
@@ -92,6 +95,8 @@ void LineLayout::layout()
         child->layout();
     }
 
+    layoutAlignment();
+
     if (children.isEmpty())
     {
         ascent.set(0);
@@ -137,6 +142,44 @@ void LineLayout::layout()
     height.set(maxAscent + maxDescent);
 
     hasDirtyDescendants = false;
+}
+
+void LineLayout::layoutAlignment()
+{
+    if (children.isEmpty()) return;
+
+    auto lastChild = children.getValue().back().get();
+    auto textWidth = lastChild->x.getValue() + lastChild->width.getValue();
+
+    switch (m_alignment)
+    {
+    case RIGHT:
+    {
+        auto parentX = parent->x.read(&x);
+        auto lineWidth = width.getValue();
+        x.set(parentX * 2 + (lineWidth - textWidth));
+        break;
+    }
+
+    case CENTER:
+    {
+        auto parentX = parent->x.read(&x);
+        auto lineWidth = width.getValue();
+        auto remainingWidth = lineWidth - textWidth;
+        x.set(parentX * 2 + remainingWidth / 2);
+        break;
+    }
+
+    default:
+        // Do nothing for left alignments.
+        break;
+    }
+
+    // Layout the children again to account for the updated x value.
+    for (const auto& child : children.getValue())
+    {
+        child->layout();
+    }
 }
 
 bool LineLayout::shouldPaint() const 

@@ -395,6 +395,20 @@ void Frame::addStyles(Node& node, const CSSRules& rules)
 
     if (auto* element = dynamic_cast<Element*>(&node))
     {
+        // Apply class selector styles.
+        if (element->attributes.contains("class"))
+        {
+            auto className = "." + element->attributes["class"];
+
+            if (rules.contains(className))
+            {
+                for (const auto& [property, value] : rules.at(className).styles)
+                {
+                    newStyles[property] = value;
+                }
+            }
+        }
+
         // Add style attribute styles. Note that the order is important
         // here because the style attribute overrides style sheet values.
         if (element->attributes.contains("style"))

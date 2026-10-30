@@ -47,6 +47,7 @@ namespace Constants
         { "margin-bottom", "24px" },
         { "margin-left", "0px" },
         { "margin-right", "0px" },
+        { "text-align", "left" },
     };
 
     const std::vector<std::string> BLOCK_ELEMENTS = 

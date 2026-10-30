@@ -339,7 +339,8 @@ void BlockLayout::newLine()
     previousWord = nullptr;
     m_cursorX = 0;
     auto lastLine = (tempChildren.empty()) ? nullptr : tempChildren.back().get();
-    auto newLine = std::make_unique<LineLayout>(node, this, lastLine);
+    auto textAlign = getTextAlignment(node);
+    auto newLine = std::make_unique<LineLayout>(node, this, lastLine, textAlign);
     tempChildren.push_back(std::move(newLine));
 }
 

@@ -3,6 +3,7 @@
 #include <map>
 #include <mutex>
 #include <QFont>
+#include <QFontDatabase>
 #include <QString>
 #include <tuple>
 
@@ -26,10 +27,15 @@ public:
 
         if (!m_fonts.contains(key)) 
         { 
-            QFont font(family, size, weight, style); 
+            QString fontFamily = family;
 
             if (family == "monospace")
-                font.setStyleHint(QFont::Monospace);
+            {
+                QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+                fontFamily = fixedFont.family();
+            }
+            
+            QFont font(fontFamily, size, weight, style); 
 
             m_fonts[key] = font; 
         } 

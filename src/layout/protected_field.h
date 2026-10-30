@@ -209,7 +209,7 @@ private:
     /// Sets descendant flags by walking the parent chain.
     void setAncestorDirtyFlags();
 
-    /// Marks each invalidation field as dirty, if the field is still alive.
+    /// Marks each invalidation field as dirty.
     void notify()
     {
         for (auto& invalidation : this->invalidations)
