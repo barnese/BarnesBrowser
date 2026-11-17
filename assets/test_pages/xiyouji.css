@@ -1,0 +1,25 @@
+body {
+    width: 60ch;
+    font-size: 24px;
+}
+
+header { 
+    font-family: 'Crimson Pro', 'Garamond', serif;
+    text-align: center;
+}
+
+h1 { 
+    font-size: 200%; 
+    font-weight: bold; 
+    text-align: center; 
+}
+
+header > p {
+    font-size: 125%;
+}
+
+blockquote { 
+    border-left: 1ex solid #eee; 
+    padding-left: 1ex; 
+    margin-left: 0; 
+}
