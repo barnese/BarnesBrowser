@@ -50,8 +50,37 @@ If you want to run tests in the current file, you can use the "Run Tests in Curr
 }
 ```
 
+## Debugging
+
+To troubleshoot memory issues, consider using the Address Sanitizer by adding these settings to the `CMakeLists.txt` file:
+
+```
+target_compile_options(main PRIVATE
+    -Wall
+    -Wextra
+    -pedantic
+    -fsanitize=address
+    -fno-omit-frame-pointer
+    -g
+)
+
+target_link_options(main PRIVATE
+    -fsanitize=address
+)
+```
+
 ## Test Pages
 
 The `assets/test_pages` folder includes several sample HTML pages to use for testing.
 
 To run a local web server, run `./run_local_server.sh` in the terminal. (Note: this script requires python3.) This will allow running those web pages at http://localhost:8000/.
+
+## History and Notes
+
+This project was entirely coded by hand up until the git tag `pre-claude`, after which I added Claude support to more rapidly implement features and bug fixes. Up until this point, the code has largely followed the implementation of the _Web Browser Engineering_ book, with a few exceptions:
+
+1. The browser chrome was implemented using Qt widgets rather than implementing them from scratch, with the intention of making future chrome user interface changes easier and ultimately more flexible and standardized. My use of the `BrowserView` also is different, but fits more with recommended Qt architecture.
+
+2. Networking has deviated heavily after implementing HTTP/1.1. See the `/src/networking/` folder for more details. Essentially, networking has expanded to having a resource loader, a HTTP connection class, HTTP cache, URL components, etc. I may consider using a networking library at some point, like https://docs.libcpr.dev/ to replace `HttpConnection`.
+
+3. While this project uses OpenGL for graphics rendering, the implementation is very basic and needs further refinement. I would also like to use Metal for macOS at some point, while keeping OpenGL for Linux. 
