@@ -80,6 +80,16 @@ void TaskRunner::clearPendingTasks()
     m_tasks = {};
 }
 
+void TaskRunner::stop()
+{
+    if (!isRunning())
+        return;
+
+    clearPendingTasks();
+    m_thread.request_stop();
+    m_thread.join();
+}
+
 void TaskRunner::log(std::string message)
 {
 #if VERBOSE_DEBUG_OUTPUT

@@ -32,7 +32,12 @@ BrowserTab::BrowserTab(int width, int height)
     m_resourceLoader = std::make_unique<ResourceLoader>(true);
 }
 
-BrowserTab::~BrowserTab() = default;
+BrowserTab::~BrowserTab()
+{
+    // Join the tab thread before any other members are destroyed, since a
+    // running task may still be using the frames and JS contexts.
+    taskRunner.stop();
+}
 
 void BrowserTab::load(URL url, std::optional<std::string> payload)
 {
@@ -334,7 +339,7 @@ bool BrowserTab::allowRequest(const URL& url)
 
 void BrowserTab::setTabAddress(const std::string& address, const std::string& title)
 {    
-    browser->setTabAddress(address, title);
+    browser->setTabAddress(this, address, title);
 }
 
 void BrowserTab::click(Point point)

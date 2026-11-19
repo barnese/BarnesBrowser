@@ -18,6 +18,10 @@ public:
     bool isRunning();
     void clearPendingTasks();
 
+    /// Discards pending tasks, asks the thread to stop, and blocks until
+    /// it has finished any task that is currently running.
+    void stop();
+
 private:
     void run(std::stop_token stopToken);
     void log(std::string message);

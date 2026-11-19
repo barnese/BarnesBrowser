@@ -83,6 +83,10 @@ void BrowserView::keyPressEvent(QKeyEvent* event)
         case Qt::Key_T:
             newTab();
             return;
+
+        case Qt::Key_W:
+            closeTab();
+            return;
         }
     }
 

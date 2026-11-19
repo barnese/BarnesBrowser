@@ -2,6 +2,7 @@
 
 #include "helpers/file_helpers.h"
 
+#include <QKeyEvent>
 #include <QVBoxLayout>
 
 Chrome::Chrome(QWidget* parent) : QWidget(parent) 
@@ -28,6 +29,10 @@ void Chrome::createTabBar()
     m_addTabButton->setProperty("class", "navButton");
 
     m_tabBar = new QTabBar(this);
+    // Tabs are fixed-width, so elide long titles in the space
+    // left of the close button rather than drawing under it.
+    m_tabBar->setElideMode(Qt::ElideRight);
+    m_tabBar->setExpanding(false);
 
     m_tabBarLayout->addWidget(m_addTabButton);
     m_tabBarLayout->addWidget(m_tabBar);
@@ -49,6 +54,9 @@ void Chrome::createAddressBar()
     m_addressBar = new QLineEdit(this);
     m_addressBar->setFont(*m_font);
     m_addressBar->setFocusPolicy(Qt::ClickFocus);
+    // Catch browser shortcuts (e.g. Command+W) while the address bar has focus,
+    // since BrowserView only receives key events when the page is focused.
+    m_addressBar->installEventFilter(this);
 
     m_addressBarLayout->addWidget(m_backButton);
     m_addressBarLayout->addWidget(m_addressBar);
@@ -58,9 +66,47 @@ void Chrome::createAddressBar()
     connect(m_addressBar, &QLineEdit::returnPressed, this, &Chrome::handleReturnPressed);
 }
 
+bool Chrome::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == m_addressBar && event->type() == QEvent::KeyPress)
+    {
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
+        // Qt maps ControlModifier to the Command key on macOS.
+        if ((keyEvent->modifiers() & Qt::ControlModifier) && keyEvent->key() == Qt::Key_W)
+        {
+            emit closeActiveTabRequested();
+            return true;
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
 void Chrome::handleTabChanged(int index)
 {
+    // tabBarClicked reports -1 when the click misses every tab.
+    if (index < 0) return;
+    restoreAddress(index);
     tabChanged(index);
+}
+
+void Chrome::handleCloseButtonClicked(QPushButton* button)
+{
+    // Look the index up at click time, since closing other
+    // tabs shifts the indices of the tabs after them.
+    for (int i = 0; i < m_tabBar->count(); i++)
+    {
+        if (m_tabBar->tabButton(i, QTabBar::RightSide) == button)
+        {
+            emit tabCloseRequested(i);
+            return;
+        }
+    }
+}
+
+void Chrome::restoreAddress(int index)
+{
+    if (index < 0 || index >= m_tabBar->count()) return;
+    setAddress(m_tabBar->tabData(index).toString());
 }
 
 void Chrome::handleReturnPressed()
@@ -70,9 +116,38 @@ void Chrome::handleReturnPressed()
 
 void Chrome::addTab(QString tabName, QString address, size_t index)
 {
-    m_tabBar->addTab(tabName);
+    int tabIndex = m_tabBar->addTab(tabName);
+    m_tabBar->setTabData(tabIndex, address);
+
+    auto* closeButton = new QPushButton("✕");
+    closeButton->setProperty("class", "tabCloseButton");
+    closeButton->setFixedSize(24, 18);
+    closeButton->setFocusPolicy(Qt::NoFocus);
+    closeButton->setAccessibleName("Close tab");
+    closeButton->setToolTip("Close tab (⌘W)");
+    connect(closeButton, &QPushButton::clicked, this, [this, closeButton]() {
+        handleCloseButtonClicked(closeButton);
+    });
+    m_tabBar->setTabButton(tabIndex, QTabBar::RightSide, closeButton);
+
     setAddress(address);
     m_tabBar->setCurrentIndex(index);
+}
+
+void Chrome::setTabAddress(size_t index, QString address)
+{
+    if (index >= static_cast<size_t>(m_tabBar->count())) return;
+    m_tabBar->setTabData(index, address);
+    if (static_cast<int>(index) == m_tabBar->currentIndex())
+    {
+        setAddress(address);
+    }
+}
+
+void Chrome::removeTab(size_t index)
+{
+    if (index >= static_cast<size_t>(m_tabBar->count())) return;
+    m_tabBar->removeTab(index);
 }
 
 void Chrome::setAddress(QString address)
@@ -96,4 +171,5 @@ void Chrome::focusAddressBar()
 void Chrome::setActiveTab(size_t index)
 {
     m_tabBar->setCurrentIndex(index);
+    restoreAddress(index);
 }

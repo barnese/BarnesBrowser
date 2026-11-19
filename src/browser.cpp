@@ -9,6 +9,7 @@
 #include "helpers/thread_registry.h"
 #include "html_tree/node_helpers.h"
 
+#include <algorithm>
 #include <QBoxLayout>
 
 Browser::Browser(QWidget* parent) 
@@ -28,6 +29,8 @@ Browser::Browser(QWidget* parent)
 
     connect(m_chrome, &Chrome::newTabRequested, this, &Browser::createNewTab);
     connect(m_chrome, &Chrome::tabChanged, this, &Browser::changeTab);
+    connect(m_chrome, &Chrome::tabCloseRequested, this, &Browser::closeTab);
+    connect(m_chrome, &Chrome::closeActiveTabRequested, this, &Browser::closeActiveTab);
     connect(m_chrome, &Chrome::addressChanged, this, &Browser::changeAddress);
     connect(m_chrome, &Chrome::navigateBackRequested, this, &Browser::goBack);
     
@@ -47,6 +50,7 @@ Browser::Browser(QWidget* parent)
     connect(m_view, &BrowserView::goBack, this, &Browser::goBack);
     connect(m_view, &BrowserView::focusAddressBar, this, &Browser::focusAddressBar);
     connect(m_view, &BrowserView::newTab, this, &Browser::createNewTab);
+    connect(m_view, &BrowserView::closeTab, this, &Browser::closeActiveTab);
     connect(m_view, &BrowserView::cycleTabs, this, &Browser::cycleTabs);
 
     connect(&m_timer, &QTimer::timeout, this, &Browser::mainTimerFired);
@@ -460,7 +464,7 @@ void Browser::createNewTab()
 
 void Browser::changeTab(size_t index)
 {
-    if (m_tabs.empty() || index > m_tabs.size())
+    if (m_tabs.empty() || index >= m_tabs.size())
     {
         return;
     }
@@ -477,12 +481,67 @@ void Browser::changeTab(size_t index)
     m_activeTab->taskRunner.scheduleTask(std::move(task));
 }
 
-void Browser::setTabAddress(const std::string& address, const std::string& title)
+void Browser::closeTab(size_t index)
+{
+    std::unique_ptr<BrowserTab> closing;
+    {
+        std::lock_guard lock(m_mutex);
+        if (index >= m_tabs.size())
+        {
+            return;
+        }
+
+        m_logger.info("closing tab " + std::to_string(index));
+
+        // Never leave the browser without a tab: open a fresh New Tab
+        // first, which becomes the active tab (appended after this one).
+        if (m_tabs.size() == 1)
+        {
+            newTabInternal();
+        }
+
+        bool wasActive = m_tabs[index].get() == m_activeTab;
+        closing = std::move(m_tabs[index]);
+        m_tabs.erase(m_tabs.begin() + index);
+        m_chrome->removeTab(index);
+
+        if (wasActive)
+        {
+            // Prefer the tab to the right, otherwise the one to the left.
+            size_t next = std::min(index, m_tabs.size() - 1);
+            setActiveTab(m_tabs[next].get());
+            m_chrome->setActiveTab(next);
+        }
+    }
+
+    // Destroy the tab outside the lock: its destructor joins the tab
+    // thread, which may be blocked waiting on m_mutex in a callback.
+    closing.reset();
+}
+
+void Browser::closeActiveTab()
+{
+    size_t activeIndex;
+    {
+        std::lock_guard lock(m_mutex);
+        activeIndex = getActiveTabIndex();
+    }
+    closeTab(activeIndex);
+}
+
+void Browser::setTabAddress(BrowserTab* tab, const std::string& address, const std::string& title)
 {
     std::lock_guard lock(m_mutex);
-    auto activeIndex = getActiveTabIndex();
-    m_chrome->setAddress(QString::fromStdString(address));
-    m_chrome->setTabName(QString::fromStdString(title), activeIndex);
+    auto it = std::ranges::find(m_tabs, tab, &std::unique_ptr<BrowserTab>::get);
+    if (it == m_tabs.end())
+    {
+        // The tab was closed while it was loading.
+        return;
+    }
+
+    auto index = static_cast<size_t>(std::distance(m_tabs.begin(), it));
+    m_chrome->setTabName(QString::fromStdString(title), index);
+    m_chrome->setTabAddress(index, QString::fromStdString(address));
 }
 
 void Browser::setActiveTab(BrowserTab* tab)

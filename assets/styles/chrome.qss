@@ -4,7 +4,7 @@ QTabBar::tab {
     padding-top: 8px;
     padding-bottom: 6px;
     padding-left: 12px;
-    padding-right: 12px;
+    padding-right: 6px;
     border-radius: 4px;
     width: 170px;
     margin-right: 5px;
@@ -32,6 +32,24 @@ QPushButton.navButton:hover {
 }
 
 QPushButton.navButton:pressed {
+    background-color: #888888;
+    color: #ffffff;
+}
+
+QPushButton.tabCloseButton {
+    background-color: transparent;
+    margin: 0px;
+    margin-right: 8px;
+    padding: 0px;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+QPushButton.tabCloseButton:hover {
+    background-color: #bbbbbb;
+}
+
+QPushButton.tabCloseButton:pressed {
     background-color: #888888;
     color: #ffffff;
 }

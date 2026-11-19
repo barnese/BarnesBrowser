@@ -16,14 +16,21 @@ public:
     void addTab(QString tabName, QString address, size_t index);
     void setAddress(QString address);
     void setTabName(QString tabName, size_t index);
+    void setTabAddress(size_t index, QString address);
+    void removeTab(size_t index);
     void focusAddressBar();
     void setActiveTab(size_t index);
 
 signals:
     void newTabRequested();
     void tabChanged(int index);
+    void tabCloseRequested(int index);
+    void closeActiveTabRequested();
     void addressChanged(QString newAddress);
     void navigateBackRequested();
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
     void createTabBar();
@@ -31,6 +38,8 @@ private:
 
     void handleTabChanged(int index);
     void handleReturnPressed();
+    void handleCloseButtonClicked(QPushButton* button);
+    void restoreAddress(int index);
 
     QHBoxLayout* m_tabBarLayout;
     QHBoxLayout* m_addressBarLayout;

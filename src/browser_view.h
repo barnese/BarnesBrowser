@@ -32,6 +32,7 @@ signals:
     void goBack();
     void focusAddressBar();
     void newTab();
+    void closeTab();
     void cycleTabs();
     void handleEnter();
     void handleTab();
