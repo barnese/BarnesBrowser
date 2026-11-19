@@ -2,7 +2,7 @@
 
 This is a simple, experimental web browser written to explore browser concepts for educational purposes. It is based on the book [Web Browser Engineering](https://browser.engineering/) by Pavel Panchekha and Chris Harrelson.
 
-The browser is primarily written in C++. See the code under `/src`. It uses CMake for building and package management. See `CMakeLists.txt` for build configuration settings. 
+The browser is primarily written in C++. It uses CMake for building and package management. See `CMakeLists.txt` for build configuration settings. The main target platform is macOS, but it also runs on Linux.
 
 This project also includes a simple, test web server, written in Python, that helps serve various pages to test the browser. See the Test Pages section below for more information. 
 
